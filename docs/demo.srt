@@ -1,17 +1,17 @@
 1
-00:00:00,500 --> 00:00:04,782
+00:00:00,500 --> 00:00:05,003
 Block Party Challenge. A party game made for the creator Dee name, for Hack the Audience.
 
 2
-00:00:07,500 --> 00:00:14,058
+00:00:07,500 --> 00:00:14,487
 Dee name's shorts are already games. Find the diamond, the greed game, don't say the letter. His median short gets about one point seven million views.
 
 3
-00:00:14,500 --> 00:00:18,550
+00:00:14,500 --> 00:00:18,655
 And his tagline is: subscribe and join the game. So we let his viewers really join.
 
 4
-00:00:20,000 --> 00:00:24,433
+00:00:20,000 --> 00:00:24,398
 One big screen, a stream or a classroom TV, shows a room code and a Q R code.
 
 5
@@ -19,54 +19,54 @@ One big screen, a stream or a classroom TV, shows a room code and a Q R code.
 Everyone joins on their phone. No app, no account. Here, ten players.
 
 6
-00:00:35,000 --> 00:00:37,924
+00:00:35,000 --> 00:00:37,877
 Round one, telepathy. Pick the answer most people will pick.
 
 7
-00:00:41,500 --> 00:00:44,853
+00:00:41,500 --> 00:00:44,970
 The reveal shows the crowd. You score for every player who agreed with you.
 
 8
-00:00:47,000 --> 00:00:52,664
+00:00:47,000 --> 00:00:52,559
 The greed game. A shared pot of coins. Take a few and everyone keeps them. Get greedy together, and everyone gets nothing.
 
 9
-00:00:57,500 --> 00:01:01,086
+00:00:57,500 --> 00:01:01,039
 Find the diamond, hidden in a field of blocks. Closer guesses score more.
 
 10
-00:01:09,500 --> 00:01:12,366
+00:01:09,500 --> 00:01:12,354
 Block telepathy: pick the block the crowd picks.
 
 11
-00:01:21,000 --> 00:01:28,138
+00:01:21,000 --> 00:01:28,347
 And his most watched format: don't say it. Name something in one word, but Korean words with the letter rieul, or English words with an E, are busted.
 
 12
-00:01:31,000 --> 00:01:36,339
+00:01:31,000 --> 00:01:36,583
 Unique clean words score double. The streamer can tap any word to reject it, and a safety filter hides bad words.
 
 13
-00:01:38,000 --> 00:01:41,423
+00:01:38,000 --> 00:01:41,411
 Lava. Stand on a safe block. Stand alone for a bonus.
 
 14
-00:01:44,000 --> 00:01:47,075
+00:01:44,000 --> 00:01:47,086
 Every round is timed by the server, so nobody can cheat the clock.
 
 15
-00:01:52,000 --> 00:01:55,028
+00:01:52,000 --> 00:01:55,214
 Then the winner, and every episode feeds a weekly season leaderboard.
 
 16
-00:02:01,000 --> 00:02:08,057
+00:02:01,000 --> 00:02:08,254
 The weekly final runs live on his stream, as an overlay, and becomes his next short. Between finals, a daily challenge lets viewers play any time.
 
 17
-00:02:11,000 --> 00:02:19,102
+00:02:11,000 --> 00:02:19,450
 Brands sponsor the episodes and the prizes, so kids never pay to enter. In our base case, that's about fifty million won in year one, with every assumption in the open.
 
 18
-00:02:26,000 --> 00:02:34,473
+00:02:26,000 --> 00:02:34,520
 It runs on Cloudflare's edge, one room per durable object. Tested with two hundred phones, and monitored every five minutes. Built by an autonomous agent studio, Nightshift Labs.
 

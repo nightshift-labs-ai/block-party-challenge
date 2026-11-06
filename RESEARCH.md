@@ -116,3 +116,17 @@ but not a game, and it plays away from our strength.)
 Audience age, country and gender split for every creator (the organizers mention "anonymized follower statistics", probably only
 given after registration). GodDot = Dname identity (taken from the event's link). Instagram engagement for AI Samarkand and
 GAMST's IG count. Kkwallu's TikTok post views. Merch existence for GAMST. How many teams picked each creator.
+
+## Trends: why now (sources checked 2026-11-06)
+- **Korean kids live on short-form.** Korea Press Foundation's "2025 Tweens' and Teens' Media Use" (2,674 students from grade 4 to grade 12,
+  fieldwork by Korea Gallup, released 2026-01-07) found 200.6 min of online video a day (elementary 143.6 min, middle school 233.7 min).
+  **49.1% watch short-form every day** (0.2% in the 2022 survey). Most-used platforms: Instagram Reels 37.2%, YouTube 35.8%, YouTube Shorts 16.5%.
+  Source: Korea Times, 2026-01-07, https://www.koreatimes.co.kr/amp/southkorea/society/20260107/korean-teens-watch-online-videos-3-hours-daily-half-view-short-form-content-every-day
+- **YouTube Shorts dominates short-form across ages:** 93.4% of Korean short-form users use it (KOCCA 2025 Content Usage Survey,
+  6,554 people aged 10+). Source: https://www.asiae.co.kr/en/article/2025121510582925254 (Asia Economy, Dec 2025; summary, not the primary report).
+- **Platforms are pushing "play with your audience".** In Sep 2025 YouTube added Playables minigames to Live: 75+ casual games that the
+  *creator* plays while chatting. It also tested a live leaderboard of the top 50 participating viewers.
+  Source: TechCrunch 2025-09-16, https://techcrunch.com/2025/09/16/youtube-live-gets-a-major-update-introduces-dual-format-streaming-minigames-and-more/
+  → Our angle is the step after that. With Playables only the creator plays. In Block Party, **every viewer plays on their own phone**, in the creator's own formats.
+- **Daily shared puzzles with a share grid** (the Wordle pattern) are now a standard retention loop. Our Daily Challenge uses it to turn
+  one-off Shorts views into a daily habit. (No figures claimed.)

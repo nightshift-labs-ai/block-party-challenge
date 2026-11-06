@@ -6,9 +6,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."; ROOT=$PWD; W=/tmp/brvid; rm -rf $W; mkdir -p $W; REC=${REC:-/tmp/rv}
 FF=/home/agent/tools/ffmpeg/ffmpeg; export LD_LIBRARY_PATH=/home/agent/tools/libroot/usr/lib/x86_64-linux-gnu
 seg(){ $FF -y -loglevel error -loop 1 -t $2 -i /tmp/pp/s$1.png -vf "scale=1280:720,format=yuv420p" -r 30 -c:v libx264 -preset veryfast -crf 20 $W/s$1.mp4; }
-seg 1 7; seg 2 12; seg 6 10; seg 8 15; seg 9 14
+seg 1 7; seg 2 12; seg 7 10; seg 9 15; seg 10 14
 $FF -y -loglevel error -i $REC/host/*.webm -i $REC/phone/*.webm -filter_complex "color=c=0x14161f:s=1280x720:r=30[bg];[0:v]scale=944:531[h];[1:v]scale=268:536[p];[bg][h]overlay=24:94[a];[a][p]overlay=988:92:shortest=1,format=yuv420p" -t 102 -r 30 -c:v libx264 -preset veryfast -crf 21 $W/game.mp4
-printf "file s1.mp4\nfile s2.mp4\nfile game.mp4\nfile s6.mp4\nfile s8.mp4\nfile s9.mp4\n" > $W/list.txt
+printf "file s1.mp4\nfile s2.mp4\nfile game.mp4\nfile s7.mp4\nfile s9.mp4\nfile s10.mp4\n" > $W/list.txt
 $FF -y -loglevel error -f concat -safe 0 -i $W/list.txt -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p -r 30 $W/raw.mp4
 python3 /home/agent/claude-money/tools/narrate.py $W/raw.mp4 docs/video-script.txt $W/voiced.mp4 --soft-subs >/dev/null
 cp $W/voiced.srt docs/demo.srt
