@@ -36,7 +36,8 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 
 ## Tech & operations (DevOps bonus)
 - **Edge-native realtime**: each room is one Durable Object holding the WebSocket connections and the authoritative game state; static assets on Cloudflare's CDN.
-- **Scale test (2026-11-06)**: one room, 200 simulated phones over the public internet, full 6-round episode (before the lava round was added) — answer→reveal latency **p50 192 ms, p95 271 ms**, 0 errors (`app/test/room-e2e.mjs <url> 200`).
+- **Hibernation**: rooms use hibernatable WebSockets; state is snapshotted to Durable Object storage and round timers are storage alarms, so an idle room costs nothing and survives eviction (`app/test/alarm-e2e.mjs`).
+- **Scale test (2026-11-06)**: one room, 200 simulated phones over the public internet, full 6-round episode (before the lava round was added) — answer→reveal latency **p50 192 ms, p95 271 ms**, 0 errors (`app/test/room-e2e.mjs <url> 200`); after switching to hibernation + persisted state (7 rounds): p50 205 ms, p95 666 ms.
 - **Monitoring**: separate cron Worker pings `/health` every 5 min, public status page with 24 h uptime and p50/p95.
 - **Safety**: input validation, per-IP rate limits on room creation and score writes, names sanitised, answers validated server-side, diamonds hidden from clients until reveal.
 - **Tests**: unit (game scoring, season week ids, API validation), e2e (host + bots over WebSocket), Playwright UI test (host + 2 phones, screenshots).
