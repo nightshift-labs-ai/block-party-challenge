@@ -1,7 +1,7 @@
 // Party room: one Durable Object per 4-letter code. Host screen (TV / stream) + up to 12 phones via WebSocket.
 // Phases: lobby → question → reveal → … → final. Server owns timers and scoring (clients can't cheat the clock).
 import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond } from "./games.js";
-const MAX_PLAYERS = 12;
+const MAX_PLAYERS = 300; // streamer mode: a creator's viewers join one room
 
 export class Room {
   constructor(state) { this.state = state; this.host = null; this.players = new Map(); this.reset(); }
@@ -86,22 +86,31 @@ export class Room {
     this.broadcast();
   }
 
-  view(forPid) {
+  view(forPid, full) {
     const r = this.episode && this.round >= 0 && this.round < this.episode.length ? this.episode[this.round] : null;
     const pub = r && { kind: r.kind, q: r.q, opts: r.opts, pot: r.pot, maxTake: r.maxTake, secs: r.secs };
     if (r && this.phase !== "question" && r.kind === "diamond") pub.diamond = r.diamond; // hidden until reveal
     return {
       t: "state", phase: this.phase, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
-      current: pub, result: this.phase === "question" ? null : this.result,
-      answered: Object.keys(this.answers),
-      players: [...this.players.values()].map(p => ({ pid: p.pid, name: p.name, score: p.score, online: !!p.ws })).sort((a, b) => b.score - a.score),
+      current: pub, result: this.phase === "question" || !this.result ? null : full ? this.result : { ...this.result, answers: undefined, pts: forPid ? { [forPid]: this.result.pts[forPid] } : {} },
+      answered: full ? Object.keys(this.answers) : forPid && forPid in this.answers ? [forPid] : [],
+      answeredCount: Object.keys(this.answers).length, playerCount: this.players.size,
+      players: this.ranked.slice(0, 50).concat(forPid && !this.ranked.slice(0, 50).some(p => p.pid === forPid) ? this.ranked.filter(p => p.pid === forPid) : []),
+      rank: forPid ? this.ranked.findIndex(p => p.pid === forPid) + 1 : null,
       you: forPid || null,
     };
   }
 
   broadcast() {
+    // Coalesce bursts (e.g. 300 answers in a second) into one fan-out every 120 ms.
+    if (this.pending) return;
+    this.pending = setTimeout(() => { this.pending = null; this.flush(); }, this.players.size > 20 ? 120 : 0);
+  }
+
+  flush() {
     const send = (ws, o) => { try { ws?.send(JSON.stringify(o)); } catch {} };
-    send(this.host, this.view(null));
+    this.ranked = [...this.players.values()].map(p => ({ pid: p.pid, name: p.name, score: p.score, online: !!p.ws })).sort((a, b) => b.score - a.score);
+    send(this.host, this.view(null, true));
     for (const p of this.players.values()) send(p.ws, this.view(p.pid));
   }
 }

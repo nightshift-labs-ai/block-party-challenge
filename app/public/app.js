@@ -90,13 +90,13 @@ function render() {
     if (S.phase === "lobby") {
       $app.innerHTML = `<h1>${T("Join on your phone", "폰으로 참가하세요")}</h1>
       <div class="panel center"><div>${esc(location.host)}</div><div class="code">${code}</div><small>${esc(join)}</small><br><div class="qr">${qrSvg(join)}</div></div>
-      <div class="panel"><div class="players">${S.players.map(p => `<span class="chip ${p.online ? "" : "off"}">${esc(p.name)}</span>`).join("") || T("Waiting for players…", "참가자 기다리는 중…")}</div></div>
+      <div class="panel"><b>${S.playerCount} ${T("players", "명")}</b><div class="players">${S.players.slice(0, 30).map(p => `<span class="chip ${p.online ? "" : "off"}">${esc(p.name)}</span>`).join("") || T("Waiting for players…", "참가자 기다리는 중…")}${S.playerCount > 30 ? `<span class="chip">+${S.playerCount - 30}</span>` : ""}</div></div>
       <button class="btn" id="start" ${S.players.length ? "" : "disabled"}>${T("Start episode", "게임 시작")}</button>`;
       document.getElementById("start").onclick = () => send({ t: "start" });
     } else if (S.phase === "question") {
       $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds} · ${code}</small><h1 class="big">${roundTitle(c)}</h1>${timerBar()}
       ${c.kind === "telepathy" ? `<p class="big">${esc(c.q)}</p><div class="opts">${c.opts.map(o => `<div class="opt">${esc(o)}</div>`).join("")}</div>` : c.kind === "diamond" ? grid(c, false) : ""}
-      <div class="panel players">${S.players.map(p => `<span class="chip ${S.answered.includes(p.pid) ? "done" : ""}">${esc(p.name)}</span>`).join("")}</div>
+      <div class="panel"><b>${S.answeredCount} / ${S.playerCount} ${T("answered", "제출")}</b>${S.playerCount <= 30 ? `<div class="players">${S.players.map(p => `<span class="chip ${S.answered.includes(p.pid) ? "done" : ""}">${esc(p.name)}</span>`).join("")}</div>` : ""}</div>
       <button class="btn alt" id="skip">${T("Reveal now", "바로 공개")}</button>`;
       document.getElementById("skip").onclick = () => send({ t: "skip" });
     } else if (S.phase === "reveal") {
@@ -129,8 +129,7 @@ function render() {
     const got = S.result?.pts?.[S.you];
     $app.innerHTML = `${head}<h1>${got === undefined ? T("No answer", "미제출") : "+" + got}</h1><p>${T("Look at the big screen!", "큰 화면을 보세요!")}</p>`;
   } else {
-    const rank = S.players.findIndex(p => p.pid === S.you) + 1;
-    $app.innerHTML = `${head}<h1>#${rank}</h1><p>${me?.score ?? 0} pts</p>`;
+    $app.innerHTML = `${head}<h1>#${S.rank} / ${S.playerCount}</h1><p>${me?.score ?? 0} pts</p>`;
   }
 }
 
