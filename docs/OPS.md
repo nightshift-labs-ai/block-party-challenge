@@ -5,6 +5,7 @@
 | Production | https://extriver-proto.nightshift-labs.workers.dev (Cloudflare Worker `extriver-proto`, static assets + Durable Objects `Room`, `Board`, `Daily`) |
 | Health | `GET /health` → `{ok, version, kv, time}` (503 if storage fails) |
 | Uptime monitor | separate cron Worker `extriver-monitor`, pings /health every 5 min, keeps 24 h → https://extriver-monitor.nightshift-labs.workers.dev/status (+ `/status.json`) |
+| Synthetic E2E | every hour the monitor plays a **full 7-round episode in production** (creates a practice room, host + 2 bot phones over WebSocket, ~4 s); result on the status page, failures alert by email (`[E2E FAIL]`) |
 | Alerts | the monitor emails the on-call inbox after **2 failed checks in a row** (≤ 10 min) and again on recovery (one email per incident, no alert storms) |
 | Backups | the monitor stores a daily copy of the season leaderboard (14 days) → `/backups.json`, one day: `/backups.json?day=YYYY-MM-DD` |
 | CI/CD | `ci/ci.yml (GitHub Actions workflow; copy into .github/workflows/ to enable)`: unit tests on every push/PR. On `main`: deploy, smoke test production (health + full WebSocket episode), **automatic rollback** to the previous version if the smoke test fails |

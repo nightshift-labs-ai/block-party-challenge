@@ -20,6 +20,10 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 <td>separate cron Worker <code>extriver-monitor</code>, pings /health every 5 min, keeps 24 h → <a href="https://extriver-monitor.nightshift-labs.workers.dev/status">https://extriver-monitor.nightshift-labs.workers.dev/status</a> (+ <code>/status.json</code>)</td>
 </tr>
 <tr>
+<td>Synthetic E2E</td>
+<td>every hour the monitor plays a <strong>full 7-round episode in production</strong> (creates a practice room, host + 2 bot phones over WebSocket, ~4 s); result on the status page, failures alert by email (<code>[E2E FAIL]</code>)</td>
+</tr>
+<tr>
 <td>Alerts</td>
 <td>the monitor emails the on-call inbox after <strong>2 failed checks in a row</strong> (≤ 10 min) and again on recovery (one email per incident, no alert storms)</td>
 </tr>
