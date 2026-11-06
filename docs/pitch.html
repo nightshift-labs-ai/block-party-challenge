@@ -21,7 +21,10 @@ img{max-height:440px;max-width:100%;border:4px solid #2a3142}.row{display:flex;g
 
 <div class="s"><h2>How it plays</h2><div class="row"><img src="shots/1-lobby.png" style="width:640px"><ul style="margin:0">
 <li>Host screen shows a code + QR</li><li>Up to <b>300 phones</b> per room</li><li>7 rounds × 12–15 s, server-timed</li>
-<li>Telepathy · Greed · Find the Diamond · Block Telepathy · Lava</li><li>Weekly season top 10</li></ul></div></div>
+<li>Telepathy · Greed · Find the Diamond · Block Telepathy · <b>Don't Say ㄹ</b> · Lava</li><li>Weekly season top 10</li></ul></div></div>
+
+<div class="s"><h2>His #1 short, playable: "Don't say ㄹ"</h2><div class="row"><img src="shots/2-reveal5.png" style="width:760px"><img src="shots/p-round5.png" style="height:440px"></div>
+<div class="f">Typed one-word answers · ㄹ checked inside every syllable (라, 를, 닭) · kid-safety blocklist · streamer can veto any word</div></div>
 
 <div class="s"><h2>Big screen + phone</h2><div class="row"><img src="shots/2-reveal6.png" style="width:760px"><img src="shots/p-round1.png" style="height:440px"></div></div>
 
@@ -35,9 +38,17 @@ img{max-height:440px;max-width:100%;border:4px solid #2a3142}.row{display:flex;g
 <tr><td>Free play</td><td>₩0</td><td>Growth engine</td></tr>
 <tr><td>Fan Pass</td><td>₩4,900 / month</td><td>Private rooms, custom question packs, cosmetics, season badge</td></tr>
 <tr><td>Cosmetics</td><td>₩1,000–5,000</td><td>No pay-to-win</td></tr>
-<tr><td>Sponsored episodes</td><td>per episode</td><td>Brand pays prizes; free entry, never player-funded</td></tr>
-<tr><td>Group licence</td><td>per class / academy</td><td>Jackbox-style format</td></tr></table>
+<tr><td>Sponsored episodes</td><td>₩2M / episode (A)</td><td>Brand pays prizes; free entry, never player-funded</td></tr>
+<tr><td>Group licence</td><td>₩9,900 / class / month</td><td>Jackbox-style format</td></tr></table>
 <p class="m">Infra ≈ $1–5 per million player-episodes (estimate) → margin is set by payment fees, not servers.</p></div>
+
+<div class="s"><h2>Year 1, three scenarios</h2><table>
+<tr><th></th><th>Players / month (m12)</th><th>Year-1 gross</th><th>Creator's 20%</th></tr>
+<tr><td>Conservative</td><td>2,000</td><td>₩1.9M ($1.4K)</td><td>₩0.34M</td></tr>
+<tr><td><b>Base</b></td><td>22,900</td><td><b>₩51M ($37K)</b></td><td><b>₩9.3M</b></td></tr>
+<tr><td>Optimistic</td><td>104,600</td><td>₩242M ($176K)</td><td>₩44M</td></tr></table>
+<p class="m">Base: 2 shorts/month featuring the game × 800K views × 1% join, 30% monthly retention, 1% Fan Pass, 1 sponsored final/month.
+Sponsorship ≈ 40% of revenue → kids don't have to be the payers. All inputs are assumptions (A), replaced by the real join rate after the first live final (docs/BUSINESS.md, tools/model.py).</p></div>
 
 <div class="s"><h2>Built to survive a creator shout-out</h2><ul>
 <li>Cloudflare edge: one Durable Object per room, hibernating WebSockets, alarm timers</li>
