@@ -3,7 +3,7 @@
 import { Room, seasonId } from "./room.js";
 import { kstDate, dailyRounds, validAnswer, scoreDaily } from "./games.js";
 export { Room };
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const MAX_NAME = 16, MAX_ENTRIES = 50;
 const json = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store", ...h } });
 
