@@ -50,6 +50,12 @@ html.overlay .qr svg{width:150px;height:150px}
 html.overlay .opt{background:#000b}
 html.overlay .grid{max-width:min(380px,50vh)}
 .keys{opacity:.6;font-size:13px;margin-left:8px}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+.pop .opt,.pop .cell,.pop p.big{animation:pop .45s ease-out both}
+.pop .cell:nth-child(1){animation-delay:0ms}.pop .cell:nth-child(2){animation-delay:25ms}.pop .cell:nth-child(3){animation-delay:50ms}.pop .cell:nth-child(4){animation-delay:75ms}.pop .cell:nth-child(5){animation-delay:100ms}.pop .cell:nth-child(6){animation-delay:125ms}.pop .cell:nth-child(7){animation-delay:150ms}.pop .cell:nth-child(8){animation-delay:175ms}.pop .cell:nth-child(9){animation-delay:200ms}.pop .cell:nth-child(10){animation-delay:225ms}.pop .cell:nth-child(11){animation-delay:250ms}.pop .cell:nth-child(12){animation-delay:275ms}.pop .cell:nth-child(13){animation-delay:300ms}.pop .cell:nth-child(14){animation-delay:325ms}.pop .cell:nth-child(15){animation-delay:350ms}.pop .cell:nth-child(16){animation-delay:375ms}.pop .cell:nth-child(17){animation-delay:400ms}.pop .cell:nth-child(18){animation-delay:425ms}.pop .cell:nth-child(19){animation-delay:450ms}.pop .cell:nth-child(20){animation-delay:475ms}.pop .cell:nth-child(21){animation-delay:500ms}.pop .cell:nth-child(22){animation-delay:525ms}.pop .cell:nth-child(23){animation-delay:550ms}.pop .cell:nth-child(24){animation-delay:575ms}.pop .cell:nth-child(25){animation-delay:600ms}
+.pop .opt:nth-child(2){animation-delay:.1s}.pop .opt:nth-child(3){animation-delay:.2s}.pop .opt:nth-child(4){animation-delay:.3s}
+.pop .opt .bar{transition:width .8s ease-out .4s}
+@media (prefers-reduced-motion:reduce){.pop *{animation:none!important}}
 </style>
 </head>
 <body>

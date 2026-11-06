@@ -147,7 +147,7 @@ function render() {
       <button class="btn alt" id="skip">${T("Reveal now", "바로 공개")}</button></div></div>`;
       document.getElementById("skip").onclick = () => send({ t: "skip" });
     } else if (S.phase === "reveal") {
-      $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds}</small><h1 class="big">${roundTitle(c)}</h1><div class="cols"><div>${reveal(c, S.result)}</div>
+      $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds}</small><h1 class="big">${roundTitle(c)}</h1><div class="cols"><div class="pop">${reveal(c, S.result)}</div>
       <div><div class="panel">${scores(S.players, 5)}</div><button class="btn" id="next">${T("Next", "다음")}</button></div></div>`;
       document.getElementById("next").onclick = () => send({ t: "next" });
     } else if (S.phase === "final") {
