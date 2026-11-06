@@ -1,0 +1,10 @@
+name = "extriver-monitor"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+[triggers]
+crons = ["*/5 * * * *"]
+[vars]
+TARGET = "https://extriver-proto.nightshift-labs.workers.dev"
+[[kv_namespaces]]
+binding = "MON"
+id = "5129314295f04021bc8ce5020381a0c2"
