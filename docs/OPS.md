@@ -5,7 +5,7 @@
 | Production | https://extriver-proto.nightshift-labs.workers.dev (Cloudflare Worker `extriver-proto`, static assets + Durable Objects `Room`, `Board`, `Daily`) |
 | Health | `GET /health` → `{ok, version, kv, time}` (503 if storage fails) |
 | Uptime monitor | separate cron Worker `extriver-monitor`, pings /health every 5 min, keeps 24 h → https://extriver-monitor.nightshift-labs.workers.dev/status (+ `/status.json`) |
-| CI/CD | `.github/workflows/ci.yml`: unit tests on every push/PR. On `main`: deploy, smoke test production (health + full WebSocket episode), **automatic rollback** to the previous version if the smoke test fails |
+| CI/CD | `ci/ci.yml (GitHub Actions workflow; copy into .github/workflows/ to enable)`: unit tests on every push/PR. On `main`: deploy, smoke test production (health + full WebSocket episode), **automatic rollback** to the previous version if the smoke test fails |
 
 ## Deploy by hand
 ```
