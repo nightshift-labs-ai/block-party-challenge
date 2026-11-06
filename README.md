@@ -35,6 +35,19 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 - Costs: serverless (Cloudflare Workers + Durable Objects) — near-zero at rest, scales per room; numbers to be measured in the load test.
 - Open checks before a commercial launch: Korean game rating (GRAC) for online games, payment rules for minors.
 
+## Unit cost (estimate from Cloudflare's published Durable Objects pricing, checked 2026-11-06)
+Pricing: requests $0.15 per million (incoming WebSocket messages count 20:1), duration $12.50 per million GB-s (128 MB per object; **hibernated rooms are not billed**), SQLite rows written $1.00 per million. Free plan: 100k requests, 13,000 GB-s and 100k rows written per day.
+
+| One 7-round episode | 10 players (friends) | 300 players (stream) |
+|---|---|---|
+| DO requests (1 join + 7 answers ÷ 20 per player) | ≈ 14 | ≈ 405 |
+| Active duration (≈0.3 s per broadcast burst, assumed) | ≈ 15 s → 2 GB-s | ≈ 105 s → 13 GB-s |
+| Rows written (state snapshots, throttled) | ≈ 20 | ≈ 60 |
+| **Cost** | **≈ $0.00003** | **≈ $0.0003** |
+
+So 1 million player-episodes cost roughly **$1–5** in infrastructure, and the free plan alone covers roughly 1,000 streamer-size episodes a day.
+Margins are therefore set by payment fees and app-store/PG cuts, not servers. Duration per burst is an assumption to be replaced with measured analytics after the load test.
+
 ## Tech & operations (DevOps bonus)
 - **Edge-native realtime**: each room is one Durable Object holding the WebSocket connections and the authoritative game state; static assets on Cloudflare's CDN.
 - **Hibernation**: rooms use hibernatable WebSockets; state is snapshotted to Durable Object storage and round timers are storage alarms, so an idle room costs nothing and survives eviction (`app/test/alarm-e2e.mjs`).
