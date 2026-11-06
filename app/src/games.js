@@ -38,11 +38,25 @@ export function scoreDiamond(answers, diamond, size = 5) {
   return { pts, diamond };
 }
 
+// Lava: 8 of 25 blocks turn to lava after everyone picks. Safe = 150, +50 if nobody else stood on your block.
+export function scoreLava(answers, lava) {
+  const set = new Set(lava), count = {}, pts = {};
+  for (const v of Object.values(answers)) count[v] = (count[v] || 0) + 1;
+  for (const [id, v] of Object.entries(answers)) pts[id] = set.has(v) ? 0 : 150 + (count[v] === 1 ? 50 : 0);
+  return { pts, lava, count };
+}
+
+export function pickLava(rnd = Math.random, n = 8) {
+  const cells = [...Array(25).keys()];
+  for (let i = cells.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [cells[i], cells[j]] = [cells[j], cells[i]]; }
+  return cells.slice(0, n).sort((a, b) => a - b);
+}
+
 export function validAnswer(round, v) {
   if (!Number.isInteger(v)) return false;
   if (round.kind === "telepathy") return v >= 0 && v < round.opts.length;
   if (round.kind === "greed") return v >= 0 && v <= round.maxTake;
-  if (round.kind === "diamond" || round.kind === "blockmatch") return v >= 0 && v < 25;
+  if (round.kind === "diamond" || round.kind === "blockmatch" || round.kind === "lava") return v >= 0 && v < 25;
   return false;
 }
 
@@ -56,6 +70,7 @@ export function makeEpisode(nPlayers, rnd = Math.random) {
     { kind: "diamond", diamond: Math.floor(rnd() * 25), secs: 12 },
     { kind: "blockmatch", secs: 12 },
     { kind: "telepathy", ...t[1], secs: 15 },
+    { kind: "lava", lava: pickLava(rnd), secs: 12 },
     { kind: "greed", pot: Math.max(8, Math.round(nPlayers * 3)), maxTake: 10, secs: 15 },
   ];
 }

@@ -1,6 +1,6 @@
 // Party room: one Durable Object per 4-letter code. Host screen (TV / stream) + up to 12 phones via WebSocket.
 // Phases: lobby → question → reveal → … → final. Server owns timers and scoring (clients can't cheat the clock).
-import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond } from "./games.js";
+import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond, scoreLava } from "./games.js";
 export function seasonId(d = new Date()) {
   const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
@@ -93,7 +93,7 @@ export class Room {
     if (this.phase !== "question") return;
     clearTimeout(this.timer);
     const r = this.episode[this.round];
-    const res = r.kind === "telepathy" || r.kind === "blockmatch" ? scoreTelepathy(this.answers) : r.kind === "greed" ? scoreGreed(this.answers, r.pot) : scoreDiamond(this.answers, r.diamond);
+    const res = r.kind === "telepathy" || r.kind === "blockmatch" ? scoreTelepathy(this.answers) : r.kind === "greed" ? scoreGreed(this.answers, r.pot) : r.kind === "lava" ? scoreLava(this.answers, r.lava) : scoreDiamond(this.answers, r.diamond);
     for (const [pid, pts] of Object.entries(res.pts)) this.players.get(pid).score += pts;
     this.result = { ...res, answers: this.answers };
     this.phase = "reveal";

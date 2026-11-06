@@ -30,5 +30,5 @@ const fin = host.last.players.slice(0, 3).map(p => `${p.name}:${p.score}`).join(
 lat.sort((a, b) => a - b);
 console.log(`answer→reveal latency over ${lat.length} samples: p50 ${lat[lat.length >> 1]} ms, p95 ${lat[Math.floor(lat.length * 0.95)]} ms; playerCount ${host.last.playerCount}`);
 console.log("code", code, "rounds", rounds.join(","), "final", fin);
-if (rounds.length !== 6) { console.log("FAIL"); process.exit(1); }
+if (rounds.length !== 7) { console.log("FAIL"); process.exit(1); }
 console.log("E2E PASSED"); process.exit(0);

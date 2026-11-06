@@ -11,11 +11,12 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 
 ## How it plays
 - Host opens the site on a big screen → room code + QR. Up to **300 phones** per room (streamer mode), 4–12 for friend groups.
-- An *episode* = 6 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:
+- An *episode* = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:
   - **Telepathy** (텔레파시) — pick the answer most people will pick. Points = how many others matched you.
   - **Greed** (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.
   - **Find the Diamond** (다이아 찾기) — a 5×5 block field hides one diamond; closer picks score more.
   - **Block Telepathy** (블록 텔레파시) — pick the block the crowd picks.
+  - **Lava** (용암) — 8 of 25 blocks turn to lava after everyone picks; survive, and stand alone for a bonus (from his "escape the lava" challenge).
 - Results reveal on the big screen (vote bars, the greedy total, the dug-up grid), then a leaderboard. Every finished episode feeds a **weekly season top 10**.
 
 ## Why Dname's audience (research summary — see RESEARCH.md)
@@ -35,7 +36,7 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 
 ## Tech & operations (DevOps bonus)
 - **Edge-native realtime**: each room is one Durable Object holding the WebSocket connections and the authoritative game state; static assets on Cloudflare's CDN.
-- **Scale test (2026-11-06)**: one room, 200 simulated phones over the public internet, full 6-round episode — answer→reveal latency **p50 192 ms, p95 271 ms**, 0 errors (`app/test/room-e2e.mjs <url> 200`).
+- **Scale test (2026-11-06)**: one room, 200 simulated phones over the public internet, full 6-round episode (before the lava round was added) — answer→reveal latency **p50 192 ms, p95 271 ms**, 0 errors (`app/test/room-e2e.mjs <url> 200`).
 - **Monitoring**: separate cron Worker pings `/health` every 5 min, public status page with 24 h uptime and p50/p95.
 - **Safety**: input validation, per-IP rate limits on room creation and score writes, names sanitised, answers validated server-side, diamonds hidden from clients until reveal.
 - **Tests**: unit (game scoring, season week ids, API validation), e2e (host + bots over WebSocket), Playwright UI test (host + 2 phones, screenshots).
