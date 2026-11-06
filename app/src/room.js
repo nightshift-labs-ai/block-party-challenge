@@ -12,10 +12,11 @@ const MAX_PLAYERS = 300; // streamer mode: a creator's viewers join one room
 export class Room {
   // Hibernatable WebSockets: the object can be evicted from memory between messages, so game state is snapshotted to
   // Durable Object storage on every broadcast and reloaded lazily; the round timer is a storage alarm, not setTimeout.
-  constructor(state, env) { this.state = state; this.env = env; this.loaded = false; }
+  constructor(state, env) { this.state = state; this.env = env; this.loaded = false; state.blockConcurrencyWhile(() => this.load()); }
 
-  async load() {
-    if (this.loaded) return;
+  // Loaded once per (re)construction under blockConcurrencyWhile, so concurrent joins never see or overwrite half-loaded state.
+  load() { return this.loading ||= this._load(); }
+  async _load() {
     const g = await this.state.storage.get("g");
     this.players = new Map((g?.players || []).map(p => [p.pid, p]));
     Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false }, g ? { phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
@@ -146,6 +147,9 @@ export class Room {
     this.ranked = [...this.players.values()].map(p => ({ pid: p.pid, name: p.name, score: p.score, online: online.has(p.pid) })).sort((a, b) => b.score - a.score);
     send(this.hostWs(), this.view(null, true));
     for (const w of this.state.getWebSockets()) { const a = w.deserializeAttachment(); if (a?.role === "player") send(w, this.view(a.pid)); }
-    this.save().catch(() => {});
+    // Persist on every phase/round change; during a question with many answers, at most once per second.
+    const key = this.phase + ":" + this.round, now = Date.now();
+    if (key !== this.savedKey || now - (this.savedAt || 0) > 1000) { this.savedKey = key; this.savedAt = now; this.save().catch(() => {}); }
+    else if (!this.saveLater) this.saveLater = setTimeout(() => { this.saveLater = null; this.savedAt = Date.now(); this.save().catch(() => {}); }, 1000);
   }
 }

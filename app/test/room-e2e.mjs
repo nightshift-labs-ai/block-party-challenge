@@ -3,7 +3,10 @@ const base = process.argv[2] || "http://localhost:8799";
 const N = +(process.argv[3] || 3); const t0 = Date.now();
 const wsBase = base.replace(/^http/, "ws");
 const { code } = await (await fetch(base + "/api/room", { method: "POST" })).json();
-const open = (q) => new Promise((res, rej) => { const w = new WebSocket(`${wsBase}/api/room/${code}/ws?${q}`); w.last = null; w.onmessage = e => { w.last = JSON.parse(e.data); w.onmsg?.(w.last); }; w.onopen = () => res(w); w.onerror = rej; });
+let retries = 0;
+const open1 = (q) => new Promise((res, rej) => { const w = new WebSocket(`${wsBase}/api/room/${code}/ws?${q}`); w.last = null; w.onmessage = e => { w.last = JSON.parse(e.data); w.onmsg?.(w.last); }; w.onopen = () => res(w); w.onerror = e => rej(new Error(e.message || "ws error")); });
+// Real phones reconnect on failure (app.js); bots retry a failed handshake once too, and we report how often it happened.
+const open = async (q) => { try { return await open1(q); } catch (e) { retries++; await new Promise(r => setTimeout(r, 500)); return open1(q); } };
 const host = await open(process.env.SEASON === "1" ? "role=host" : "role=host&practice=1"); // practice rooms never touch the season board
 const bots = [];
 const names = N === 3 ? ["Ana", "Bo", "Cy"] : Array.from({ length: N }, (_, i) => "bot" + i);
@@ -15,7 +18,7 @@ await Promise.all(names.map(async n => {
     b.sentAt = Date.now(); b.send(JSON.stringify({ t: "answer", v })); }
     if (s.t === "state" && s.phase === "reveal" && b.sentAt) { lat.push(Date.now() - b.sentAt); b.sentAt = 0; } };
 }));
-console.log(`${N} players joined in ${Date.now() - t0} ms`);
+console.log(`${N} players joined in ${Date.now() - t0} ms (handshake retries: ${retries})`);
 await new Promise(r => setTimeout(r, 300));
 const rounds = [];
 await new Promise((res, rej) => {
