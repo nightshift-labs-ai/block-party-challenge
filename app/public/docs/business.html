@@ -1,0 +1,201 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Business model, 3-scenario year-1 model, competitors</title><style>body{font:16px/1.55 system-ui,"Noto Sans KR",sans-serif;max-width:900px;margin:2em auto;padding:0 1em;background:#14161f;color:#e8e8ee}a{color:#f2c94c}
+table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px solid #333a4d;padding:6px 8px;vertical-align:top}th{background:#262b3b}code{background:#262b3b;padding:1px 4px}h1,h2,h3{color:#f2c94c}</style><p><a href="./">← all docs</a></p><h1>Block Party Challenge: business model (draft, 2026-11-06)</h1>
+<p>Partner creator: <strong>GodDot / Dname</strong> (YouTube @d_name0). Every number below that is not a public count is an <strong>assumption</strong>,
+marked (A). The model is in <code>tools/model.py</code>, so judges and the creator can change the inputs and re-run it.</p>
+<h2>1. Who pays, and why they would</h2>
+<table>
+<thead>
+<tr>
+<th>Payer</th>
+<th>What they get</th>
+<th>Why they pay</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Brands</strong> (snacks, kids&#39; food, stationery, mobile games)</td>
+<td>A sponsored weekly &quot;Dname Final&quot; episode: branded round, logo on the big screen, the prize</td>
+<td>They already buy kids&#39; attention through creators. Here it comes as <em>play time</em>, not a 5-second mention.</td>
+</tr>
+<tr>
+<td><strong>Fans&#39; parents</strong> (Fan Pass ₩4,900/mo)</td>
+<td>Private rooms for friend groups, custom question packs, cosmetics, a season badge</td>
+<td>The kid wants to play &quot;Dname&#39;s game&quot; with friends between videos. Price is in the range of one snack run.</td>
+</tr>
+<tr>
+<td><strong>Fans</strong> (cosmetics ₩1,000–5,000)</td>
+<td>Blocky avatars, reveal effects, emotes. No pay-to-win.</td>
+<td>Status inside the room, and on Dname&#39;s stream.</td>
+</tr>
+<tr>
+<td><strong>Teachers / academies</strong> (group licence ₩9,900/mo)</td>
+<td>Ad-free classroom mode, custom quiz packs on school topics</td>
+<td>Phones-as-buzzers party games are already used in classrooms. Jackbox and Kahoot prove the format.</td>
+</tr>
+</tbody></table>
+<p>Prizes are <strong>always sponsor-funded with free entry</strong>. Players never pay to enter, and nothing random can be bought.
+This keeps it out of gambling/lottery rules and is a hard design rule, not a later fix.</p>
+<h2>2. Funnel (how players arrive)</h2>
+<p>Public counts (2026-11-06): 270K subscribers, median <strong>≈1.7M views</strong> over the last 50 shorts, but recent uploads are rare and
+weaker (13K–755K). The model therefore uses lower view numbers than the median.</p>
+<ol>
+<li>Dname posts a short that <em>is</em> a game round (&quot;Don&#39;t say ㄹ&quot;, &quot;Find the diamond&quot;) and ends with &quot;join this week&#39;s final: QR / link in the pinned comment&quot;.</li>
+<li>Viewers play the same round on their phones in the weekly live final. The best moments become his next short.</li>
+<li>Between finals, the <strong>Daily Challenge</strong> (live now: <code>/?daily=1</code>) catches viewers whenever they watch a short. Its shareable 🟩🟨⬛ result brings in friends.</li>
+<li>Players bring friends into private rooms (Fan Pass), and teachers find it through students.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Input (A)</th>
+<th>Conservative</th>
+<th>Base</th>
+<th>Optimistic</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Shorts per month featuring the game</td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Views per short</td>
+<td>300K</td>
+<td>800K</td>
+<td>1.7M</td>
+</tr>
+<tr>
+<td>View → player join rate</td>
+<td>0.5%</td>
+<td>1%</td>
+<td>2%</td>
+</tr>
+<tr>
+<td>Month-to-month player retention</td>
+<td>25%</td>
+<td>30%</td>
+<td>35%</td>
+</tr>
+<tr>
+<td>Fan Pass conversion (of monthly players)</td>
+<td>0.5%</td>
+<td>1%</td>
+<td>1.5%</td>
+</tr>
+<tr>
+<td>Cosmetics buyers (of monthly players, ₩3,000 avg)</td>
+<td>1%</td>
+<td>2%</td>
+<td>3%</td>
+</tr>
+<tr>
+<td>Sponsored episodes per month from month 3 (₩2M each)</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Classroom licences by month 12</td>
+<td>10</td>
+<td>40</td>
+<td>100</td>
+</tr>
+</tbody></table>
+<h2>3. Results (year 1, <code>python3 tools/model.py</code>, ₩1,380 = $1)</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Monthly players at m12</th>
+<th>Gross revenue m12</th>
+<th><strong>Year-1 gross</strong></th>
+<th>Year-1 net of ~10% payment fees</th>
+<th>Creator&#39;s 20% share</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Conservative</td>
+<td>2,000</td>
+<td>₩0.2M</td>
+<td>₩1.9M ($1.4K)</td>
+<td>₩1.7M</td>
+<td>₩0.34M ($250)</td>
+</tr>
+<tr>
+<td><strong>Base</strong></td>
+<td>22,900</td>
+<td>₩4.9M</td>
+<td><strong>₩51M ($37K)</strong></td>
+<td>₩46M</td>
+<td><strong>₩9.3M ($6.7K)</strong></td>
+</tr>
+<tr>
+<td>Optimistic</td>
+<td>104,600</td>
+<td>₩22M</td>
+<td>₩242M ($176K)</td>
+<td>₩218M</td>
+<td>₩44M ($32K)</td>
+</tr>
+</tbody></table>
+<p>What the model shows:</p>
+<ul>
+<li><strong>Sponsorship is the biggest line</strong> in the base case (≈40% of revenue). The game turns his audience into a sellable ad format
+without asking kids to pay. That matters most for a kids&#39; audience.</li>
+<li>Revenue depends on <strong>shorts featuring the game</strong>. The game is built to <em>be</em> his content, with a streamer overlay, keyboard-driven
+host and replayable rounds, so making that short costs him less effort than his current Minecraft setups.</li>
+<li>Infrastructure is not a meaningful cost (README &quot;Unit cost&quot;: ≈$1–5 per million player-episodes). Margin is set by payment fees and support.</li>
+</ul>
+<h2>4. Competitors and alternatives</h2>
+<table>
+<thead>
+<tr>
+<th>Alternative</th>
+<th>What it does well</th>
+<th>Why Block Party fits Dname&#39;s audience better</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Custom Minecraft/Roblox maps</strong> (what he does now)</td>
+<td>Rich 3D worlds, his brand look</td>
+<td>Viewers need a PC/console, an account and a server slot, so only a handful can play. Block Party: any phone, a link, hundreds per room.</td>
+</tr>
+<tr>
+<td><strong>YouTube Live Playables</strong> (Sep 2025)</td>
+<td>Built into YouTube, zero setup</td>
+<td>Only the creator plays; viewers watch and chat. In Block Party every viewer plays.</td>
+</tr>
+<tr>
+<td><strong>Jackbox-style party packs</strong></td>
+<td>Proven phone-as-controller format that people pay for</td>
+<td>Generic content, bought per pack, meant for living rooms. Block Party is free, runs his formats and has a stream overlay.</td>
+</tr>
+<tr>
+<td><strong>Kahoot / classroom quiz tools</strong></td>
+<td>Huge classroom reach</td>
+<td>Quiz-only (right/wrong answers). Block Party&#39;s rounds are social (greed, telepathy, luck), so anyone can win. That is the appeal of his videos.</td>
+</tr>
+<tr>
+<td><strong>Chat polls / prediction widgets</strong></td>
+<td>Easy for streamers</td>
+<td>One question, no game, no score. Block Party has episodes, a season leaderboard and replays that make shorts.</td>
+</tr>
+</tbody></table>
+<p>The moat is not the technology. It is <strong>his formats + his audience + the weekly final + the season leaderboard</strong>, which a generic tool cannot copy.
+(Product descriptions are from each product&#39;s public pages. We did not verify current prices, so none are quoted.)</p>
+<h2>5. Costs and risks</h2>
+<ul>
+<li><strong>Costs:</strong> Cloudflare Workers Paid ($5/mo) once past the free tier; payment gateway fees (≈3–10%, assumed 10%); question-pack
+writing and moderation (a few hours a week); a Korean game rating before paid features launch (GRAC/self-rating; <strong>to check</strong>).</li>
+<li><strong>Minors:</strong> paid features go through a parent (web payment with parental consent, gift cards/vouchers). Free text only appears
+in the &quot;Don&#39;t Say It&quot; round: blocklist, 16-character limit and a host veto.</li>
+<li><strong>Creator dependency:</strong> rare uploads would mean fewer players, which is the conservative scenario. The friend-room and classroom
+modes work without new videos.</li>
+<li><strong>Copying:</strong> the format is easy to copy. The moat is Dname&#39;s audience, his weekly final and the season leaderboard, not the code.</li>
+</ul>
+<h2>6. Milestones</h2>
+<ol>
+<li>Month 0–1: Dname plays one episode on stream, posts the clip, and we measure the real join rate (replaces the (A) inputs).</li>
+<li>Month 2: Fan Pass + cosmetics. First sponsor pitch, with the measured numbers.</li>
+<li>Month 3+: weekly sponsored final, classroom mode, Korean question packs written with the creator.</li>
+</ol>

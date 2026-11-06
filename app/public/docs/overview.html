@@ -1,0 +1,98 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Overview, how it plays, tech & unit cost</title><style>body{font:16px/1.55 system-ui,"Noto Sans KR",sans-serif;max-width:900px;margin:2em auto;padding:0 1em;background:#14161f;color:#e8e8ee}a{color:#f2c94c}
+table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px solid #333a4d;padding:6px 8px;vertical-align:top}th{background:#262b3b}code{background:#262b3b;padding:1px 4px}h1,h2,h3{color:#f2c94c}</style><p><a href="./">← all docs</a></p><h1>Block Party Challenge · 블록 파티 챌린지 (working title)</h1>
+<p><strong>For creator partner: GodDot / Dname (YouTube @d_name0)</strong> — Hack the Audience 2026 (Extriver Partners). DRAFT.</p>
+<p>Live prototype: <a href="https://extriver-proto.nightshift-labs.workers.dev">https://extriver-proto.nightshift-labs.workers.dev</a> · Status page: <a href="https://extriver-monitor.nightshift-labs.workers.dev/status">https://extriver-monitor.nightshift-labs.workers.dev/status</a></p>
+<p>Docs: <a href="business.html">business model + 3-scenario funnel</a> (<code>tools/model.py</code>) · <a href="research.html">creator research</a> · pitch deck <code>docs/pitch.pdf</code> · 2:40 demo video <code>docs/demo.mp4</code> (real recorded episode with 10 players; rebuild with <code>tools/recvideo.mjs</code> + <code>tools/makevideo.sh</code>).</p>
+<h2>The idea in one line</h2>
+<p>Dname&#39;s shorts are already games — &quot;find the diamond and win&quot;, greed game, block telepathy, trust game — and his tagline is
+&quot;Subscribe and join the game!&quot;. Block Party Challenge lets his viewers actually play those formats <strong>with him and with each other</strong>:
+one big screen (his stream, a classroom TV, a living-room TV) and everyone joins from their phone with a 4-letter code or QR. No app, no account.</p>
+<h2>How it plays</h2>
+<ul>
+<li>Host opens the site on a big screen → room code + QR. Up to <strong>300 phones</strong> per room (streamer mode), 4–12 for friend groups.</li>
+<li>An <em>episode</em> = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:<ul>
+<li><strong>Telepathy</strong> (텔레파시) — pick the answer most people will pick. Points = how many others matched you.</li>
+<li><strong>Greed</strong> (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.</li>
+<li><strong>Find the Diamond</strong> (다이아 찾기) — a 5×5 block field hides one diamond; closer picks score more.</li>
+<li><strong>Block Telepathy</strong> (블록 텔레파시) — pick the block the crowd picks.</li>
+<li><strong>Don&#39;t Say It</strong> (금지어 챌린지) — from his top short (&quot;Don&#39;t say ㄹ and win&quot;, 5.5M views): name something in a category with one typed word; Korean words containing ㄹ anywhere (라, 를, 닭…) or English words with an E are busted. Unique clean words score double. The host/streamer can tap any word to reject it (off-topic or not OK on stream); a kid-safety blocklist hides bad words before they ever reach the big screen.</li>
+<li><strong>Lava</strong> (용암) — 8 of 25 blocks turn to lava after everyone picks; survive, and stand alone for a bonus (from his &quot;escape the lava&quot; challenge).</li>
+</ul>
+</li>
+<li><strong>Try it alone</strong> (for judges and first-time visitors): the home-page button &quot;Try it alone (with 6 bots)&quot; opens a practice room where 6 bot players join
+from the host page. Open the join link on your phone or in a second tab and play a full episode alone. Practice rooms never touch the season board.</li>
+<li><strong>Daily Challenge</strong> (<code>/?daily=1</code>, 오늘의 챌린지): shorts viewers arrive at any hour, not just during the weekly live final. Every Korean day has
+the same 5 rounds for everyone (seeded by date). You play against <em>today&#39;s crowd</em>: telepathy scores the % of players who picked what you picked,
+and lava gives a bonus if under 5% stood on your block. Ends with a Wordle-style shareable result (🟩🟨⬛ + points + link): the share loop
+that brings players between videos. One SQLite Durable Object per day; one answer per device per round.</li>
+<li><strong>Sponsored episodes</strong> (business model, built in): host URL <code>/?title=Dname Final #1&amp;sponsor=Snack Co&amp;prize=Top 3 get a snack box</code> shows a banner on the big
+screen and every phone (&quot;presented by … · free entry&quot;). The prize is only described. Nothing is collected or paid through the game. Works in the overlay URL too.</li>
+<li><strong>Streamer overlay</strong>: <code>/?overlay=1</code> as an OBS/stream browser source — transparent background, outlined text, keyboard-driven (Space/Enter: start → reveal → next), so Dname can run a live &quot;Dname Final&quot; with viewers on their phones.</li>
+<li>Results reveal on the big screen (vote bars, the greedy total, the dug-up grid), then a leaderboard. Every finished episode feeds a <strong>weekly season top 10</strong>.</li>
+</ul>
+<h2>Why Dname&#39;s audience (research summary — see RESEARCH.md)</h2>
+<ul>
+<li>Highest reach per video among the five partners: median ≈1.7M views per short (top 5.5M), 270K subscribers (counts from 2026-11-06).</li>
+<li>Every video is a viewer-prize challenge built on simple game theory (greed, trust, telepathy, luck) — exactly the rounds above.</li>
+<li>Korean kids/teens audience <em>(not verified; no public demographics)</em> → no-install, phone-as-controller, classroom- and friend-group-friendly.</li>
+<li>Content flywheel: the weekly &quot;Dname Final&quot; room is streamed/recorded → becomes his next short → brings new players → next week&#39;s final.</li>
+</ul>
+<h2>Business model (draft)</h2>
+<ul>
+<li><strong>Free to play</strong> — a game must spread before it can earn.</li>
+<li><strong>Fan Pass ₩4,900/month</strong>: private rooms with custom question packs, extra cosmetics, a season badge. (Payments by parents/vouchers; minors protections apply.)</li>
+<li><strong>Cosmetics ₩1,000–5,000</strong>: blocky avatars, reveal effects, emotes — no pay-to-win.</li>
+<li><strong>Sponsored episodes</strong>: a brand sponsors a weekly episode and its prizes (snack/food brands already appear in his niche). Prizes are always <strong>free-entry and sponsor-funded, never paid by players</strong> (no gambling/lottery mechanics).</li>
+<li><strong>Group licence</strong> for classrooms/academies (Jackbox-style party games show people pay for this format).</li>
+<li>Costs: serverless (Cloudflare Workers + Durable Objects) — near-zero at rest, scales per room; numbers to be measured in the load test.</li>
+<li>Open checks before a commercial launch: Korean game rating (GRAC) for online games, payment rules for minors.</li>
+</ul>
+<h2>Unit cost (estimate from Cloudflare&#39;s published Durable Objects pricing, checked 2026-11-06)</h2>
+<p>Pricing: requests $0.15 per million (incoming WebSocket messages count 20:1), duration $12.50 per million GB-s (128 MB per object; <strong>hibernated rooms are not billed</strong>), SQLite rows written $1.00 per million. Free plan: 100k requests, 13,000 GB-s and 100k rows written per day.</p>
+<table>
+<thead>
+<tr>
+<th>One 7-round episode</th>
+<th>10 players (friends)</th>
+<th>300 players (stream)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DO requests (1 join + 7 answers ÷ 20 per player)</td>
+<td>≈ 14</td>
+<td>≈ 405</td>
+</tr>
+<tr>
+<td>Active duration (≈0.3 s per broadcast burst, assumed)</td>
+<td>≈ 15 s → 2 GB-s</td>
+<td>≈ 105 s → 13 GB-s</td>
+</tr>
+<tr>
+<td>Rows written (state snapshots, throttled)</td>
+<td>≈ 20</td>
+<td>≈ 60</td>
+</tr>
+<tr>
+<td><strong>Cost</strong></td>
+<td><strong>≈ $0.00003</strong></td>
+<td><strong>≈ $0.0003</strong></td>
+</tr>
+</tbody></table>
+<p>So 1 million player-episodes cost roughly <strong>$1–5</strong> in infrastructure, and the free plan alone covers about 250 streamer-size episodes a day (its 100k-request limit binds before the 13,000 GB-s duration limit); beyond that the paid plan ($5/month base) applies.
+Margins are therefore set by payment fees and app-store/PG cuts, not servers. Duration per burst is an assumption to be replaced with measured analytics after the load test.</p>
+<h2>Tech &amp; operations (DevOps bonus)</h2>
+<ul>
+<li><strong>Edge-native realtime</strong>: each room is one Durable Object holding the WebSocket connections and the authoritative game state; static assets on Cloudflare&#39;s CDN.</li>
+<li><strong>Hibernation</strong>: rooms use hibernatable WebSockets; state is snapshotted to Durable Object storage and round timers are storage alarms, so an idle room costs nothing and survives eviction (<code>app/test/alarm-e2e.mjs</code>).</li>
+<li><strong>Scale test (latest 2026-11-06, current 7-round episode incl. the typed-word round, hibernation + persisted state)</strong>: one room, 200 simulated phones over the public internet, full episode, 1,400 answers, answer→reveal latency <strong>p50 219 ms, p95 260 ms</strong>, 0 errors, 0 handshake retries (<code>app/test/room-e2e.mjs &lt;url&gt; 200</code>). Earlier runs the same day: p50 192–238 ms.</li>
+<li><strong>Monitoring</strong>: separate cron Worker pings <code>/health</code> every 5 min, public status page with 24 h uptime and p50/p95.</li>
+<li><strong>Safety</strong>: input validation, per-IP rate limits on room creation and score writes, names sanitised, answers validated server-side, diamonds hidden from clients until reveal.</li>
+<li><strong>Tests</strong>: unit (game scoring, season week ids, API validation), e2e (host + bots over WebSocket), Playwright UI test (host + 2 phones, screenshots).</li>
+<li><strong>Rollback</strong>: every deploy is a versioned Worker (<code>wrangler rollback</code>). CI/CD pipeline: planned with the public repo.</li>
+</ul>
+<h2>Honest notes</h2>
+<ul>
+<li>Built by <strong>Nightshift Labs, an AI-agent-run studio</strong> (the code, research and design were produced by an AI agent; a human owner registers and signs).</li>
+<li>Original game: blocky art style made in CSS, no Minecraft/Mojang assets or names, no copyrighted music. QR code library: qrcode-generator (MIT, Kazuhiko Arase).</li>
+<li>Prototype started 2026-11-06 (during the hackathon window).</li>
+</ul>

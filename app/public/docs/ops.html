@@ -1,0 +1,52 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Operations: deploy, rollback, monitoring, load test</title><style>body{font:16px/1.55 system-ui,"Noto Sans KR",sans-serif;max-width:900px;margin:2em auto;padding:0 1em;background:#14161f;color:#e8e8ee}a{color:#f2c94c}
+table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px solid #333a4d;padding:6px 8px;vertical-align:top}th{background:#262b3b}code{background:#262b3b;padding:1px 4px}h1,h2,h3{color:#f2c94c}</style><p><a href="./">← all docs</a></p><h1>Operations runbook: Block Party Challenge</h1>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Production</td>
+<td><a href="https://extriver-proto.nightshift-labs.workers.dev">https://extriver-proto.nightshift-labs.workers.dev</a> (Cloudflare Worker <code>extriver-proto</code>, static assets + Durable Objects <code>Room</code>, <code>Board</code>, <code>Daily</code>)</td>
+</tr>
+<tr>
+<td>Health</td>
+<td><code>GET /health</code> → <code>{ok, version, kv, time}</code> (503 if storage fails)</td>
+</tr>
+<tr>
+<td>Uptime monitor</td>
+<td>separate cron Worker <code>extriver-monitor</code>, pings /health every 5 min, keeps 24 h → <a href="https://extriver-monitor.nightshift-labs.workers.dev/status">https://extriver-monitor.nightshift-labs.workers.dev/status</a> (+ <code>/status.json</code>)</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td><code>.github/workflows/ci.yml</code>: unit tests on every push/PR. On <code>main</code>: deploy, smoke test production (health + full WebSocket episode), <strong>automatic rollback</strong> to the previous version if the smoke test fails</td>
+</tr>
+</tbody></table>
+<h2>Deploy by hand</h2>
+<pre><code>cd app &amp;&amp; npm test &amp;&amp; npx wrangler@4 deploy
+node test/room-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev        # 3 bots, full episode, host veto check
+node test/room-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev 200    # load: 200 phones in one room, prints p50/p95
+node test/alarm-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev       # round timer fires with no answers (storage alarm)
+node ../tools/uitest.mjs &lt;url&gt; &lt;dir&gt;; node ../tools/dailytest.mjs &lt;url&gt; &lt;dir&gt;; node ../tools/overlaytest.mjs &lt;url&gt; &lt;dir&gt;   # browser tests
+</code></pre>
+<h2>Roll back</h2>
+<p>Every deploy is an immutable Worker version.</p>
+<pre><code>npx wrangler@4 deployments list            # find the last good version id
+npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
+</code></pre>
+<p>Durable Object storage is not rolled back. Schema changes are additive only (<code>CREATE TABLE IF NOT EXISTS</code>, new classes through new migration tags), so an older version still reads the data.</p>
+<h2>Scaling and limits</h2>
+<ul>
+<li>One Durable Object per room: rooms scale out independently. Measured: 200 phones in one room, p50 ≈ 0.2 s answer→reveal (README).</li>
+<li>Answer bursts are coalesced into one broadcast per 120 ms in rooms over 20 players. Snapshots are throttled to ≤ 1/s.</li>
+<li>Rooms hibernate when idle (no duration billing). Round timers are storage alarms, so a room evicted mid-round still reveals on time.</li>
+<li>Abuse: per-IP rate limits (room creation 10/min, scores 20/min, daily answers 60/min), server-side validation of every answer, hidden cells never sent before the reveal.</li>
+</ul>
+<h2>Incidents</h2>
+<ol>
+<li>The status page shows failures → <code>curl -i &lt;url&gt;/health</code>, then <code>npx wrangler@4 tail extriver-proto</code> for live logs.</li>
+<li>A bad deploy → roll back (above), then fix forward with a test that reproduces it.</li>
+<li>A room is stuck → the host&#39;s &quot;Play again&quot; resets it, and players reconnect automatically (1.5 s retry) with their id kept in sessionStorage.</li>
+</ol>
