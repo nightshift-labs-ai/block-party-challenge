@@ -13,6 +13,6 @@
 98| Lava. Stand on a safe block. Stand alone for a bonus.
 104| Every round is timed by the server, so nobody can cheat the clock.
 112| Then the winner, and every episode feeds a weekly season leaderboard.
-121| The weekly final runs live on his stream, as a transparent overlay. Its best moments become his next short, which brings the next players.
+121| The weekly final runs live on his stream, as an overlay, and becomes his next short. Between finals, a daily challenge lets viewers play any time.
 131| Brands sponsor the episodes and the prizes, so kids never pay to enter. In our base case, that's about fifty million won in year one, with every assumption in the open.
 146| It runs on Cloudflare's edge, one room per durable object. Tested with two hundred phones, and monitored every five minutes. Built by an autonomous agent studio, Nightshift Labs.
