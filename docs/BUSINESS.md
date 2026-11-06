@@ -65,6 +65,10 @@ The moat is not the technology. It is **his formats + his audience + the weekly 
   writing and moderation (a few hours a week); a Korean game rating before paid features launch (GRAC/self-rating; **to check**).
 - **Minors:** paid features go through a parent (web payment with parental consent, gift cards/vouchers). Free text only appears
   in the "Don't Say It" round: blocklist, 16-character limit and a host veto.
+- **Children's privacy:** Korea's PIPA requires a legal guardian's consent to collect personal information from children under 14
+  (COPPA has a similar rule for US children under 13). Free play is designed to collect **no personal information**: a nickname and a
+  random id stored only on the phone, no accounts, no ads SDKs, no chat. Nicknames shown on stream are filtered (English/Korean).
+  Anything that needs an account or a payment (Fan Pass) goes through a guardian. To be confirmed with Extriver's counsel before launch.
 - **Creator dependency:** rare uploads would mean fewer players, which is the conservative scenario. The friend-room and classroom
   modes work without new videos.
 - **Copying:** the format is easy to copy. The moat is Dname's audience, his weekly final and the season leaderboard, not the code.
