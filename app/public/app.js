@@ -3,6 +3,15 @@ const $app = document.getElementById("app");
 const T = (en, ko) => `${en} <span class="ko">${ko}</span>`;
 const bi = (en, ko) => ko && ko !== en ? `${esc(en)} <span class="ko">${esc(ko)}</span>` : esc(en);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// Streamer overlay: ?overlay=1 → transparent background for an OBS/stream "browser source"; host keys: Space/Enter = start/reveal/next.
+const OVERLAY = new URLSearchParams(location.search).get("overlay") === "1";
+if (OVERLAY) document.documentElement.classList.add("overlay");
+addEventListener("keydown", e => {
+  if (role !== "host" || !S || !(e.key === " " || e.key === "Enter")) return;
+  e.preventDefault();
+  const id = { lobby: "start", question: "skip", reveal: "next", final: "again" }[S.phase];
+  document.getElementById(id)?.click();
+});
 const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "");
 // Tiny WebAudio synth (no audio files): ticks, reveal sting, join pop. Host screen only; starts after a user click.
 let actx = null;
@@ -27,7 +36,8 @@ function home() {
   $app.innerHTML = `
   <h1>Block Party Challenge<br><span class="ko">블록 파티 챌린지</span></h1>
   <div class="panel"><p>${T("One big screen, everyone plays on their phone. Read the crowd, don't get greedy, find the diamond.", "큰 화면 하나, 모두 폰으로 참가! 눈치 보고, 욕심 내지 말고, 다이아를 찾아라.")}</p>
-  <button class="btn alt" id="host">${T("Host on this screen", "이 화면에서 방 만들기")}</button></div>
+  <button class="btn alt" id="host">${T("Host on this screen", "이 화면에서 방 만들기")}</button>
+  <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1" style="color:var(--gold)">${esc(location.host)}/?overlay=1</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
   <div class="panel"><b>${T("Join a room", "방 참가")}</b>
   <input id="code" maxlength="4" placeholder="CODE" value="${esc(q)}" autocapitalize="characters">
   <input id="name" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}">
@@ -128,7 +138,7 @@ function render() {
       $app.innerHTML = `<h1>${T("Join on your phone", "폰으로 참가하세요")}</h1>
       <div class="panel center"><div>${esc(location.host)}</div><div class="code">${code}</div><small>${esc(join)}</small><br><div class="qr">${qrSvg(join)}</div></div>
       <div class="panel"><b>${S.playerCount} ${T("players", "명")}</b><div class="players">${S.players.slice(0, 30).map(p => `<span class="chip ${p.online ? "" : "off"}">${esc(p.name)}</span>`).join("") || T("Waiting for players…", "참가자 기다리는 중…")}${S.playerCount > 30 ? `<span class="chip">+${S.playerCount - 30}</span>` : ""}</div></div>
-      <button class="btn" id="start" ${S.players.length ? "" : "disabled"}>${T("Start episode", "게임 시작")}</button>`;
+      <button class="btn" id="start" ${S.players.length ? "" : "disabled"}>${T("Start episode", "게임 시작")}</button><span class="keys">Space / Enter</span>`;
       document.getElementById("start").onclick = () => send({ t: "start" });
     } else if (S.phase === "question") {
       $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds} · ${code}</small><h1 class="big">${roundTitle(c)}</h1>${timerBar()}
