@@ -3,9 +3,9 @@
 // Recap data is collected on the host screen only (round headline + the one number that made the moment).
 
 const plain = s => String(s ?? "");
-export const recap = { rounds: [], players: 0, title: "" };
+export const recap = { rounds: [], players: 0, title: "", sponsor: "", prize: "" };
 
-export function resetRecap() { recap.rounds = []; recap.players = 0; recap.title = ""; }
+export function resetRecap() { recap.rounds = []; recap.players = 0; recap.title = ""; recap.sponsor = ""; recap.prize = ""; }
 
 // Called on every question → reveal transition (host).
 export function addRound(S) {
@@ -36,6 +36,8 @@ export function addRound(S) {
   recap.rounds.push({ round: S.round, head, hk, big, sub, sk });
   recap.players = Math.max(recap.players, S.playerCount || 0);
   if (S.brand?.title) recap.title = S.brand.title;
+  if (S.brand?.sponsor) recap.sponsor = S.brand.sponsor;
+  if (S.brand?.prize) recap.prize = S.brand.prize;
 }
 
 // ---- drawing ----
@@ -82,6 +84,7 @@ export function buildScenes(players) {
     else { text(ctx, "BLOCK", 560, 150, "#ffd23f"); text(ctx, "PARTY", 720, 150, "#3bceac"); text(ctx, "CHALLENGE", 860, 100); }
     ctx.restore();
     text(ctx, `${recap.players || players.length}명 · ${recap.rounds.length}라운드`, 1080, 70, "#fff", 800); text(ctx, `${recap.players || players.length} players · ${recap.rounds.length} rounds`, 1170, 48, "#ddd", 700); text(ctx, "블록 파티 챌린지", 1400, 72, "#ffd23f", 900);
+    if (recap.sponsor) { text(ctx, "제공 · presented by", 1560, 44, "#ddd", 700); text(ctx, recap.sponsor, 1640, 76, "#fff", 900); }
   } }];
   recap.rounds.forEach((r, i) => scenes.push({ dur: 2.6, draw: (ctx, t) => {
     blocks(ctx, t + i * 3, (i * 67) % 360);
@@ -107,6 +110,7 @@ export function buildScenes(players) {
       }
     });
     if (t > 2.2) { text(ctx, "다음 에피소드에 같이 하자!", 1660, 68, "#fff", 900); text(ctx, "Play along next episode!", 1750, 46, "#ddd", 700); }
+    if (recap.sponsor) text(ctx, `${recap.prize ? recap.prize + " · " : ""}presented by ${recap.sponsor}`, 1840, 40, "#ffd23f", 800);
   } });
   return scenes;
 }
