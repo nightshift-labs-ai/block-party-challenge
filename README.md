@@ -24,6 +24,8 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
   the same 5 rounds for everyone (seeded by date). You play against *today's crowd*: telepathy scores the % of players who picked what you picked,
   and lava gives a bonus if under 5% stood on your block. Ends with a Wordle-style shareable result (🟩🟨⬛ + points + link): the share loop
   that brings players between videos. One SQLite Durable Object per day; one answer per device per round.
+- **Sponsored episodes** (business model, built in): host URL `/?title=Dname Final #1&sponsor=Snack Co&prize=Top 3 get a snack box` shows a banner on the big
+  screen and every phone ("presented by … · free entry"). The prize is only described. Nothing is collected or paid through the game. Works in the overlay URL too.
 - **Streamer overlay**: `/?overlay=1` as an OBS/stream browser source — transparent background, outlined text, keyboard-driven (Space/Enter: start → reveal → next), so Dname can run a live "Dname Final" with viewers on their phones.
 - Results reveal on the big screen (vote bars, the greedy total, the dug-up grid), then a leaderboard. Every finished episode feeds a **weekly season top 10**.
 

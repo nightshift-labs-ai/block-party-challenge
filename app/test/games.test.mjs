@@ -52,3 +52,8 @@ test("daily: deterministic per date, scoring vs crowd", () => {
   assert.equal(scoreDaily(a[3], safe, { [safe]: 1 }, 40), 200); assert.equal(scoreDaily(a[3], safe, { [safe]: 1 }, 5), 150); assert.equal(scoreDaily(a[3], a[3].lava[0], {}, 5), 0);
   assert.equal(kstDate(Date.UTC(2026, 10, 6, 15, 30)), "2026-11-07");
 });
+import { cleanBrand } from "../src/room.js";
+test("brand: sanitised + capped", () => {
+  assert.deepEqual(cleanBrand({ title: "<b>Dname Final</b>", sponsor: "Snack Co", prize: "x".repeat(99) }), { title: "bDname Final/b", sponsor: "Snack Co", prize: "x".repeat(60) });
+  assert.equal(cleanBrand({}), null);
+});

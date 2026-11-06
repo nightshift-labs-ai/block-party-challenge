@@ -29,7 +29,7 @@ const sfx = {
   reveal: () => [392, 523, 659, 1047].forEach((f, i) => beep(f, 0.15, "triangle", 0.09, i * 0.08)),
   bust: () => [300, 200, 120].forEach((f, i) => beep(f, 0.2, "sawtooth", 0.07, i * 0.12)),
 };
-let phoneKey = null, lastTick = 0, ws = null, S = null, role = null, code = null, myPick = null, tick = null;
+let brandSent = false, phoneKey = null, lastTick = 0, ws = null, S = null, role = null, code = null, myPick = null, tick = null;
 
 function home() {
   const q = new URLSearchParams(location.search).get("code") || "";
@@ -79,7 +79,13 @@ function connect(q) {
         if (m.phase === "question" && (prev?.phase !== "question" || prev.round !== m.round)) sfx.start();
         if (m.phase === "reveal" && prev?.phase === "question") (m.result && m.result.ok === false ? sfx.bust : sfx.reveal)();
       }
+      if (role === "host" && m.phase === "lobby" && !brandSent) {
+        brandSent = true; const u = new URLSearchParams(location.search);
+        if (u.get("title") || u.get("sponsor") || u.get("prize")) send({ t: "brand", title: u.get("title"), sponsor: u.get("sponsor"), prize: u.get("prize") });
+      }
       render();
+      const b = S.brand;
+      if (b && !$app.querySelector(".brand")) $app.insertAdjacentHTML("afterbegin", `<div class="brand">${b.title ? `<b>${esc(b.title)}</b>` : ""}${b.sponsor ? ` · ${T("presented by", "제공")} <b>${esc(b.sponsor)}</b>` : ""}${b.prize ? `<br><small>🎁 ${esc(b.prize)} · ${T("free entry", "무료 참가")}</small>` : ""}</div>`);
     }
   };
   ws.onclose = () => setTimeout(() => { if (role) connect(role === "host" ? hostQ() : `name=${encodeURIComponent(localStorage.bpName)}&pid=${sessionStorage["bp" + code] || ""}`); }, 1500);

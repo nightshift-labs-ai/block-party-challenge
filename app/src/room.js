@@ -19,11 +19,11 @@ export class Room {
   async _load() {
     const g = await this.state.storage.get("g");
     this.players = new Map((g?.players || []).map(p => [p.pid, p]));
-    Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false }, g ? { phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
+    Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false, brand: null }, g ? { brand: g.brand || null, phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
     this.loaded = true;
   }
   async save() {
-    await this.state.storage.put("g", { phase: this.phase, round: this.round, episode: this.episode, answers: this.answers, result: this.result, deadline: this.deadline, noSeason: this.noSeason, players: [...this.players.values()] });
+    await this.state.storage.put("g", { phase: this.phase, round: this.round, episode: this.episode, answers: this.answers, result: this.result, deadline: this.deadline, noSeason: this.noSeason, brand: this.brand, players: [...this.players.values()] });
   }
   reset() { this.phase = "lobby"; this.round = -1; this.episode = null; this.answers = {}; this.result = null; this.deadline = 0; this.state.storage.deleteAlarm(); }
   hostWs() { return this.state.getWebSockets("host")[0] || null; }
@@ -79,6 +79,7 @@ export class Room {
     else if (m.t === "next" && this.phase === "reveal") this.next();
     else if (m.t === "skip" && this.phase === "question") this.reveal();
     else if (m.t === "veto" && this.phase === "reveal" && this.episode?.[this.round]?.kind === "taboo" && typeof m.w === "string") this.veto(m.w);
+    else if (m.t === "brand" && this.phase === "lobby") { this.brand = cleanBrand(m); this.broadcast(); }
     else if (m.t === "again" && this.phase === "final") { for (const p of this.players.values()) p.score = 0; this.reset(); this.broadcast(); }
   }
 
@@ -136,7 +137,7 @@ export class Room {
     const pub = r && { kind: r.kind, q: r.q, opts: r.opts, qk: r.qk, ok: r.ok, pot: r.pot, maxTake: r.maxTake, secs: r.secs };
     if (r && this.phase !== "question" && r.kind === "diamond") pub.diamond = r.diamond; // hidden until reveal
     return {
-      t: "state", phase: this.phase, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
+      t: "state", phase: this.phase, brand: this.brand, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
       current: pub, result: this.phase === "question" || !this.result ? null : full ? this.result : { ...this.result, answers: undefined, verdict: undefined, pts: forPid ? { [forPid]: this.result.pts[forPid] } : {} },
       answered: full ? Object.keys(this.answers) : forPid && forPid in this.answers ? [forPid] : [],
       answeredCount: Object.keys(this.answers).length, playerCount: this.players.size,
@@ -164,4 +165,12 @@ export class Room {
     if (key !== this.savedKey || now - (this.savedAt || 0) > 1000) { this.savedKey = key; this.savedAt = now; this.save().catch(() => {}); }
     else if (!this.saveLater) this.saveLater = setTimeout(() => { this.saveLater = null; this.savedAt = Date.now(); this.save().catch(() => {}); }, 1000);
   }
+}
+
+// Sponsored/branded episode (set by the host in the lobby): show title, sponsor and prize line on every screen.
+// Plain text only, length-capped; prizes are described, never collected or paid through the game.
+export function cleanBrand(m) {
+  const c = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, n);
+  const b = { title: c(m.title, 40), sponsor: c(m.sponsor, 30), prize: c(m.prize, 60) };
+  return b.title || b.sponsor || b.prize ? b : null;
 }
