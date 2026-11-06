@@ -45,7 +45,7 @@ Pricing: requests $0.15 per million (incoming WebSocket messages count 20:1), du
 | Rows written (state snapshots, throttled) | ≈ 20 | ≈ 60 |
 | **Cost** | **≈ $0.00003** | **≈ $0.0003** |
 
-So 1 million player-episodes cost roughly **$1–5** in infrastructure, and the free plan alone covers roughly 1,000 streamer-size episodes a day.
+So 1 million player-episodes cost roughly **$1–5** in infrastructure, and the free plan alone covers about 250 streamer-size episodes a day (its 100k-request limit binds before the 13,000 GB-s duration limit); beyond that the paid plan ($5/month base) applies.
 Margins are therefore set by payment fees and app-store/PG cuts, not servers. Duration per burst is an assumption to be replaced with measured analytics after the load test.
 
 ## Tech & operations (DevOps bonus)
