@@ -11,27 +11,29 @@ export function resetRecap() { recap.rounds = []; recap.players = 0; recap.title
 export function addRound(S) {
   const c = S.current, r = S.result || {};
   if (!c || recap.rounds.some(x => x.round === S.round)) return;
-  let head = "", big = "", sub = "";
+  let head = "", hk = "", big = "", sub = "", sk = "";
   const n = Math.max(1, S.playerCount || 1);
   if (c.kind === "telepathy") {
     const cnt = r.count || {}, tot = Object.values(cnt).reduce((a, b) => a + b, 0) || 1;
     let best = 0; for (const k in cnt) if (cnt[k] > (cnt[best] || 0)) best = +k;
-    head = "TELEPATHY"; sub = plain(c.q);
-    if (cnt[best]) { big = `${Math.round(100 * cnt[best] / tot)}%`; sub += `\n→ "${plain(c.opts?.[best])}"`; } else { big = "?"; sub += "\nNobody answered in time!"; }
+    head = "TELEPATHY"; hk = "텔레파시"; sub = plain(c.q); sk = plain(c.qk || "");
+    if (cnt[best]) { big = `${Math.round(100 * cnt[best] / tot)}%`; sub += ` → "${plain(c.opts?.[best])}"`; sk += ` → "${plain(c.ok?.[best] || c.opts?.[best])}"`; }
+    else { big = "?"; sub += " · Nobody answered in time!"; sk += " · 아무도 못 맞혔다!"; }
   } else if (c.kind === "greed") {
-    head = "GREED"; big = `${r.total ?? "?"}/${r.pot ?? c.pot}`; sub = r.ok ? "Everyone keeps their coins!" : "TOO GREEDY! Nobody gets anything.";
+    head = "GREED"; hk = "욕심 게임"; big = `${r.total ?? "?"}/${r.pot ?? c.pot}`;
+    sub = r.ok ? "Everyone keeps their coins!" : "TOO GREEDY! Nobody gets anything."; sk = r.ok ? "모두 동전 획득!" : "욕심 폭발! 모두 0점";
   } else if (c.kind === "blockmatch") {
-    const v = Object.values(r.count || {}); head = "BLOCK TELEPATHY"; big = `${Math.max(0, ...v)}`; sub = "picked the same block";
+    const v = Object.values(r.count || {}); head = "BLOCK TELEPATHY"; hk = "블록 텔레파시"; big = `${Math.max(0, ...v)}`; sub = "picked the same block"; sk = "명이 같은 블록 선택";
   } else if (c.kind === "taboo") {
-    head = "DON'T SAY IT"; big = `${r.busted ?? 0}`; sub = `busted on "${plain(c.q)}"`;
+    head = "DON'T SAY IT"; hk = "금지어 챌린지"; big = `${r.busted ?? 0}`; sub = `busted on "${plain(c.q)}"`; sk = `명 탈락 · ${plain(c.qk || "")}`;
   } else if (c.kind === "lava") {
     const cnt = r.count || {}; let burned = 0; for (const i of r.lava || []) burned += cnt[i] || 0;
-    head = "THE FLOOR IS LAVA"; big = `${burned}`; sub = burned === 1 ? "player fell in the lava" : "players fell in the lava";
+    head = "THE FLOOR IS LAVA"; hk = "바닥은 용암"; big = `${burned}`; sub = burned === 1 ? "player fell in the lava" : "players fell in the lava"; sk = "명 용암에 빠짐";
   } else {
     const picks = {}; for (const v of Object.values(r.answers || {})) picks[v] = (picks[v] || 0) + 1;
-    head = "FIND THE DIAMOND"; big = `${picks[c.diamond] || 0}/${n}`; sub = "found the diamond";
+    head = "FIND THE DIAMOND"; hk = "다이아 찾기"; big = `${picks[c.diamond] || 0}/${n}`; sub = "found the diamond"; sk = "명 다이아 발견";
   }
-  recap.rounds.push({ round: S.round, head, big, sub });
+  recap.rounds.push({ round: S.round, head, hk, big, sub, sk });
   recap.players = Math.max(recap.players, S.playerCount || 0);
   if (S.brand?.title) recap.title = S.brand.title;
 }
@@ -79,20 +81,21 @@ export function buildScenes(players) {
     if (recap.title) { const y = text(ctx, recap.title, 600, 110, "#ffd23f"); text(ctx, "BLOCK PARTY CHALLENGE", y + 40, 64); }
     else { text(ctx, "BLOCK", 560, 150, "#ffd23f"); text(ctx, "PARTY", 720, 150, "#3bceac"); text(ctx, "CHALLENGE", 860, 100); }
     ctx.restore();
-    text(ctx, `${recap.players || players.length} players · ${recap.rounds.length} rounds`, 1100, 60, "#fff", 700);
+    text(ctx, `${recap.players || players.length}명 · ${recap.rounds.length}라운드`, 1080, 70, "#fff", 800); text(ctx, `${recap.players || players.length} players · ${recap.rounds.length} rounds`, 1170, 48, "#ddd", 700); text(ctx, "블록 파티 챌린지", 1400, 72, "#ffd23f", 900);
   } }];
   recap.rounds.forEach((r, i) => scenes.push({ dur: 2.6, draw: (ctx, t) => {
     blocks(ctx, t + i * 3, (i * 67) % 360);
-    text(ctx, `ROUND ${i + 1}`, 330, 56, "#fff", 700);
-    text(ctx, r.head, 470, 104, COLORS[i % COLORS.length]);
+    text(ctx, `ROUND ${i + 1} · ${i + 1}라운드`, 300, 52, "#fff", 700);
+    const y1 = text(ctx, r.hk || r.head, 450, 110, COLORS[i % COLORS.length]);
+    if (r.hk) text(ctx, r.head, y1 - 20, 48, "#fff", 800);
     const k = ease((t - 0.3) / 0.5);
     ctx.save(); ctx.globalAlpha = k; ctx.translate(W / 2, 900); ctx.scale(0.6 + 0.4 * k, 0.6 + 0.4 * k); ctx.translate(-W / 2, -900);
-    text(ctx, r.big, 980, 300, "#fff"); ctx.restore();
-    if (t > 0.7) text(ctx, r.sub, 1250, 64, "#fff", 800);
+    text(ctx, r.big, 1000, 300, "#fff"); ctx.restore();
+    if (t > 0.7) { const y2 = text(ctx, r.sk || r.sub, 1250, 66, "#fff", 900); if (r.sk) text(ctx, r.sub, y2 + 10, 44, "#ddd", 700); }
   } }));
   scenes.push({ dur: 4.5, draw: (ctx, t) => {
     blocks(ctx, t, 45);
-    text(ctx, "WINNER!", 420, 110, "#ffd23f");
+    text(ctx, "우승!", 400, 130, "#ffd23f"); text(ctx, "WINNER", 500, 56, "#fff", 800);
     const hs = [520, 380, 300], xs = [W / 2, W / 2 - 330, W / 2 + 330], cs = ["#ffd23f", "#c0c0c0", "#cd7f32"];
     top.forEach((p, i) => {
       const k = ease((t - 0.3 - (2 - i) * 0.35) / 0.5), h = hs[i] * k, x = xs[i] - 140;
@@ -103,7 +106,7 @@ export function buildScenes(players) {
         ctx.fillStyle = "#222"; ctx.fillText(String(p.score), xs[i], 1500 - h + 90);
       }
     });
-    if (t > 2.2) text(ctx, "Play along next episode!", 1680, 64, "#fff", 800);
+    if (t > 2.2) { text(ctx, "다음 에피소드에 같이 하자!", 1660, 68, "#fff", 900); text(ctx, "Play along next episode!", 1750, 46, "#ddd", 700); }
   } });
   return scenes;
 }
