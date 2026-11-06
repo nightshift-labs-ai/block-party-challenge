@@ -4,7 +4,23 @@ const T = (en, ko) => `${en} <span class="ko">${ko}</span>`;
 const bi = (en, ko) => ko && ko !== en ? `${esc(en)} <span class="ko">${esc(ko)}</span>` : esc(en);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "");
-let ws = null, S = null, role = null, code = null, myPick = null, tick = null;
+// Tiny WebAudio synth (no audio files): ticks, reveal sting, join pop. Host screen only; starts after a user click.
+let actx = null;
+function beep(freq, dur = 0.08, type = "square", vol = 0.08, when = 0) {
+  if (!actx) return;
+  const t = actx.currentTime + when, o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+const sfx = {
+  join: () => beep(880, 0.06, "square", 0.05),
+  tick: () => beep(1200, 0.04, "square", 0.04),
+  start: () => [523, 659, 784].forEach((f, i) => beep(f, 0.12, "square", 0.06, i * 0.1)),
+  reveal: () => [392, 523, 659, 1047].forEach((f, i) => beep(f, 0.15, "triangle", 0.09, i * 0.08)),
+  bust: () => [300, 200, 120].forEach((f, i) => beep(f, 0.2, "sawtooth", 0.07, i * 0.12)),
+};
+let lastTick = 0, ws = null, S = null, role = null, code = null, myPick = null, tick = null;
 
 function home() {
   const q = new URLSearchParams(location.search).get("code") || "";
@@ -25,6 +41,7 @@ function home() {
   document.getElementById("host").onclick = async () => {
     const r = await fetch("/api/room", { method: "POST" }); const j = await r.json();
     if (!j.code) return alert(j.error || "error");
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
     code = j.code; role = "host"; connect(hostQ());
   };
   document.getElementById("join").onclick = () => {
@@ -42,7 +59,15 @@ function connect(q) {
     const m = JSON.parse(e.data);
     if (m.t === "welcome") sessionStorage["bp" + code] = m.pid;
     else if (m.t === "error") { alert(m.msg); location.reload(); }
-    else if (m.t === "state") { if (S?.phase !== m.phase || S?.round !== m.round) myPick = null; m.skew = Date.now() - m.now; S = m; render(); }
+    else if (m.t === "state") {
+      const prev = S; if (prev?.phase !== m.phase || prev?.round !== m.round) myPick = null; m.skew = Date.now() - m.now; S = m;
+      if (role === "host" && actx) {
+        if (prev && m.playerCount > prev.playerCount && m.phase === "lobby") sfx.join();
+        if (m.phase === "question" && (prev?.phase !== "question" || prev.round !== m.round)) sfx.start();
+        if (m.phase === "reveal" && prev?.phase === "question") (m.result && m.result.ok === false ? sfx.bust : sfx.reveal)();
+      }
+      render();
+    }
   };
   ws.onclose = () => setTimeout(() => { if (role) connect(role === "host" ? hostQ() : `name=${encodeURIComponent(localStorage.bpName)}&pid=${sessionStorage["bp" + code] || ""}`); }, 1500);
 }
@@ -53,7 +78,8 @@ function timerBar() {
   if (S.phase !== "question") return "";
   const total = S.current.secs * 1000;
   tick = setInterval(() => { const el = document.querySelector(".timer i"); if (!el) return clearInterval(tick);
-    const left = Math.max(0, S.deadline - (Date.now() - S.skew)); el.style.width = (100 * left / total) + "%"; }, 250);
+    const left = Math.max(0, S.deadline - (Date.now() - S.skew)); el.style.width = (100 * left / total) + "%";
+    const sec = Math.ceil(left / 1000); if (role === "host" && sec <= 3 && sec > 0 && sec !== lastTick) { lastTick = sec; sfx.tick(); } }, 250);
   return `<div class="timer"><i style="width:100%"></i></div>`;
 }
 
