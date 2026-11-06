@@ -53,6 +53,7 @@ function timerBar() {
 function roundTitle(c) {
   return c.kind === "telepathy" ? T("TELEPATHY: match the crowd!", "텔레파시: 다수와 같은 답을!")
     : c.kind === "greed" ? T(`GREED: the pot has ${c.pot} coins. Take 0–${c.maxTake}. Too greedy together = nobody gets anything!`, `욕심 게임: 동전 ${c.pot}개. 0–${c.maxTake}개 가져가기. 합이 넘치면 모두 0!`)
+    : c.kind === "blockmatch" ? T("BLOCK TELEPATHY: pick the block most people pick!", "블록 텔레파시: 가장 많이 고를 블록은?")
     : T("FIND THE DIAMOND: pick a block", "다이아 찾기: 블록을 골라라");
 }
 
@@ -79,6 +80,7 @@ function reveal(c, r) {
     return `<div class="opts">${c.opts.map((o, i) => `<div class="opt">${esc(o)}<br>${r.count[i] || 0}<span class="bar" style="width:${100 * (r.count[i] || 0) / tot}%"></span></div>`).join("")}</div>`;
   }
   if (c.kind === "greed") return `<p class="big center">${r.total} / ${r.pot} ${r.ok ? "✅ " + T("Everyone keeps their coins!", "모두 획득!") : "💥 " + T("Too greedy! Nobody gets anything.", "욕심 폭발! 모두 0점")}</p>`;
+  if (c.kind === "blockmatch") return grid(c, false, r.count);
   const picks = {}; for (const v of Object.values(r.answers)) picks[v] = (picks[v] || 0) + 1;
   return grid(c, false, picks);
 }
@@ -95,7 +97,7 @@ function render() {
       document.getElementById("start").onclick = () => send({ t: "start" });
     } else if (S.phase === "question") {
       $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds} · ${code}</small><h1 class="big">${roundTitle(c)}</h1>${timerBar()}
-      ${c.kind === "telepathy" ? `<p class="big">${esc(c.q)}</p><div class="opts">${c.opts.map(o => `<div class="opt">${esc(o)}</div>`).join("")}</div>` : c.kind === "diamond" ? grid(c, false) : ""}
+      ${c.kind === "telepathy" ? `<p class="big">${esc(c.q)}</p><div class="opts">${c.opts.map(o => `<div class="opt">${esc(o)}</div>`).join("")}</div>` : c.kind === "diamond" || c.kind === "blockmatch" ? grid(c, false) : ""}
       <div class="panel"><b>${S.answeredCount} / ${S.playerCount} ${T("answered", "제출")}</b>${S.playerCount <= 30 ? `<div class="players">${S.players.map(p => `<span class="chip ${S.answered.includes(p.pid) ? "done" : ""}">${esc(p.name)}</span>`).join("")}</div>` : ""}</div>
       <button class="btn alt" id="skip">${T("Reveal now", "바로 공개")}</button>`;
       document.getElementById("skip").onclick = () => send({ t: "skip" });

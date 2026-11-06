@@ -16,7 +16,7 @@ for (const n of ["Mina", "Joon"]) {
 }
 await host.waitForSelector("text=Joon"); await host.screenshot({ path: `${out}/1-lobby.png` });
 await host.click("#start");
-for (let r = 0; r < 5; r++) {
+for (let r = 0; r < 6; r++) {
   await host.waitForSelector("#skip");
   await phones[0].screenshot({ path: `${out}/p-round${r + 1}.png` });
   for (const p of phones) {

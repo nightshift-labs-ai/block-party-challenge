@@ -13,6 +13,6 @@ test("diamond distance", () => {
 });
 test("validation + episode", () => {
   const ep = makeEpisode(4, () => 0.3);
-  assert.equal(ep.length, 5);
+  assert.equal(ep.length, 6); assert.ok(validAnswer(ep[3], 24)); assert.ok(!validAnswer(ep[3], 25));
   assert.ok(validAnswer(ep[1], 10)); assert.ok(!validAnswer(ep[1], 11)); assert.ok(!validAnswer(ep[0], 1.5));
 });

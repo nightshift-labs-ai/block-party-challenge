@@ -11,7 +11,7 @@ const lat = [];
 await Promise.all(names.map(async n => {
   const b = await open("name=" + n); bots.push(b);
   b.onmsg = s => { if (s.t === "state" && s.phase === "question" && !s.answered.includes(s.you)) {
-    const c = s.current; const v = c.kind === "telepathy" ? 0 : c.kind === "greed" ? 2 + bots.indexOf(b) : 12;
+    const c = s.current; const v = c.kind === "telepathy" ? 0 : c.kind === "greed" ? 2 + (bots.indexOf(b) % 3) : 12;
     b.sentAt = Date.now(); b.send(JSON.stringify({ t: "answer", v })); }
     if (s.t === "state" && s.phase === "reveal" && b.sentAt) { lat.push(Date.now() - b.sentAt); b.sentAt = 0; } };
 }));
@@ -30,5 +30,5 @@ const fin = host.last.players.slice(0, 3).map(p => `${p.name}:${p.score}`).join(
 lat.sort((a, b) => a - b);
 console.log(`answer→reveal latency over ${lat.length} samples: p50 ${lat[lat.length >> 1]} ms, p95 ${lat[Math.floor(lat.length * 0.95)]} ms; playerCount ${host.last.playerCount}`);
 console.log("code", code, "rounds", rounds.join(","), "final", fin);
-if (rounds.length !== 5) { console.log("FAIL"); process.exit(1); }
+if (rounds.length !== 6) { console.log("FAIL"); process.exit(1); }
 console.log("E2E PASSED"); process.exit(0);

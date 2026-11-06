@@ -79,7 +79,7 @@ export class Room {
     if (this.phase !== "question") return;
     clearTimeout(this.timer);
     const r = this.episode[this.round];
-    const res = r.kind === "telepathy" ? scoreTelepathy(this.answers) : r.kind === "greed" ? scoreGreed(this.answers, r.pot) : scoreDiamond(this.answers, r.diamond);
+    const res = r.kind === "telepathy" || r.kind === "blockmatch" ? scoreTelepathy(this.answers) : r.kind === "greed" ? scoreGreed(this.answers, r.pot) : scoreDiamond(this.answers, r.diamond);
     for (const [pid, pts] of Object.entries(res.pts)) this.players.get(pid).score += pts;
     this.result = { ...res, answers: this.answers };
     this.phase = "reveal";

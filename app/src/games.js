@@ -42,7 +42,7 @@ export function validAnswer(round, v) {
   if (!Number.isInteger(v)) return false;
   if (round.kind === "telepathy") return v >= 0 && v < round.opts.length;
   if (round.kind === "greed") return v >= 0 && v <= round.maxTake;
-  if (round.kind === "diamond") return v >= 0 && v < 25;
+  if (round.kind === "diamond" || round.kind === "blockmatch") return v >= 0 && v < 25;
   return false;
 }
 
@@ -54,6 +54,7 @@ export function makeEpisode(nPlayers, rnd = Math.random) {
     { kind: "telepathy", ...t[0], secs: 15 },
     { kind: "greed", pot, maxTake: 10, secs: 15 },
     { kind: "diamond", diamond: Math.floor(rnd() * 25), secs: 12 },
+    { kind: "blockmatch", secs: 12 },
     { kind: "telepathy", ...t[1], secs: 15 },
     { kind: "greed", pot: Math.max(8, Math.round(nPlayers * 3)), maxTake: 10, secs: 15 },
   ];
