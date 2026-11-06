@@ -1,6 +1,7 @@
 // Block Party Challenge — host screen + phone controller in one page.
 const $app = document.getElementById("app");
 const T = (en, ko) => `${en} <span class="ko">${ko}</span>`;
+const bi = (en, ko) => ko && ko !== en ? `${esc(en)} <span class="ko">${esc(ko)}</span>` : esc(en);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "");
 let ws = null, S = null, role = null, code = null, myPick = null, tick = null;
@@ -84,7 +85,7 @@ function scores(players, limit = 12) {
 function reveal(c, r) {
   if (c.kind === "telepathy") {
     const tot = Object.values(r.count).reduce((a, b) => a + b, 0) || 1;
-    return `<p class="big">${esc(c.q)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt">${esc(o)}<br>${r.count[i] || 0}<span class="bar" style="width:${100 * (r.count[i] || 0) / tot}%"></span></div>`).join("")}</div>`;
+    return `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt">${bi(o, c.ok?.[i])}<br>${r.count[i] || 0}<span class="bar" style="width:${100 * (r.count[i] || 0) / tot}%"></span></div>`).join("")}</div>`;
   }
   if (c.kind === "greed") return `<p class="big center">${r.total} / ${r.pot} ${r.ok ? "✅ " + T("Everyone keeps their coins!", "모두 획득!") : "💥 " + T("Too greedy! Nobody gets anything.", "욕심 폭발! 모두 0점")}</p>`;
   if (c.kind === "blockmatch") return grid(c, false, r.count);
@@ -105,7 +106,7 @@ function render() {
       document.getElementById("start").onclick = () => send({ t: "start" });
     } else if (S.phase === "question") {
       $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds} · ${code}</small><h1 class="big">${roundTitle(c)}</h1>${timerBar()}
-      <div class="cols"><div>${c.kind === "telepathy" ? `<p class="big">${esc(c.q)}</p><div class="opts">${c.opts.map(o => `<div class="opt">${esc(o)}</div>`).join("")}</div>` : c.kind === "diamond" || c.kind === "blockmatch" || c.kind === "lava" ? grid(c, false) : ""}</div><div>
+      <div class="cols"><div>${c.kind === "telepathy" ? `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt">${bi(o, c.ok?.[i])}</div>`).join("")}</div>` : c.kind === "diamond" || c.kind === "blockmatch" || c.kind === "lava" ? grid(c, false) : ""}</div><div>
       <div class="panel"><b>${S.answeredCount} / ${S.playerCount} ${T("answered", "제출")}</b>${S.playerCount <= 30 ? `<div class="players">${S.players.map(p => `<span class="chip ${S.answered.includes(p.pid) ? "done" : ""}">${esc(p.name)}</span>`).join("")}</div>` : ""}</div>
       <button class="btn alt" id="skip">${T("Reveal now", "바로 공개")}</button></div></div>`;
       document.getElementById("skip").onclick = () => send({ t: "skip" });
@@ -127,7 +128,7 @@ function render() {
     const done = S.answered.includes(S.you);
     if (done) { $app.innerHTML = `${head}<h1>${T("Locked in!", "제출 완료!")}</h1>${timerBar()}`; return; }
     let body = "";
-    if (c.kind === "telepathy") body = `<p>${esc(c.q)}</p><div class="opts">${c.opts.map((o, i) => `<button class="btn opt" data-v="${i}">${esc(o)}</button>`).join("")}</div>`;
+    if (c.kind === "telepathy") body = `<p>${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<button class="btn opt" data-v="${i}">${bi(o, c.ok?.[i])}</button>`).join("")}</div>`;
     else if (c.kind === "greed") body = `<p class="big center" id="gv">3</p><input type="range" class="slider" min="0" max="${c.maxTake}" value="3" id="gr"><button class="btn alt" id="gok">${T("Take coins", "가져가기")}</button>`;
     else body = grid(c, true);
     $app.innerHTML = `${head}<h1 class="big">${roundTitle(c)}</h1>${timerBar()}${body}`;

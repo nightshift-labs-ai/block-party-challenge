@@ -1,11 +1,29 @@
 // Pure game logic for the party rounds (testable without Workers). Formats adapted from challenge-video staples:
 // telepathy (match the crowd), greed (shared pot), diamond (find the hidden block).
 export const TELEPATHY = [
-  { q: "Pick the block everyone else will pick", opts: ["Diamond", "Gold", "Dirt", "TNT"] },
-  { q: "Best snack after school?", opts: ["Tteokbokki", "Ramyeon", "Chicken", "Ice cream"] },
-  { q: "Pick a number everyone else picks", opts: ["1", "3", "7", "10"] },
-  { q: "Which mob would you keep as a pet?", opts: ["Wolf", "Cat", "Creeper", "Axolotl"] },
-  { q: "Best way to spend 10,000 won?", opts: ["Snacks", "Game item", "Save it", "Gift"] },
+  // q/opts in English, qk/ok in Korean. Kid-safe, brand-free, answerable in 15 s.
+  { q: "Pick the block everyone else will pick", opts: ["Diamond", "Gold", "Dirt", "TNT"], qk: "모두가 고를 블록은?", ok: ["다이아", "금", "흙", "TNT"] },
+  { q: "Best snack after school?", opts: ["Tteokbokki", "Ramyeon", "Chicken", "Ice cream"], qk: "하교 후 최고의 간식은?", ok: ["떡볶이", "라면", "치킨", "아이스크림"] },
+  { q: "Pick the number everyone else picks", opts: ["1", "3", "7", "10"], qk: "다들 고를 숫자는?", ok: ["1", "3", "7", "10"] },
+  { q: "Which animal would you keep as a pet?", opts: ["Wolf", "Cat", "Fox", "Axolotl"], qk: "키우고 싶은 동물은?", ok: ["늑대", "고양이", "여우", "우파루파"] },
+  { q: "Best way to spend 10,000 won?", opts: ["Snacks", "Game item", "Save it", "Gift"], qk: "만 원이 생기면?", ok: ["간식", "게임 아이템", "저금", "선물"] },
+  { q: "You find a treasure chest. What's inside?", opts: ["Gold", "Diamonds", "A map", "A trap"], qk: "보물상자 안에 든 것은?", ok: ["금", "다이아", "지도", "함정"] },
+  { q: "Best superpower?", opts: ["Fly", "Invisible", "Teleport", "Time stop"], qk: "최고의 초능력은?", ok: ["하늘 날기", "투명인간", "순간이동", "시간 정지"] },
+  { q: "Pick a colour everyone picks", opts: ["Red", "Blue", "Green", "Yellow"], qk: "다들 고를 색깔은?", ok: ["빨강", "파랑", "초록", "노랑"] },
+  { q: "Where would you build your base?", opts: ["Mountain", "Sea", "Sky", "Underground"], qk: "기지를 짓는다면 어디?", ok: ["산", "바다", "하늘", "지하"] },
+  { q: "Most useful tool?", opts: ["Pickaxe", "Sword", "Shovel", "Bucket"], qk: "가장 쓸모 있는 도구는?", ok: ["곡괭이", "칼", "삽", "양동이"] },
+  { q: "Best season?", opts: ["Spring", "Summer", "Autumn", "Winter"], qk: "최고의 계절은?", ok: ["봄", "여름", "가을", "겨울"] },
+  { q: "Pick the scariest thing", opts: ["Lava", "Ghosts", "Spiders", "Exams"], qk: "제일 무서운 것은?", ok: ["용암", "유령", "거미", "시험"] },
+  { q: "Best school lunch?", opts: ["Pork cutlet", "Curry", "Bulgogi", "Spaghetti"], qk: "최고의 급식 메뉴는?", ok: ["돈가스", "카레", "불고기", "스파게티"] },
+  { q: "Dream job?", opts: ["YouTuber", "Pro gamer", "Doctor", "Idol"], qk: "장래희망은?", ok: ["유튜버", "프로게이머", "의사", "아이돌"] },
+  { q: "If you won 1,000,000 won?", opts: ["Spend it", "Save it", "Share it", "Invest in snacks"], qk: "100만 원에 당첨되면?", ok: ["다 쓴다", "저금한다", "나눈다", "간식에 투자"] },
+  { q: "Pick a weather", opts: ["Sunny", "Rain", "Snow", "Storm"], qk: "날씨를 고른다면?", ok: ["맑음", "비", "눈", "폭풍"] },
+  { q: "Best pizza topping?", opts: ["Pepperoni", "Potato", "Pineapple", "Cheese only"], qk: "최고의 피자 토핑은?", ok: ["페퍼로니", "포테이토", "파인애플", "치즈만"] },
+  { q: "Most annoying sound?", opts: ["Alarm", "Mosquito", "Chalkboard", "Silence"], qk: "제일 짜증나는 소리는?", ok: ["알람", "모기", "칠판 긁기", "정적"] },
+  { q: "Pick a direction", opts: ["Left", "Right", "Up", "Down"], qk: "방향을 고른다면?", ok: ["왼쪽", "오른쪽", "위", "아래"] },
+  { q: "Best way to escape lava?", opts: ["Jump", "Water bucket", "Build up", "Pray"], qk: "용암 탈출 방법은?", ok: ["점프", "물 양동이", "기둥 쌓기", "기도"] },
+  { q: "Which would you choose?", opts: ["Eat only ramyeon", "Never eat ramyeon", "Ramyeon once a year", "Ramyeon with friends"], qk: "당신의 선택은?", ok: ["평생 라면만", "평생 라면 금지", "1년에 한 번", "친구랑만 라면"] },
+  { q: "Who wins?", opts: ["100 chickens", "1 giant chicken", "10 cats", "1 tiger"], qk: "누가 이길까?", ok: ["닭 100마리", "거대 닭 1마리", "고양이 10마리", "호랑이 1마리"] },
 ];
 
 // Telepathy: points = number of OTHER players who chose the same option (rewards reading the room).

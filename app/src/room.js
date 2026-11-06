@@ -102,7 +102,7 @@ export class Room {
 
   view(forPid, full) {
     const r = this.episode && this.round >= 0 && this.round < this.episode.length ? this.episode[this.round] : null;
-    const pub = r && { kind: r.kind, q: r.q, opts: r.opts, pot: r.pot, maxTake: r.maxTake, secs: r.secs };
+    const pub = r && { kind: r.kind, q: r.q, opts: r.opts, qk: r.qk, ok: r.ok, pot: r.pot, maxTake: r.maxTake, secs: r.secs };
     if (r && this.phase !== "question" && r.kind === "diamond") pub.diamond = r.diamond; // hidden until reveal
     return {
       t: "state", phase: this.phase, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
