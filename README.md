@@ -4,6 +4,8 @@
 
 Live prototype: https://extriver-proto.nightshift-labs.workers.dev · Status page: https://extriver-monitor.nightshift-labs.workers.dev/status
 
+Docs: [business model + 3-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) · [creator research](RESEARCH.md) · pitch deck `docs/pitch.pdf` · 2:40 demo video `docs/demo.mp4` (real recorded episode with 10 players; rebuild with `tools/recvideo.mjs` + `tools/makevideo.sh`).
+
 ## The idea in one line
 Dname's shorts are already games — "find the diamond and win", greed game, block telepathy, trust game — and his tagline is
 "Subscribe and join the game!". Block Party Challenge lets his viewers actually play those formats **with him and with each other**:
