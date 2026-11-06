@@ -24,7 +24,7 @@ for (let r = 0; r < 7; r++) {
     else if (await p.$("#gok")) await p.click("#gok");
     else await p.click(".cell >> nth=12");
   }
-  await host.waitForSelector("#next"); await host.screenshot({ path: `${out}/2-reveal${r + 1}.png` });
+  await host.waitForSelector("#next"); await host.screenshot({ path: `${out}/2-reveal${r + 1}.png` }); await phones[0].waitForSelector("text=Look at the big screen"); await phones[0].screenshot({ path: `${out}/p-reveal${r + 1}.png` });
   await host.click("#next");
 }
 await host.waitForSelector("#again"); await host.screenshot({ path: `${out}/3-final.png` });

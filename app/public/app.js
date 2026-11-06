@@ -138,7 +138,12 @@ function render() {
     if (gr) { gr.oninput = () => document.getElementById("gv").textContent = gr.value; document.getElementById("gok").onclick = () => send({ t: "answer", v: +gr.value }); }
   } else if (S.phase === "reveal") {
     const got = S.result?.pts?.[S.you];
-    $app.innerHTML = `${head}<h1>${got === undefined ? T("No answer", "미제출") : "+" + got}</h1><p>${T("Look at the big screen!", "큰 화면을 보세요!")}</p>`;
+    const r = S.result || {};
+    const why = got === undefined ? "" : c.kind === "greed" ? (r.ok ? `✅ ${r.total}/${r.pot} — ${T("the room stayed fair!", "모두 욕심을 참았다!")}` : `💥 ${r.total}/${r.pot} — ${T("too greedy!", "욕심 폭발!")}`)
+      : c.kind === "lava" ? (got === 0 ? `🔥 ${T("You fell in the lava!", "용암에 빠졌다!")}` : got > 150 ? `🏝️ ${T("Safe and alone: bonus!", "혼자 생존: 보너스!")}` : `🙂 ${T("Safe!", "생존!")}`)
+      : c.kind === "diamond" ? (got === 500 ? `💎 ${T("You found it!", "다이아 발견!")}` : got ? T("Close!", "아깝다!") : T("Far away…", "멀었다…"))
+      : got ? T("You read the crowd!", "눈치 백단!") : T("Nobody agreed with you.", "아무도 같은 답을 안 골랐다.");
+    $app.innerHTML = `${head}<h1>${got === undefined ? T("No answer", "미제출") : "+" + got}</h1><p class="big">${why}</p><p>${T("Look at the big screen!", "큰 화면을 보세요!")}</p>`;
   } else {
     $app.innerHTML = `${head}<h1>#${S.rank} / ${S.playerCount}</h1><p>${me?.score ?? 0} pts</p>`;
   }
