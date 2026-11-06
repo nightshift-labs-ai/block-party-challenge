@@ -5,6 +5,8 @@ compatibility_date = "2026-10-01"
 crons = ["*/5 * * * *"]
 [vars]
 TARGET = "https://extriver-proto.nightshift-labs.workers.dev"
+ALERT_FROM = "nightshiftlabs-api@agentmail.to"
+ALERT_TO = "nightshiftlabs-api@agentmail.to"
 [[kv_namespaces]]
 binding = "MON"
 id = "5129314295f04021bc8ce5020381a0c2"

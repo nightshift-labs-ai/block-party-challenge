@@ -1,3 +1,4 @@
+import { safeName } from "./namefilter.js";
 // Party room: one Durable Object per 4-letter code. Host screen (TV / stream) + up to 300 phones via WebSocket.
 // Phases: lobby → question → reveal → … → final. Server owns timers and scoring (clients can't cheat the clock).
 import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond, scoreLava, scoreTaboo, normWord } from "./games.js";
@@ -51,6 +52,7 @@ export class Room {
     name = String(name || "").replace(/[^\p{L}\p{N} _.-]/gu, "").trim().slice(0, 12);
     if (!name) return "name required";
     pid = /^[a-z0-9]{8,24}$/.test(pid || "") ? pid : crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    name = safeName(name, pid); // kids watch the stream: unsafe nicknames become a friendly generated name
     if (!this.players.has(pid)) {
       if (this.players.size >= MAX_PLAYERS) return "room full";
       if (this.phase !== "lobby") return "game already started";

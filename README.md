@@ -63,8 +63,8 @@ Margins are therefore set by payment fees and app-store/PG cuts, not servers. Du
 - **Edge-native realtime**: each room is one Durable Object holding the WebSocket connections and the authoritative game state; static assets on Cloudflare's CDN.
 - **Hibernation**: rooms use hibernatable WebSockets; state is snapshotted to Durable Object storage and round timers are storage alarms, so an idle room costs nothing and survives eviction (`app/test/alarm-e2e.mjs`).
 - **Scale test (latest 2026-11-06, current 7-round episode incl. the typed-word round, hibernation + persisted state)**: one room, 200 simulated phones over the public internet, full episode, 1,400 answers, answer→reveal latency **p50 219 ms, p95 260 ms**, 0 errors, 0 handshake retries (`app/test/room-e2e.mjs <url> 200`). Earlier runs the same day: p50 192–238 ms.
-- **Monitoring**: separate cron Worker pings `/health` every 5 min, public status page with 24 h uptime and p50/p95.
-- **Safety**: input validation, per-IP rate limits on room creation and score writes, names sanitised, answers validated server-side, diamonds hidden from clients until reveal.
+- **Monitoring + alerts**: separate cron Worker pings `/health` every 5 min, public status page with 24 h uptime and p50/p95; emails the on-call inbox after 2 failed checks in a row and on recovery; daily leaderboard backup (14 days, `/backups.json`). Maintenance plan, on-call and restore steps: docs/OPS.md.
+- **Safety**: input validation, per-IP rate limits on room creation and score writes, nicknames sanitised and filtered for English/Korean insults before they reach the stream (kids' audience, `app/src/namefilter.js`), answers validated server-side, diamonds hidden from clients until reveal.
 - **Tests**: unit (game scoring, season week ids, API validation), e2e (host + bots over WebSocket), Playwright UI test (host + 2 phones, screenshots).
 - **Rollback**: every deploy is a versioned Worker (`wrangler rollback`). CI/CD pipeline: planned with the public repo.
 

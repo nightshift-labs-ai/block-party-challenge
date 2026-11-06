@@ -1,3 +1,4 @@
+import { safeName } from "./namefilter.js";
 // Extriver prototype backend (Cloudflare Worker, free plan). Static game/app files come from ./public.
 // Endpoints: GET /health, GET /api/leaderboard?board=<id>, POST /api/score {board,name,score}
 import { Room, seasonId } from "./room.js";
@@ -8,7 +9,8 @@ const MAX_NAME = 16, MAX_ENTRIES = 50;
 const json = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store", ...h } });
 
 function cleanName(n) {
-  return String(n || "").replace(/[^\p{L}\p{N} _.-]/gu, "").trim().slice(0, MAX_NAME) || "anon";
+  const c = String(n || "").replace(/[^\p{L}\p{N} _.-]/gu, "").trim().slice(0, MAX_NAME) || "anon";
+  return safeName(c, c).slice(0, MAX_NAME);
 }
 function cleanBoard(b) {
   const s = String(b || "main").toLowerCase();

@@ -20,6 +20,14 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 <td>separate cron Worker <code>extriver-monitor</code>, pings /health every 5 min, keeps 24 h → <a href="https://extriver-monitor.nightshift-labs.workers.dev/status">https://extriver-monitor.nightshift-labs.workers.dev/status</a> (+ <code>/status.json</code>)</td>
 </tr>
 <tr>
+<td>Alerts</td>
+<td>the monitor emails the on-call inbox after <strong>2 failed checks in a row</strong> (≤ 10 min) and again on recovery (one email per incident, no alert storms)</td>
+</tr>
+<tr>
+<td>Backups</td>
+<td>the monitor stores a daily copy of the season leaderboard (14 days) → <code>/backups.json</code>, one day: <code>/backups.json?day=YYYY-MM-DD</code></td>
+</tr>
+<tr>
 <td>CI/CD</td>
 <td><code>ci/ci.yml (GitHub Actions workflow; copy into .github/workflows/ to enable)</code>: unit tests on every push/PR. On <code>main</code>: deploy, smoke test production (health + full WebSocket episode), <strong>automatic rollback</strong> to the previous version if the smoke test fails</td>
 </tr>
@@ -50,3 +58,52 @@ npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
 <li>A bad deploy → roll back (above), then fix forward with a test that reproduces it.</li>
 <li>A room is stuck → the host&#39;s &quot;Play again&quot; resets it, and players reconnect automatically (1.5 s retry) with their id kept in sessionStorage.</li>
 </ol>
+<h2>Backups and restore</h2>
+<ul>
+<li>Long-lived data is small: the weekly season leaderboard (Durable Object <code>Board</code>, SQLite) and the Daily Challenge results. Rooms are ephemeral by design.</li>
+<li>The monitor copies the season leaderboard once a day to KV (14-day retention). Restore = re-POST the entries of the chosen day to <code>/api/score</code> (same validation as live traffic), or rebuild the week from scratch: a season only lasts 7 days.</li>
+<li>Code and docs: GitHub (public repo) is the source of truth; every deploy is an immutable Worker version (rollback above).</li>
+</ul>
+<h2>Maintenance and on-call</h2>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Cadence</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dependencies / security patches</td>
+<td>weekly + on advisories</td>
+<td>the Worker has <strong>no runtime npm dependencies</strong> (plain JS on the Workers runtime, which Cloudflare patches); dev tools pinned by major version (<code>wrangler@4</code>), so there is no third-party runtime code to patch.</td>
+</tr>
+<tr>
+<td>Content (new rounds, prompts)</td>
+<td>weekly, before the creator&#39;s Friday episode</td>
+<td>data-only change in <code>games.js</code> + unit test → CI deploy → smoke test</td>
+</tr>
+<tr>
+<td>Load test</td>
+<td>before every promoted episode</td>
+<td><code>node test/room-e2e.mjs &lt;url&gt; 200</code> (p50/p95 printed); scale target 300 phones/room, unlimited rooms</td>
+</tr>
+<tr>
+<td>Review alerts / logs</td>
+<td>daily</td>
+<td>status page + <code>wrangler tail</code>; incident notes go into this file</td>
+</tr>
+<tr>
+<td>On-call</td>
+<td>always</td>
+<td>first responder = the Nightshift Labs operator agent (runs every hour, reads the alert inbox); the human team representative is the escalation contact for anything needing account access</td>
+</tr>
+</tbody></table>
+<h2>Kids&#39; safety and privacy (the creator&#39;s audience is mostly under 14)</h2>
+<ul>
+<li><strong>No accounts, no personal data:</strong> a player is a nickname (max 12 chars) plus a random id kept in the phone&#39;s sessionStorage. No email, phone number, age, location, cookies for tracking or ads SDKs.</li>
+<li><strong>No chat, no free text on screen</strong> except nicknames. Nicknames are filtered before they reach the stream (<code>app/src/namefilter.js</code>: English + Korean insults/slurs/sexual terms, leetspeak and spacing tricks; unsafe names become a friendly generated name such as &quot;LuckyFox42&quot;; unit-tested for false positives like &quot;Grape&quot;, &quot;Cassie&quot;, &quot;한남동&quot;).</li>
+<li><strong>Kids never pay to enter</strong> a game. Paid items (Fan Pass, cosmetics) are planned only behind the creator&#39;s existing store and parental payment flows; see BUSINESS.md.</li>
+<li><strong>Retention:</strong> rooms forget players when they end; leaderboards keep nickname + score only (season board: 7 days live + 14-day backup).</li>
+<li>Basic security: server-side validation of every answer and score, per-IP rate limits, hidden answers never sent to phones before the reveal, HTTPS/WSS only.</li>
+</ul>
