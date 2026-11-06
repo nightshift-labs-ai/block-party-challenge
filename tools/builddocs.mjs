@@ -8,7 +8,7 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 const docs = [["README.md", "overview", "Overview, how it plays, tech & unit cost"], ["RESEARCH.md", "research", "Audience research: 5 creators, why Dname, trends"],
   ["docs/BUSINESS.md", "business", "Business model, 3-scenario year-1 model, competitors"], ["docs/OPS.md", "ops", "Operations: deploy, rollback, monitoring, load test"], ["docs/SUMMARY-KO.md", "summary-ko", "한국어 요약 (Korean one-page summary)"]];
 for (const [src, name, title] of docs) {
-  const md = fs.readFileSync(src, "utf8").replace(/\]\(docs\//g, "](").replace(/\]\(RESEARCH\.md\)/g, "](research.html)").replace(/\]\(BUSINESS\.md\)/g, "](business.html)");
+  const md = fs.readFileSync(src, "utf8").replace(/\]\(docs\//g, "](").replace(/\]\(RESEARCH\.md\)/g, "](research.html)").replace(/\]\(BUSINESS\.md\)/g, "](business.html)").replace(/\]\(SUMMARY-KO\.md\)/g, "](summary-ko.html)");
   fs.writeFileSync(`${out}/${name}.html`, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title}</title><style>${css}</style><p><a href="./">← all docs</a></p>${marked.parse(md)}`);
 }
 fs.copyFileSync("docs/pitch.pdf", `${out}/pitch.pdf`); fs.copyFileSync("docs/pitch-ko.pdf", `${out}/pitch-ko.pdf`); fs.copyFileSync("docs/demo.mp4", `${out}/demo.mp4`); fs.copyFileSync("docs/demo.srt", `${out}/demo.srt`);

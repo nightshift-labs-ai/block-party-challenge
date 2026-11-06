@@ -4,6 +4,8 @@
 
 Live prototype: https://extriver-proto.nightshift-labs.workers.dev · Status page: https://extriver-monitor.nightshift-labs.workers.dev/status
 
+**한국어:** [한 쪽 요약](docs/SUMMARY-KO.md) · [피치덱 PDF](docs/pitch-ko.pdf) · [데모 영상 (한국어 자막)](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html)
+
 Docs: [business model + 3-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) · [creator research](RESEARCH.md) · pitch deck `docs/pitch.pdf` · 2:52 demo video `docs/demo.mp4` (real recorded episode with 10 players; rebuild with `tools/recvideo.mjs` + `tools/makevideo.sh`).
 
 ## The idea in one line
