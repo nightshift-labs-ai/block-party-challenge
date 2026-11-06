@@ -48,7 +48,19 @@ What the model shows:
   host and replayable rounds, so making that short costs him less effort than his current Minecraft setups.
 - Infrastructure is not a meaningful cost (README "Unit cost": ≈$1–5 per million player-episodes). Margin is set by payment fees and support.
 
-## 4. Costs and risks
+## 4. Competitors and alternatives
+| Alternative | What it does well | Why Block Party fits Dname's audience better |
+|---|---|---|
+| **Custom Minecraft/Roblox maps** (what he does now) | Rich 3D worlds, his brand look | Viewers need a PC/console, an account and a server slot, so only a handful can play. Block Party: any phone, a link, hundreds per room. |
+| **YouTube Live Playables** (Sep 2025) | Built into YouTube, zero setup | Only the creator plays; viewers watch and chat. In Block Party every viewer plays. |
+| **Jackbox-style party packs** | Proven phone-as-controller format that people pay for | Generic content, bought per pack, meant for living rooms. Block Party is free, runs his formats and has a stream overlay. |
+| **Kahoot / classroom quiz tools** | Huge classroom reach | Quiz-only (right/wrong answers). Block Party's rounds are social (greed, telepathy, luck), so anyone can win. That is the appeal of his videos. |
+| **Chat polls / prediction widgets** | Easy for streamers | One question, no game, no score. Block Party has episodes, a season leaderboard and replays that make shorts. |
+
+The moat is not the technology. It is **his formats + his audience + the weekly final + the season leaderboard**, which a generic tool cannot copy.
+(Product descriptions are from each product's public pages. We did not verify current prices, so none are quoted.)
+
+## 5. Costs and risks
 - **Costs:** Cloudflare Workers Paid ($5/mo) once past the free tier; payment gateway fees (≈3–10%, assumed 10%); question-pack
   writing and moderation (a few hours a week); a Korean game rating before paid features launch (GRAC/self-rating; **to check**).
 - **Minors:** paid features go through a parent (web payment with parental consent, gift cards/vouchers). Free text only appears
@@ -57,7 +69,7 @@ What the model shows:
   modes work without new videos.
 - **Copying:** the format is easy to copy. The moat is Dname's audience, his weekly final and the season leaderboard, not the code.
 
-## 5. Milestones
+## 6. Milestones
 1. Month 0–1: Dname plays one episode on stream, posts the clip, and we measure the real join rate (replaces the (A) inputs).
 2. Month 2: Fan Pass + cosmetics. First sponsor pitch, with the measured numbers.
 3. Month 3+: weekly sponsored final, classroom mode, Korean question packs written with the creator.
