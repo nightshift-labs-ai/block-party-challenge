@@ -2,6 +2,7 @@
 const $app = document.getElementById("app");
 const T = (en, ko) => `${en} <span class="ko">${ko}</span>`;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "");
 let ws = null, S = null, role = null, code = null, myPick = null, tick = null;
 
 function home() {
@@ -14,11 +15,16 @@ function home() {
   <input id="code" maxlength="4" placeholder="CODE" value="${esc(q)}" autocapitalize="characters">
   <input id="name" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}">
   <button class="btn" id="join">${T("Join", "참가")}</button><div id="err" style="color:var(--red)"></div></div>
+  <div class="panel"><b>${T("This week's season top 10", "이번 주 시즌 TOP 10")}</b><div id="season"><small>…</small></div></div>
   <small>Made by Nightshift Labs (an AI-agent-run studio) for Hack the Audience 2026. Original game; not affiliated with Mojang or Minecraft.</small>`;
+  fetch("/api/leaderboard?board=season").then(r => r.json()).then(j => {
+    const el = document.getElementById("season"); if (!el) return;
+    el.innerHTML = j.entries?.length ? `<table>${j.entries.slice(0, 10).map((e, i) => `<tr><td>${i + 1}</td><td>${esc(e.name)}</td><td style="text-align:right">${e.score}</td></tr>`).join("")}</table>` : `<small>${T("No games yet this week. Be first!", "아직 기록 없음. 첫 번째가 되어 보세요!")}</small>`;
+  }).catch(() => {});
   document.getElementById("host").onclick = async () => {
     const r = await fetch("/api/room", { method: "POST" }); const j = await r.json();
     if (!j.code) return alert(j.error || "error");
-    code = j.code; role = "host"; connect(`role=host`);
+    code = j.code; role = "host"; connect(hostQ());
   };
   document.getElementById("join").onclick = () => {
     const c = document.getElementById("code").value.trim().toUpperCase(), n = document.getElementById("name").value.trim();
@@ -37,7 +43,7 @@ function connect(q) {
     else if (m.t === "error") { alert(m.msg); location.reload(); }
     else if (m.t === "state") { if (S?.phase !== m.phase || S?.round !== m.round) myPick = null; m.skew = Date.now() - m.now; S = m; render(); }
   };
-  ws.onclose = () => setTimeout(() => { if (role) connect(role === "host" ? "role=host" : `name=${encodeURIComponent(localStorage.bpName)}&pid=${sessionStorage["bp" + code] || ""}`); }, 1500);
+  ws.onclose = () => setTimeout(() => { if (role) connect(role === "host" ? hostQ() : `name=${encodeURIComponent(localStorage.bpName)}&pid=${sessionStorage["bp" + code] || ""}`); }, 1500);
 }
 const send = o => ws?.readyState === 1 && ws.send(JSON.stringify(o));
 

@@ -1,10 +1,16 @@
 // Party room: one Durable Object per 4-letter code. Host screen (TV / stream) + up to 12 phones via WebSocket.
 // Phases: lobby → question → reveal → … → final. Server owns timers and scoring (clients can't cheat the clock).
 import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond } from "./games.js";
+export function seasonId(d = new Date()) {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y = t.getUTCFullYear(), w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
+  return `season-${y}-w${String(w).padStart(2, "0")}`;
+}
 const MAX_PLAYERS = 300; // streamer mode: a creator's viewers join one room
 
 export class Room {
-  constructor(state) { this.state = state; this.host = null; this.players = new Map(); this.reset(); }
+  constructor(state, env) { this.state = state; this.env = env; this.host = null; this.players = new Map(); this.reset(); }
   reset() { this.phase = "lobby"; this.round = -1; this.episode = null; this.answers = {}; this.result = null; this.deadline = 0; clearTimeout(this.timer); }
 
   async fetch(req) {
@@ -13,7 +19,7 @@ export class Room {
     const [client, server] = Object.values(new WebSocketPair());
     server.accept();
     const role = url.searchParams.get("role");
-    if (role === "host") this.attachHost(server);
+    if (role === "host") { this.noSeason = url.searchParams.get("practice") === "1"; this.attachHost(server); }
     else {
       const err = this.attachPlayer(server, url.searchParams.get("name"), url.searchParams.get("pid"));
       if (err) { server.send(JSON.stringify({ t: "error", msg: err })); server.close(1008, err); }
@@ -58,12 +64,20 @@ export class Room {
 
   next() {
     this.round++;
-    if (this.round >= this.episode.length) { this.phase = "final"; this.broadcast(); return; }
+    if (this.round >= this.episode.length) { this.phase = "final"; this.broadcast(); this.recordSeason(); return; }
     this.phase = "question"; this.answers = {}; this.result = null;
     const r = this.episode[this.round];
     this.deadline = Date.now() + r.secs * 1000;
     clearTimeout(this.timer); this.timer = setTimeout(() => this.reveal(), r.secs * 1000 + 300);
     this.broadcast();
+  }
+
+  // Weekly season leaderboard: each finished episode submits its top 10 to the Board DO "season-<ISO week>".
+  async recordSeason() {
+    if (!this.env?.BOARD || this.noSeason) return;
+    const board = seasonId(), stub = this.env.BOARD.get(this.env.BOARD.idFromName(board));
+    const top = [...this.players.values()].filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 10);
+    for (const p of top) try { await stub.fetch("https://do/", { method: "POST", body: JSON.stringify({ name: p.name, score: p.score }) }); } catch {}
   }
 
   onAnswer(pid, v) {

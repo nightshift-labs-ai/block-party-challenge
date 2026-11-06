@@ -4,7 +4,7 @@ const N = +(process.argv[3] || 3); const t0 = Date.now();
 const wsBase = base.replace(/^http/, "ws");
 const { code } = await (await fetch(base + "/api/room", { method: "POST" })).json();
 const open = (q) => new Promise((res, rej) => { const w = new WebSocket(`${wsBase}/api/room/${code}/ws?${q}`); w.last = null; w.onmessage = e => { w.last = JSON.parse(e.data); w.onmsg?.(w.last); }; w.onopen = () => res(w); w.onerror = rej; });
-const host = await open("role=host");
+const host = await open(process.env.SEASON === "1" ? "role=host" : "role=host&practice=1"); // practice rooms never touch the season board
 const bots = [];
 const names = N === 3 ? ["Ana", "Bo", "Cy"] : Array.from({ length: N }, (_, i) => "bot" + i);
 const lat = [];
@@ -21,7 +21,7 @@ const rounds = [];
 await new Promise((res, rej) => {
   const to = setTimeout(() => rej(new Error("timeout, last phase " + host.last?.phase)), 60000);
   host.onmsg = s => {
-    if (s.phase === "reveal") { rounds.push(s.current.kind); setTimeout(() => host.send(JSON.stringify({ t: "next" })), 50); }
+    if (s.phase === "reveal") { rounds.push(s.current.kind + (s.answeredCount < s.playerCount ? `(${s.answeredCount}/${s.playerCount})` : "")); setTimeout(() => host.send(JSON.stringify({ t: "next" })), 50); }
     if (s.phase === "final") { clearTimeout(to); res(); }
   };
   host.send(JSON.stringify({ t: "start" }));

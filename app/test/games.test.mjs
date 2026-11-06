@@ -16,3 +16,8 @@ test("validation + episode", () => {
   assert.equal(ep.length, 6); assert.ok(validAnswer(ep[3], 24)); assert.ok(!validAnswer(ep[3], 25));
   assert.ok(validAnswer(ep[1], 10)); assert.ok(!validAnswer(ep[1], 11)); assert.ok(!validAnswer(ep[0], 1.5));
 });
+import { seasonId } from "../src/room.js";
+test("season id = ISO week", () => {
+  assert.equal(seasonId(new Date("2026-11-06T10:00:00Z")), "season-2026-w45");
+  assert.equal(seasonId(new Date("2027-01-01T10:00:00Z")), "season-2026-w53");
+});

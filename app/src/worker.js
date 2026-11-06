@@ -1,6 +1,6 @@
 // Extriver prototype backend (Cloudflare Worker, free plan). Static game/app files come from ./public.
 // Endpoints: GET /health, GET /api/leaderboard?board=<id>, POST /api/score {board,name,score}
-import { Room } from "./room.js";
+import { Room, seasonId } from "./room.js";
 export { Room };
 const VERSION = "0.2.0";
 const MAX_NAME = 16, MAX_ENTRIES = 50;
@@ -31,7 +31,7 @@ export async function handle(req, env) {
     return json({ ok: kv !== "error", version: VERSION, kv, time: new Date().toISOString() }, kv === "error" ? 503 : 200);
   }
   if (url.pathname === "/api/leaderboard" && req.method === "GET") {
-    const board = cleanBoard(url.searchParams.get("board"));
+    const board = cleanBoard(url.searchParams.get("board") === "season" ? seasonId() : url.searchParams.get("board"));
     if (!board) return json({ error: "bad board" }, 400);
     const list = env.BOARD ? await (await env.BOARD.get(env.BOARD.idFromName(board)).fetch("https://do/")).json()
       : env.SCORES ? (await env.SCORES.get("lb:" + board, "json")) || [] : [];
