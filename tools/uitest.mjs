@@ -22,7 +22,12 @@ for (let r = 0; r < 7; r++) {
   for (const p of phones) {
     if (await p.$("[data-v]")) await p.click("[data-v]");
     else if (await p.$("#gok")) await p.click("#gok");
-    else if (await p.$("#tw")) { await p.fill("#tw", p === phones[0] ? "사과" : "딸기"); await p.click("#tok"); }
+    else if (await p.$("#tw")) {
+      // one clean word + one busted (contains ㄹ) per category, so the reveal shows both
+      const W = { food: ["피자", "라면"], animal: ["고양이", "호랑이"], classroom: ["의자", "칠판"], sport: ["축구", "농구"], sky: ["해", "구름"], fruit: ["포도", "딸기"],
+        job: ["의사", "경찰"], country: ["한국", "프랑스"], colour: ["파랑", "빨강"], "game item": ["방패", "활"] };
+      const q = (await p.textContent("h1")).toLowerCase(), k = Object.keys(W).find(x => q.includes(x)) || "food";
+      await p.fill("#tw", W[k][p === phones[0] ? 0 : 1]); await p.click("#tok"); }
     else await p.click(".cell >> nth=12");
   }
   await host.waitForSelector("#next"); await host.waitForTimeout(1300); await host.screenshot({ path: `${out}/2-reveal${r + 1}.png` }); await phones[0].waitForSelector("text=Look at the big screen"); await phones[0].screenshot({ path: `${out}/p-reveal${r + 1}.png` });
