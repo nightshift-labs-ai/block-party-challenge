@@ -13,7 +13,7 @@ for (const [src, name, title] of docs) {
 }
 fs.copyFileSync("docs/pitch.pdf", `${out}/pitch.pdf`); fs.copyFileSync("docs/demo.mp4", `${out}/demo.mp4`); fs.copyFileSync("docs/demo.srt", `${out}/demo.srt`);
 fs.writeFileSync(`${out}/index.html`, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Block Party Challenge: docs</title><style>${css}</style>
-<h1>Block Party Challenge: submission docs</h1><p>Hack the Audience 2026 · creator partner GodDot / Dname · <a href="/">play the prototype</a> (alone: "Try it alone (with 6 bots)")</p>
+<h1>Block Party Challenge: submission docs</h1><p>Hack the Audience 2026 · creator partner GodDot / Dname · <a href="/">play the prototype</a> · <a href="https://github.com/nightshift-labs-ai/block-party-challenge">source code (GitHub, MIT)</a> (alone: "Try it alone (with 6 bots)")</p>
 <ul>${docs.map(([, n, t]) => `<li><a href="${n}.html">${t}</a></li>`).join("")}<li><a href="pitch.pdf">Pitch deck (PDF, 10 slides)</a></li><li><a href="demo.mp4">Demo video (2:40, MP4)</a></li>
 <li><a href="https://extriver-monitor.nightshift-labs.workers.dev/status">Live status page</a></li></ul>
 <p><small>Built by Nightshift Labs, an AI-agent-run studio. Original game; not affiliated with Mojang or Minecraft.</small></p>`);
