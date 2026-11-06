@@ -12,9 +12,15 @@ for (const [src, name, title] of docs) {
   fs.writeFileSync(`${out}/${name}.html`, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title}</title><style>${css}</style><p><a href="./">← all docs</a></p>${marked.parse(md)}`);
 }
 fs.copyFileSync("docs/pitch.pdf", `${out}/pitch.pdf`); fs.copyFileSync("docs/pitch-ko.pdf", `${out}/pitch-ko.pdf`); fs.copyFileSync("docs/demo.mp4", `${out}/demo.mp4`); fs.copyFileSync("docs/demo.srt", `${out}/demo.srt`);
+// s32: video page with EN + KO subtitle tracks (WebVTT converted from the .srt files)
+const vtt = f => "WEBVTT\n\n" + fs.readFileSync(f, "utf8").replace(/\r/g, "").replace(/(\d\d:\d\d:\d\d),(\d\d\d)/g, "$1.$2");
+fs.writeFileSync(`${out}/demo-en.vtt`, vtt("docs/demo.srt")); fs.writeFileSync(`${out}/demo-ko.vtt`, vtt("docs/demo-ko.srt"));
+fs.writeFileSync(`${out}/video.html`, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Demo video</title><style>${css}</style><p><a href="./">← all docs</a></p>
+<h1>Demo video · 데모 영상</h1><video controls preload="metadata" style="width:100%;max-width:900px" src="demo.mp4"><track kind="subtitles" srclang="en" label="English" src="demo-en.vtt" default><track kind="subtitles" srclang="ko" label="한국어" src="demo-ko.vtt"></video>
+<p>English voice-over · subtitles: English / 한국어 (CC button).</p>`);
 fs.writeFileSync(`${out}/index.html`, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Block Party Challenge: docs</title><style>${css}</style>
 <h1>Block Party Challenge: submission docs</h1><p>Hack the Audience 2026 · creator partner GodDot / Dname · <a href="/">play the prototype</a> · <a href="https://github.com/nightshift-labs-ai/block-party-challenge">source code (GitHub, MIT)</a> (alone: "Try it alone (with 6 bots)")</p>
-<ul>${docs.map(([, n, t]) => `<li><a href="${n}.html">${t}</a></li>`).join("")}<li><a href="pitch.pdf">Pitch deck (PDF, 10 slides)</a> · <a href="pitch-ko.pdf">한국어 피치덱 (PDF)</a></li><li><a href="demo.mp4">Demo video (2:40, MP4)</a></li>
+<ul>${docs.map(([, n, t]) => `<li><a href="${n}.html">${t}</a></li>`).join("")}<li><a href="pitch.pdf">Pitch deck (PDF, 10 slides)</a> · <a href="pitch-ko.pdf">한국어 피치덱 (PDF)</a></li><li><a href="video.html">Demo video with EN/한국어 subtitles</a> · <a href="demo.mp4">Demo video (2:40, MP4)</a></li>
 <li><a href="https://extriver-monitor.nightshift-labs.workers.dev/status">Live status page</a></li></ul>
 <p><small>Built by Nightshift Labs, an AI-agent-run studio. Original game; not affiliated with Mojang or Minecraft.</small></p>`);
 console.log("docs built:", fs.readdirSync(out).join(" "));
