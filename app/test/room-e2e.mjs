@@ -14,7 +14,7 @@ const lat = [];
 await Promise.all(names.map(async n => {
   const b = await open("name=" + n); bots.push(b);
   b.onmsg = s => { if (s.t === "state" && s.phase === "question" && !s.answered.includes(s.you)) {
-    const c = s.current; const v = c.kind === "telepathy" ? 0 : c.kind === "greed" ? 2 + (bots.indexOf(b) % 3) : 12;
+    const c = s.current; const v = c.kind === "telepathy" ? 0 : c.kind === "greed" ? 2 + (bots.indexOf(b) % 3) : c.kind === "taboo" ? ["사과", "cat", "바나나", "dog " + bots.indexOf(b)][bots.indexOf(b) % 4] : 12;
     b.sentAt = Date.now(); b.send(JSON.stringify({ t: "answer", v })); }
     if (s.t === "state" && s.phase === "reveal" && b.sentAt) { lat.push(Date.now() - b.sentAt); b.sentAt = 0; } };
 }));
@@ -24,6 +24,9 @@ const rounds = [];
 await new Promise((res, rej) => {
   const to = setTimeout(() => rej(new Error("timeout, last phase " + host.last?.phase)), 60000);
   host.onmsg = s => {
+    if (s.phase === "reveal" && s.current.kind === "taboo" && !host.vetoed) { host.vetoed = true; host.send(JSON.stringify({ t: "veto", w: "cat" })); return; }
+    if (s.phase === "reveal" && s.current.kind === "taboo" && s.result.words.some(x => x.w === "cat")) return; // wait for veto
+    if (s.phase === "reveal" && s.current.kind === "taboo" && !host.vetoChecked) { host.vetoChecked = true; if (Object.values(s.result.verdict).filter(v => v === "vetoed").length < 1) { console.log("VETO FAILED"); process.exit(1); } }
     if (s.phase === "reveal") { rounds.push(s.current.kind + (s.answeredCount < s.playerCount ? `(${s.answeredCount}/${s.playerCount})` : "")); setTimeout(() => host.send(JSON.stringify({ t: "next" })), 50); }
     if (s.phase === "final") { clearTimeout(to); res(); }
   };

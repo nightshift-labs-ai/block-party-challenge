@@ -29,7 +29,7 @@ const sfx = {
   reveal: () => [392, 523, 659, 1047].forEach((f, i) => beep(f, 0.15, "triangle", 0.09, i * 0.08)),
   bust: () => [300, 200, 120].forEach((f, i) => beep(f, 0.2, "sawtooth", 0.07, i * 0.12)),
 };
-let lastTick = 0, ws = null, S = null, role = null, code = null, myPick = null, tick = null;
+let phoneKey = null, lastTick = 0, ws = null, S = null, role = null, code = null, myPick = null, tick = null;
 
 function home() {
   const q = new URLSearchParams(location.search).get("code") || "";
@@ -97,6 +97,7 @@ function roundTitle(c) {
   return c.kind === "telepathy" ? T("TELEPATHY: match the crowd!", "텔레파시: 다수와 같은 답을!")
     : c.kind === "greed" ? T(`GREED: the pot has ${c.pot} coins. Take 0–${c.maxTake}. Too greedy together = nobody gets anything!`, `욕심 게임: 동전 ${c.pot}개. 0–${c.maxTake}개 가져가기. 합이 넘치면 모두 0!`)
     : c.kind === "lava" ? T("LAVA: 8 blocks will turn to lava. Stand on a safe one — alone for a bonus!", "용암: 8칸이 용암으로! 안전한 칸에 서라 (혼자면 보너스)")
+    : c.kind === "taboo" ? T(`DON'T SAY IT: ${c.q} — without the letter E!`, `금지어 챌린지: ${c.qk} — ㄹ 들어가면 탈락!`)
     : c.kind === "blockmatch" ? T("BLOCK TELEPATHY: pick the block most people pick!", "블록 텔레파시: 가장 많이 고를 블록은?")
     : T("FIND THE DIAMOND: pick a block", "다이아 찾기: 블록을 골라라");
 }
@@ -125,6 +126,7 @@ function reveal(c, r) {
   }
   if (c.kind === "greed") return `<p class="big center">${r.total} / ${r.pot} ${r.ok ? "✅ " + T("Everyone keeps their coins!", "모두 획득!") : "💥 " + T("Too greedy! Nobody gets anything.", "욕심 폭발! 모두 0점")}</p>`;
   if (c.kind === "blockmatch") return grid(c, false, r.count);
+  if (c.kind === "taboo") return `<p class="big">${r.busted} ${T("busted", "탈락")}</p>${role === "host" ? `<small>${T("Off-topic or not OK? Click a word to reject it.", "주제에 안 맞거나 부적절하면 단어를 클릭해 무효 처리.")}</small>` : ""}<div class="players">${(r.words || []).map(x => `<span class="chip ${x.ok ? "done" : "bust"}" ${role === "host" ? `data-w="${esc(x.w)}" title="Click to reject / 클릭하면 무효"` : ""}>${esc(x.w)}${x.n > 1 ? " ×" + x.n : ""}</span>`).join("") || "—"}</div>`;
   if (c.kind === "lava") return grid({ ...c, lavaShown: r.lava }, false, r.count);
   const picks = {}; for (const v of Object.values(r.answers)) picks[v] = (picks[v] || 0) + 1;
   return grid(c, false, picks);
@@ -142,7 +144,7 @@ function render() {
       document.getElementById("start").onclick = () => send({ t: "start" });
     } else if (S.phase === "question") {
       $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds} · ${code}</small><h1 class="big">${roundTitle(c)}</h1>${timerBar()}
-      <div class="cols"><div>${c.kind === "telepathy" ? `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt">${bi(o, c.ok?.[i])}</div>`).join("")}</div>` : c.kind === "diamond" || c.kind === "blockmatch" || c.kind === "lava" ? grid(c, false) : ""}</div><div>
+      <div class="cols"><div>${c.kind === "telepathy" ? `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt">${bi(o, c.ok?.[i])}</div>`).join("")}</div>` : c.kind === "diamond" || c.kind === "blockmatch" || c.kind === "lava" ? grid(c, false) : c.kind === "taboo" ? `<p class="big">${T("One word. Korean: no ㄹ (ㄹ, 를, 일, 닭…). English: no E. Unique words score double!", "한 단어! 한글은 ㄹ 금지 (ㄹ, 를, 일, 닭…), 영어는 E 금지. 남과 다른 단어면 2배!")}</p>` : ""}</div><div>
       <div class="panel"><b>${S.answeredCount} / ${S.playerCount} ${T("answered", "제출")}</b>${S.playerCount <= 30 ? `<div class="players">${S.players.map(p => `<span class="chip ${S.answered.includes(p.pid) ? "done" : ""}">${esc(p.name)}</span>`).join("")}</div>` : ""}</div>
       <button class="btn alt" id="skip">${T("Reveal now", "바로 공개")}</button></div></div>`;
       document.getElementById("skip").onclick = () => send({ t: "skip" });
@@ -150,6 +152,7 @@ function render() {
       $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds}</small><h1 class="big">${roundTitle(c)}</h1><div class="cols"><div class="pop">${reveal(c, S.result)}</div>
       <div><div class="panel">${scores(S.players, 5)}</div><button class="btn" id="next">${T("Next", "다음")}</button></div></div>`;
       document.getElementById("next").onclick = () => send({ t: "next" });
+      document.querySelectorAll("[data-w]").forEach(el => el.onclick = () => send({ t: "veto", w: el.dataset.w }));
     } else if (S.phase === "final") {
       const w = S.players[0];
       $app.innerHTML = `<h1>🏆 ${esc(w?.name || "")}</h1><div class="panel">${scores(S.players)}</div><button class="btn" id="again">${T("Play again", "다시 하기")}</button>`;
@@ -159,17 +162,31 @@ function render() {
   }
   // phone
   const head = `<small>${esc(me?.name || "")} · ${me?.score ?? 0} pts · ${code}</small>`;
+  if (S.phase !== "question") phoneKey = null;
   if (S.phase === "lobby") $app.innerHTML = `${head}<h1>${T("You're in!", "참가 완료!")}</h1><p>${T("Watch the big screen.", "큰 화면을 보세요.")}</p>`;
   else if (S.phase === "question") {
-    const done = S.answered.includes(S.you);
+    const done = S.answered.includes(S.you), key = `${S.round}:${done}`;
+    // Don't rebuild the controls on every broadcast (others answering) — it would wipe typing / slider position.
+    if (key === phoneKey && document.querySelector(".timer")) return;
+    phoneKey = key;
     if (done) { $app.innerHTML = `${head}<h1>${T("Locked in!", "제출 완료!")}</h1>${timerBar()}`; return; }
     let body = "";
     if (c.kind === "telepathy") body = `<p>${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<button class="btn opt" data-v="${i}">${bi(o, c.ok?.[i])}</button>`).join("")}</div>`;
     else if (c.kind === "greed") body = `<p class="big center" id="gv">3</p><input type="range" class="slider" min="0" max="${c.maxTake}" value="3" id="gr"><button class="btn alt" id="gok">${T("Take coins", "가져가기")}</button>`;
+    else if (c.kind === "taboo") body = `<p>${T("Type one word — Korean without ㄹ, English without E.", "한 단어 입력 — 한글은 ㄹ 없이, 영어는 E 없이.")}</p><input id="tw" maxlength="16" autocomplete="off" placeholder="${esc(c.qk)}"><div id="twarn" style="color:var(--red);min-height:1.2em"></div><button class="btn alt" id="tok">${T("Submit", "제출")}</button>`;
     else body = grid(c, true);
     $app.innerHTML = `${head}<h1 class="big">${roundTitle(c)}</h1>${timerBar()}${body}`;
     document.querySelectorAll("[data-v]").forEach(b => b.onclick = () => send({ t: "answer", v: +b.dataset.v }));
     document.querySelectorAll(".cell").forEach(b => b.onclick = () => { myPick = +b.dataset.i; send({ t: "answer", v: myPick }); });
+    const tw = document.getElementById("tw");
+    if (tw) {
+      tw.focus();
+      // Live warning only (the server decides): flags ㄹ inside Hangul syllables or the letter E.
+      const bad = w => /e/i.test(w) || [...w].some(ch => { const k = ch.codePointAt(0); if (k >= 0x3139 && k <= 0x3140) return true; if (k < 0xac00 || k > 0xd7a3) return false; const i = k - 0xac00, f = i % 28; return Math.floor(i / 588) === 5 || (f >= 8 && f <= 15); });
+      tw.oninput = () => document.getElementById("twarn").textContent = bad(tw.value) ? "⚠️ ㄹ / E!" : "";
+      const go = () => { const w = tw.value.trim(); if (w) send({ t: "answer", v: w }); };
+      document.getElementById("tok").onclick = go; tw.onkeydown = e => { if (e.key === "Enter") go(); };
+    }
     const gr = document.getElementById("gr");
     if (gr) { gr.oninput = () => document.getElementById("gv").textContent = gr.value; document.getElementById("gok").onclick = () => send({ t: "answer", v: +gr.value }); }
   } else if (S.phase === "reveal") {
@@ -177,6 +194,7 @@ function render() {
     const r = S.result || {};
     const why = got === undefined ? "" : c.kind === "greed" ? (r.ok ? `✅ ${r.total}/${r.pot} — ${T("the room stayed fair!", "모두 욕심을 참았다!")}` : `💥 ${r.total}/${r.pot} — ${T("too greedy!", "욕심 폭발!")}`)
       : c.kind === "lava" ? (got === 0 ? `🔥 ${T("You fell in the lava!", "용암에 빠졌다!")}` : got > 150 ? `🏝️ ${T("Safe and alone: bonus!", "혼자 생존: 보너스!")}` : `🙂 ${T("Safe!", "생존!")}`)
+      : c.kind === "taboo" ? (got === 0 ? `🚫 ${T("Busted! The word had a banned letter (or wasn't allowed).", "탈락! 금지 글자가 들어갔어요 (또는 허용되지 않는 단어).")}` : got > 100 ? `✨ ${T("Clean and original: double points!", "통과 + 나만의 단어: 2배!")}` : `🙂 ${T("Clean! Someone else had the same word.", "통과! 같은 단어를 쓴 사람이 있어요.")}`)
       : c.kind === "diamond" ? (got === 500 ? `💎 ${T("You found it!", "다이아 발견!")}` : got ? T("Close!", "아깝다!") : T("Far away…", "멀었다…"))
       : got ? T("You read the crowd!", "눈치 백단!") : T("Nobody agreed with you.", "아무도 같은 답을 안 골랐다.");
     $app.innerHTML = `${head}<h1>${got === undefined ? T("No answer", "미제출") : "+" + got}</h1><p class="big">${why}</p><p>${T("Look at the big screen!", "큰 화면을 보세요!")}</p>`;

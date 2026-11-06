@@ -70,7 +70,49 @@ export function pickLava(rnd = Math.random, n = 8) {
   return cells.slice(0, n).sort((a, b) => a - b);
 }
 
+// Taboo ("don't say ㄹ"): answer a category with one word that avoids the banned letter —
+// Korean: no ㄹ anywhere in a syllable (initial or final, incl. ㄺ ㄻ … ㅀ); English: no letter "e".
+// Valid = 100, and +100 if nobody else wrote the same word (rewards originality). Busted/blocked = 0.
+export const TABOO = [
+  { q: "Name a food", qk: "음식 이름" }, { q: "Name an animal", qk: "동물 이름" }, { q: "Name something in a classroom", qk: "교실에 있는 물건" },
+  { q: "Name a sport", qk: "운동 종목" }, { q: "Name something in the sky", qk: "하늘에 있는 것" }, { q: "Name a fruit", qk: "과일 이름" },
+  { q: "Name a job", qk: "직업 이름" }, { q: "Name a country", qk: "나라 이름" }, { q: "Name a colour", qk: "색깔 이름" }, { q: "Name a game item", qk: "게임 아이템" },
+];
+// Small kid-safety blocklist (answers are shown on a stream). Matched as substrings after lower-casing and removing spaces.
+const BLOCK = ["fuck", "shit", "bitch", "sex", "porn", "nazi", "kill", "dick", "cunt", "nigg", "faggot", "retard",
+  "시발", "씨발", "ㅅㅂ", "ㅆㅂ", "병신", "ㅂㅅ", "좆", "존나", "개새", "섹스", "미친", "닥쳐", "지랄", "fuk", "sibal"];
+export function normWord(v) {
+  if (typeof v !== "string") return null;
+  const w = v.normalize("NFC").replace(/\s+/g, " ").trim().slice(0, 16);
+  return /^[\p{L}\p{N} ]{1,16}$/u.test(w) ? w : null;
+}
+export function hasRieul(w) {
+  for (const ch of w) {
+    const c = ch.codePointAt(0);
+    if (c >= 0x3139 && c <= 0x3140) return true; // compatibility jamo ㄹ ㄺ … ㅀ
+    if (c >= 0xac00 && c <= 0xd7a3) { const i = c - 0xac00, ini = Math.floor(i / 588), fin = i % 28; if (ini === 5 || (fin >= 8 && fin <= 15)) return true; }
+  }
+  return false;
+}
+export function tabooCheck(w) {
+  const flat = w.toLowerCase().replace(/ /g, "");
+  if (BLOCK.some(b => flat.includes(b))) return "blocked";
+  if (hasRieul(w) || /e/i.test(w)) return "busted";
+  return "ok";
+}
+export function scoreTaboo(answers) {
+  const verdict = {}, count = {}, pts = {}, words = [];
+  for (const [id, w] of Object.entries(answers)) { verdict[id] = tabooCheck(w); if (verdict[id] === "ok") { const k = w.toLowerCase(); count[k] = (count[k] || 0) + 1; } }
+  for (const [id, w] of Object.entries(answers)) pts[id] = verdict[id] === "ok" ? 100 + (count[w.toLowerCase()] === 1 ? 100 : 0) : 0;
+  // Public word list for the big screen: blocked words are never shown, duplicates merged, at most 40.
+  const seen = new Map();
+  for (const [id, w] of Object.entries(answers)) { if (verdict[id] === "blocked") continue; const k = w.toLowerCase(); if (!seen.has(k)) seen.set(k, { w, ok: verdict[id] === "ok", n: 0 }); seen.get(k).n++; }
+  words.push(...[...seen.values()].sort((a, b) => b.ok - a.ok || b.n - a.n).slice(0, 40));
+  return { pts, verdict, words, busted: Object.values(verdict).filter(v => v !== "ok").length };
+}
+
 export function validAnswer(round, v) {
+  if (round.kind === "taboo") return normWord(v) !== null;
   if (!Number.isInteger(v)) return false;
   if (round.kind === "telepathy") return v >= 0 && v < round.opts.length;
   if (round.kind === "greed") return v >= 0 && v <= round.maxTake;
@@ -82,12 +124,13 @@ export function validAnswer(round, v) {
 export function makeEpisode(nPlayers, rnd = Math.random) {
   const t = [...TELEPATHY].sort(() => rnd() - 0.5);
   const pot = Math.max(10, Math.round(nPlayers * 4));
+  const tb = TABOO[Math.floor(rnd() * TABOO.length)];
   return [
     { kind: "telepathy", ...t[0], secs: 15 },
     { kind: "greed", pot, maxTake: 10, secs: 15 },
     { kind: "diamond", diamond: Math.floor(rnd() * 25), secs: 12 },
     { kind: "blockmatch", secs: 12 },
-    { kind: "telepathy", ...t[1], secs: 15 },
+    { kind: "taboo", ...tb, secs: 20 },
     { kind: "lava", lava: pickLava(rnd), secs: 12 },
     { kind: "greed", pot: Math.max(8, Math.round(nPlayers * 3)), maxTake: 10, secs: 15 },
   ];

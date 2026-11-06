@@ -1,6 +1,6 @@
 // Party room: one Durable Object per 4-letter code. Host screen (TV / stream) + up to 300 phones via WebSocket.
 // Phases: lobby → question → reveal → … → final. Server owns timers and scoring (clients can't cheat the clock).
-import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond, scoreLava } from "./games.js";
+import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond, scoreLava, scoreTaboo, normWord } from "./games.js";
 export function seasonId(d = new Date()) {
   const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
@@ -78,6 +78,7 @@ export class Room {
     if (m.t === "start" && this.phase === "lobby" && this.players.size >= 1) { this.episode = makeEpisode(this.players.size); this.round = -1; this.next(); }
     else if (m.t === "next" && this.phase === "reveal") this.next();
     else if (m.t === "skip" && this.phase === "question") this.reveal();
+    else if (m.t === "veto" && this.phase === "reveal" && this.episode?.[this.round]?.kind === "taboo" && typeof m.w === "string") this.veto(m.w);
     else if (m.t === "again" && this.phase === "final") { for (const p of this.players.values()) p.score = 0; this.reset(); this.broadcast(); }
   }
 
@@ -103,16 +104,27 @@ export class Room {
     if (this.phase !== "question" || pid in this.answers || !this.players.has(pid)) return;
     const r = this.episode[this.round];
     if (!validAnswer(r, v) || Date.now() > this.deadline + 500) return;
-    this.answers[pid] = v;
+    this.answers[pid] = r.kind === "taboo" ? normWord(v) : v;
     const active = [...this.players.keys()].filter(id => this.playerWs(id)).length;
     if (Object.keys(this.answers).length >= active) this.reveal(); else this.broadcast();
+  }
+
+  // Host (streamer) rejects a word in the taboo round — off-topic for the category or not OK on stream:
+  // its writers lose that round's points and the word disappears from every screen.
+  veto(w) {
+    const k = w.toLowerCase(), r = this.result; if (!r?.words) return;
+    for (const [pid, v] of Object.entries(this.answers)) if (v.toLowerCase() === k) {
+      const p = this.players.get(pid); if (p) p.score -= r.pts[pid] || 0; r.pts[pid] = 0; r.verdict[pid] = "vetoed"; }
+    r.words = r.words.filter(x => x.w.toLowerCase() !== k);
+    r.busted = Object.values(r.verdict).filter(v => v !== "ok").length;
+    this.broadcast();
   }
 
   reveal() {
     if (this.phase !== "question") return;
     this.state.storage.deleteAlarm();
     const r = this.episode[this.round];
-    const res = r.kind === "telepathy" || r.kind === "blockmatch" ? scoreTelepathy(this.answers) : r.kind === "greed" ? scoreGreed(this.answers, r.pot) : r.kind === "lava" ? scoreLava(this.answers, r.lava) : scoreDiamond(this.answers, r.diamond);
+    const res = r.kind === "telepathy" || r.kind === "blockmatch" ? scoreTelepathy(this.answers) : r.kind === "greed" ? scoreGreed(this.answers, r.pot) : r.kind === "lava" ? scoreLava(this.answers, r.lava) : r.kind === "taboo" ? scoreTaboo(this.answers) : scoreDiamond(this.answers, r.diamond);
     for (const [pid, pts] of Object.entries(res.pts)) { const p = this.players.get(pid); if (p) p.score += pts; }
     this.result = { ...res, answers: this.answers };
     this.phase = "reveal";
@@ -125,7 +137,7 @@ export class Room {
     if (r && this.phase !== "question" && r.kind === "diamond") pub.diamond = r.diamond; // hidden until reveal
     return {
       t: "state", phase: this.phase, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
-      current: pub, result: this.phase === "question" || !this.result ? null : full ? this.result : { ...this.result, answers: undefined, pts: forPid ? { [forPid]: this.result.pts[forPid] } : {} },
+      current: pub, result: this.phase === "question" || !this.result ? null : full ? this.result : { ...this.result, answers: undefined, verdict: undefined, pts: forPid ? { [forPid]: this.result.pts[forPid] } : {} },
       answered: full ? Object.keys(this.answers) : forPid && forPid in this.answers ? [forPid] : [],
       answeredCount: Object.keys(this.answers).length, playerCount: this.players.size,
       players: this.ranked.slice(0, 50).concat(forPid && !this.ranked.slice(0, 50).some(p => p.pid === forPid) ? this.ranked.filter(p => p.pid === forPid) : []),

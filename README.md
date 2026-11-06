@@ -16,6 +16,7 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
   - **Greed** (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.
   - **Find the Diamond** (다이아 찾기) — a 5×5 block field hides one diamond; closer picks score more.
   - **Block Telepathy** (블록 텔레파시) — pick the block the crowd picks.
+  - **Don't Say It** (금지어 챌린지) — from his top short ("Don't say ㄹ and win", 5.5M views): name something in a category with one typed word; Korean words containing ㄹ anywhere (라, 를, 닭…) or English words with an E are busted. Unique clean words score double. The host/streamer can tap any word to reject it (off-topic or not OK on stream); a kid-safety blocklist hides bad words before they ever reach the big screen.
   - **Lava** (용암) — 8 of 25 blocks turn to lava after everyone picks; survive, and stand alone for a bonus (from his "escape the lava" challenge).
 - **Streamer overlay**: `/?overlay=1` as an OBS/stream browser source — transparent background, outlined text, keyboard-driven (Space/Enter: start → reveal → next), so Dname can run a live "Dname Final" with viewers on their phones.
 - Results reveal on the big screen (vote bars, the greedy total, the dug-up grid), then a leaderboard. Every finished episode feeds a **weekly season top 10**.

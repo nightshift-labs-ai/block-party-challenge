@@ -26,3 +26,19 @@ test("lava", () => {
   assert.deepEqual(scoreLava({ a: 2 }, [0]).pts, { a: 200 });
   const l = pickLava(() => 0.5); assert.equal(new Set(l).size, 8);
 });
+import { scoreTaboo, hasRieul, normWord, tabooCheck } from "../src/games.js";
+test("taboo: ㄹ detection (initial, final, compound final, jamo) and E", () => {
+  assert.ok(hasRieul("라면")); assert.ok(hasRieul("딸기")); assert.ok(hasRieul("닭")); assert.ok(hasRieul("ㄹ")); assert.ok(hasRieul("사과를"));
+  assert.ok(!hasRieul("사과")); assert.ok(!hasRieul("바나나")); assert.ok(!hasRieul("cat"));
+  assert.equal(tabooCheck("apple"), "busted"); assert.equal(tabooCheck("cat"), "ok"); assert.equal(tabooCheck("시발"), "blocked");
+});
+test("taboo: scoring, uniqueness bonus, public word list hides blocked", () => {
+  const r = scoreTaboo({ a: "사과", b: "사과", c: "포도", d: "딸기", e: "씨 발" });
+  assert.deepEqual(r.pts, { a: 100, b: 100, c: 200, d: 0, e: 0 });
+  assert.equal(r.busted, 2); assert.ok(!r.words.some(x => x.w.includes("발") && x.w.includes("씨")));
+  assert.deepEqual(r.words.map(x => x.w), ["사과", "포도", "딸기"]);
+});
+test("taboo: answer validation", () => {
+  assert.equal(normWord("  고  양이 "), "고 양이"); assert.equal(normWord("<b>"), null); assert.equal(normWord(5), null); assert.equal(normWord(""), null);
+  const ep = makeEpisode(4, () => 0.3); assert.equal(ep[4].kind, "taboo"); assert.ok(validAnswer(ep[4], "사과")); assert.ok(!validAnswer(ep[4], 3));
+});

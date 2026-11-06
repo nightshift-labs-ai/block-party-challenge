@@ -22,6 +22,7 @@ for (let r = 0; r < 7; r++) {
   for (const p of phones) {
     if (await p.$("[data-v]")) await p.click("[data-v]");
     else if (await p.$("#gok")) await p.click("#gok");
+    else if (await p.$("#tw")) { await p.fill("#tw", p === phones[0] ? "사과" : "딸기"); await p.click("#tok"); }
     else await p.click(".cell >> nth=12");
   }
   await host.waitForSelector("#next"); await host.waitForTimeout(1300); await host.screenshot({ path: `${out}/2-reveal${r + 1}.png` }); await phones[0].waitForSelector("text=Look at the big screen"); await phones[0].screenshot({ path: `${out}/p-reveal${r + 1}.png` });
