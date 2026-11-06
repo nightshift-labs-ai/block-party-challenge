@@ -20,6 +20,8 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
   - **Block Telepathy** (블록 텔레파시) — pick the block the crowd picks.
   - **Don't Say It** (금지어 챌린지) — from his top short ("Don't say ㄹ and win", 5.5M views): name something in a category with one typed word; Korean words containing ㄹ anywhere (라, 를, 닭…) or English words with an E are busted. Unique clean words score double. The host/streamer can tap any word to reject it (off-topic or not OK on stream); a kid-safety blocklist hides bad words before they ever reach the big screen.
   - **Lava** (용암) — 8 of 25 blocks turn to lava after everyone picks; survive, and stand alone for a bonus (from his "escape the lava" challenge).
+- **Try it alone** (for judges and first-time visitors): the home-page button "Try it alone (with 6 bots)" opens a practice room where 6 bot players join
+  from the host page. Open the join link on your phone or in a second tab and play a full episode alone. Practice rooms never touch the season board.
 - **Daily Challenge** (`/?daily=1`, 오늘의 챌린지): shorts viewers arrive at any hour, not just during the weekly live final. Every Korean day has
   the same 5 rounds for everyone (seeded by date). You play against *today's crowd*: telepathy scores the % of players who picked what you picked,
   and lava gives a bonus if under 5% stood on your block. Ends with a Wordle-style shareable result (🟩🟨⬛ + points + link): the share loop

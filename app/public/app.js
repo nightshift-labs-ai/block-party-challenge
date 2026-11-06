@@ -29,7 +29,7 @@ const sfx = {
   reveal: () => [392, 523, 659, 1047].forEach((f, i) => beep(f, 0.15, "triangle", 0.09, i * 0.08)),
   bust: () => [300, 200, 120].forEach((f, i) => beep(f, 0.2, "sawtooth", 0.07, i * 0.12)),
 };
-let brandSent = false, phoneKey = null, lastTick = 0, ws = null, S = null, role = null, code = null, myPick = null, tick = null;
+let botsStarted = false, brandSent = false, phoneKey = null, lastTick = 0, ws = null, S = null, role = null, code = null, myPick = null, tick = null;
 
 function home() {
   const q = new URLSearchParams(location.search).get("code") || "";
@@ -37,6 +37,7 @@ function home() {
   <h1>Block Party Challenge<br><span class="ko">블록 파티 챌린지</span></h1>
   <div class="panel"><p>${T("One big screen, everyone plays on their phone. Read the crowd, don't get greedy, find the diamond.", "큰 화면 하나, 모두 폰으로 참가! 눈치 보고, 욕심 내지 말고, 다이아를 찾아라.")}</p>
   <button class="btn alt" id="host">${T("Host on this screen", "이 화면에서 방 만들기")}</button>
+  <button class="btn" id="solo">${T("Try it alone (with 6 bots)", "혼자 체험하기 (봇 6명)")}</button>
   <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1" style="color:var(--gold)">${esc(location.host)}/?overlay=1</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
   <div class="panel"><b>${T("Daily challenge", "오늘의 챌린지")}</b> <small>${T("5 rounds, no room needed: play against everyone who played today.", "방 없이 5라운드! 오늘 플레이한 모두와 대결.")}</small><br>
   <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button></div>
@@ -57,6 +58,7 @@ function home() {
     code = j.code; role = "host"; connect(hostQ());
   };
   document.getElementById("daily").onclick = () => daily();
+  document.getElementById("solo").onclick = () => { history.replaceState(null, "", "/?practice=1&bots=6"); document.getElementById("host").click(); };
   document.getElementById("join").onclick = () => {
     const c = document.getElementById("code").value.trim().toUpperCase(), n = document.getElementById("name").value.trim();
     if (!/^[A-Z]{4}$/.test(c) || !n) { document.getElementById("err").textContent = "Enter a 4-letter code and a nickname"; return; }
@@ -79,6 +81,7 @@ function connect(q) {
         if (m.phase === "question" && (prev?.phase !== "question" || prev.round !== m.round)) sfx.start();
         if (m.phase === "reveal" && prev?.phase === "question") (m.result && m.result.ok === false ? sfx.bust : sfx.reveal)();
       }
+      if (role === "host" && m.phase === "lobby" && !botsStarted) { botsStarted = true; startBots(+new URLSearchParams(location.search).get("bots") || 0); }
       if (role === "host" && m.phase === "lobby" && !brandSent) {
         brandSent = true; const u = new URLSearchParams(location.search);
         if (u.get("title") || u.get("sponsor") || u.get("prize")) send({ t: "brand", title: u.get("title"), sponsor: u.get("sponsor"), prize: u.get("prize") });
@@ -210,6 +213,21 @@ function render() {
   } else {
     $app.innerHTML = `${head}<h1>#${S.rank} / ${S.playerCount}</h1><p>${me?.score ?? 0} pts</p>`;
   }
+}
+
+// ---- Demo bots (?bots=N, max 12): extra players run from the host page so one person can try a full episode. Practice rooms only. ----
+function startBots(n) {
+  n = Math.min(12, Math.max(0, n | 0)); if (!n || new URLSearchParams(location.search).get("practice") !== "1") return;
+  const names = ["Bot Ari", "Bot Joon", "Bot Hana", "Bot Seo", "Bot Yuna", "Bot Doha", "Bot Minho", "Bot Taeo", "Bot Jiwoo", "Bot Rin", "Bot Sol", "Bot Ha"];
+  const words = ["피자", "고양이", "축구", "사과", "파랑", "한국", "의사", "라면", "딸기", "칼", "cat", "dog"];
+  for (let i = 0; i < n; i++) setTimeout(() => {
+    const b = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/room/${code}/ws?name=${encodeURIComponent(names[i])}`);
+    b.onmessage = e => { const s = JSON.parse(e.data); if (s.t !== "state" || s.phase !== "question" || s.answered.includes(s.you) || b.k === s.round + ":" + s.deadline) return;
+      b.k = s.round + ":" + s.deadline; const c = s.current, r = Math.random();
+      const v = c.kind === "telepathy" ? (r < 0.45 ? 0 : r < 0.7 ? 1 : r < 0.88 ? 2 : 3) : c.kind === "greed" ? 1 + Math.floor(r * 7)
+        : c.kind === "taboo" ? words[Math.floor(r * words.length)] : c.kind === "blockmatch" ? [12, 12, 6, 18, 0][Math.floor(r * 5)] : Math.floor(r * 25);
+      setTimeout(() => b.readyState === 1 && b.send(JSON.stringify({ t: "answer", v })), 2000 + r * 6000); };
+  }, 300 + i * 250);
 }
 
 // ---- Daily Challenge: same 5 rounds for everyone today (Korean date); scores come from today's crowd. ----
