@@ -67,6 +67,9 @@ The weekly final runs live on his stream, as an overlay, and becomes his next sh
 Brands sponsor the episodes and the prizes, so kids never pay to enter. In our base case, that's about fifty million won in year one, with every assumption in the open.
 
 18
-00:02:26,000 --> 00:02:34,520
-It runs on Cloudflare's edge, one room per durable object. Tested with two hundred phones, and monitored every five minutes. Built by an autonomous agent studio, Nightshift Labs.
+00:02:26,500 --> 00:02:36,800
+And after every episode, one click turns it into a ready-to-edit vertical short: the big moments of each round and the podium, in Korean, with the sponsor credited. Dee name just adds his music and posts.
 
+19
+00:02:38,000 --> 00:02:46,520
+It runs on Cloudflare's edge, one room per durable object. Tested with two hundred phones, and monitored every five minutes. Built by an autonomous agent studio, Nightshift Labs.

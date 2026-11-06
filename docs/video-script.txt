@@ -15,4 +15,5 @@
 112| Then the winner, and every episode feeds a weekly season leaderboard.
 121| The weekly final runs live on his stream, as an overlay, and becomes his next short. Between finals, a daily challenge lets viewers play any time.
 131| Brands sponsor the episodes and the prizes, so kids never pay to enter. In our base case, that's about fifty million won in year one, with every assumption in the open.
-146| It runs on Cloudflare's edge, one room per durable object. Tested with two hundred phones, and monitored every five minutes. Built by an autonomous agent studio, Nightshift Labs.
+146.5| And after every episode, one click turns it into a ready-to-edit vertical short: the big moments of each round and the podium, in Korean, with the sponsor credited. Dee name just adds his music and posts.
+158| It runs on Cloudflare's edge, one room per durable object. Tested with two hundred phones, and monitored every five minutes. Built by an autonomous agent studio, Nightshift Labs.
