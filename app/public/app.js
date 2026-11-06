@@ -1,4 +1,6 @@
 // Block Party Challenge — host screen + phone controller in one page.
+import { addRound, resetRecap, makeShort } from "/short.js";
+let short = { busy: false, label: "", html: "" };
 const $app = document.getElementById("app");
 const T = (en, ko) => `${en} <span class="ko">${ko}</span>`;
 const bi = (en, ko) => ko && ko !== en ? `${esc(en)} <span class="ko">${esc(ko)}</span>` : esc(en);
@@ -76,6 +78,10 @@ function connect(q) {
     else if (m.t === "error") { alert(m.msg); location.reload(); }
     else if (m.t === "state") {
       const prev = S; if (prev?.phase !== m.phase || prev?.round !== m.round) myPick = null; m.skew = Date.now() - m.now; S = m;
+      if (role === "host") {
+        if (m.phase === "lobby" && prev?.phase !== "lobby") { resetRecap(); short = { busy: false, label: "", html: "" }; }
+        if (m.phase === "reveal" && prev?.phase === "question") addRound(m);
+      }
       if (role === "host" && actx) {
         if (prev && m.playerCount > prev.playerCount && m.phase === "lobby") sfx.join();
         if (m.phase === "question" && (prev?.phase !== "question" || prev.round !== m.round)) sfx.start();
@@ -167,8 +173,19 @@ function render() {
       document.querySelectorAll("[data-w]").forEach(el => el.onclick = () => send({ t: "veto", w: el.dataset.w }));
     } else if (S.phase === "final") {
       const w = S.players[0];
-      $app.innerHTML = `<h1>🏆 ${esc(w?.name || "")}</h1><div class="panel">${scores(S.players)}</div><button class="btn" id="again">${T("Play again", "다시 하기")}</button>`;
+      $app.innerHTML = `<h1>🏆 ${esc(w?.name || "")}</h1><div class="panel">${scores(S.players)}</div><button class="btn" id="again">${T("Play again", "다시 하기")}</button> <button class="btn" id="short" ${short.busy || short.html ? "disabled" : ""}>${short.label || `🎬 ${T("Make a Short (9:16)", "쇼츠 만들기")}`}</button><div id="shortout">${short.html}</div>`;
       document.getElementById("again").onclick = () => send({ t: "again" });
+      document.getElementById("short").onclick = async () => {
+        if (short.busy) return; short.busy = true; render();
+        const setLabel = l => { short.label = l; const b = document.getElementById("short"); if (b) b.textContent = l; };
+        try {
+          const v = await makeShort(S.players, p => setLabel(`🎬 ${Math.round(p * 100)}%`));
+          const url = URL.createObjectURL(v.blob);
+          short.html = `<p><a class="btn" id="shortdl" download="block-party-short.webm" href="${url}">⬇ ${T("Download Short", "쇼츠 다운로드")} (${Math.round(v.seconds)} s, ${(v.blob.size / 1e6).toFixed(1)} MB)</a></p><small>${T("1080×1920 WebM, no music: add your own track in the editor. Made in this browser, nothing uploaded. Keep this tab visible while it records.", "1080×1920 WebM, 음악 없음 — 편집기에서 음악을 추가하세요. 브라우저에서만 생성되며 업로드되지 않습니다.")}</small>`;
+          short.label = "🎬 ✓";
+        } catch (err) { short.html = esc(err.message); short.label = ""; }
+        short.busy = false; render();
+      };
     }
     return;
   }

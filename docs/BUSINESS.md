@@ -55,7 +55,7 @@ What the model shows:
 | **YouTube Live Playables** (Sep 2025) | Built into YouTube, zero setup | Only the creator plays; viewers watch and chat. In Block Party every viewer plays. |
 | **Jackbox-style party packs** | Proven phone-as-controller format that people pay for | Generic content, bought per pack, meant for living rooms. Block Party is free, runs his formats and has a stream overlay. |
 | **Kahoot / classroom quiz tools** | Huge classroom reach | Quiz-only (right/wrong answers). Block Party's rounds are social (greed, telepathy, luck), so anyone can win. That is the appeal of his videos. |
-| **Chat polls / prediction widgets** | Easy for streamers | One question, no game, no score. Block Party has episodes, a season leaderboard and replays that make shorts. |
+| **Chat polls / prediction widgets** | Easy for streamers | One question, no game, no score. Block Party has episodes, a season leaderboard and a one-click **"Make a Short"** button that turns each episode into a 9:16 recap video. |
 
 The moat is not the technology. It is **his formats + his audience + the weekly final + the season leaderboard**, which a generic tool cannot copy.
 (Product descriptions are from each product's public pages. We did not verify current prices, so none are quoted.)
