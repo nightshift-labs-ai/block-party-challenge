@@ -42,3 +42,13 @@ test("taboo: answer validation", () => {
   assert.equal(normWord("  고  양이 "), "고 양이"); assert.equal(normWord("<b>"), null); assert.equal(normWord(5), null); assert.equal(normWord(""), null);
   const ep = makeEpisode(4, () => 0.3); assert.equal(ep[4].kind, "taboo"); assert.ok(validAnswer(ep[4], "사과")); assert.ok(!validAnswer(ep[4], 3));
 });
+import { dailyRounds, scoreDaily, kstDate } from "../src/games.js";
+test("daily: deterministic per date, scoring vs crowd", () => {
+  const a = dailyRounds("2026-11-06"), b = dailyRounds("2026-11-06"), c = dailyRounds("2026-11-07");
+  assert.deepEqual(a, b); assert.notDeepEqual(a, c); assert.equal(a.length, 5); assert.equal(a[3].lava.length, 8);
+  assert.equal(scoreDaily(a[0], 1, { 1: 3, 2: 1 }, 4), 75);
+  assert.equal(scoreDaily(a[1], a[1].diamond, {}, 1), 500);
+  const safe = [...Array(25).keys()].find(i => !a[3].lava.includes(i));
+  assert.equal(scoreDaily(a[3], safe, { [safe]: 1 }, 40), 200); assert.equal(scoreDaily(a[3], safe, { [safe]: 1 }, 5), 150); assert.equal(scoreDaily(a[3], a[3].lava[0], {}, 5), 0);
+  assert.equal(kstDate(Date.UTC(2026, 10, 6, 15, 30)), "2026-11-07");
+});

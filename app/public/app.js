@@ -38,6 +38,8 @@ function home() {
   <div class="panel"><p>${T("One big screen, everyone plays on their phone. Read the crowd, don't get greedy, find the diamond.", "큰 화면 하나, 모두 폰으로 참가! 눈치 보고, 욕심 내지 말고, 다이아를 찾아라.")}</p>
   <button class="btn alt" id="host">${T("Host on this screen", "이 화면에서 방 만들기")}</button>
   <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1" style="color:var(--gold)">${esc(location.host)}/?overlay=1</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
+  <div class="panel"><b>${T("Daily challenge", "오늘의 챌린지")}</b> <small>${T("5 rounds, no room needed: play against everyone who played today.", "방 없이 5라운드! 오늘 플레이한 모두와 대결.")}</small><br>
+  <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button></div>
   <div class="panel"><b>${T("Join a room", "방 참가")}</b>
   <input id="code" maxlength="4" placeholder="CODE" value="${esc(q)}" autocapitalize="characters">
   <input id="name" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}">
@@ -54,6 +56,7 @@ function home() {
     try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
     code = j.code; role = "host"; connect(hostQ());
   };
+  document.getElementById("daily").onclick = () => daily();
   document.getElementById("join").onclick = () => {
     const c = document.getElementById("code").value.trim().toUpperCase(), n = document.getElementById("name").value.trim();
     if (!/^[A-Z]{4}$/.test(c) || !n) { document.getElementById("err").textContent = "Enter a 4-letter code and a nickname"; return; }
@@ -203,4 +206,39 @@ function render() {
   }
 }
 
-home();
+// ---- Daily Challenge: same 5 rounds for everyone today (Korean date); scores come from today's crowd. ----
+async function daily() {
+  const tok = localStorage.bpTok || (localStorage.bpTok = [...crypto.getRandomValues(new Uint8Array(12))].map(b => (b % 36).toString(36)).join(""));
+  const d = await (await fetch("/api/daily")).json(), key = "bpDaily" + d.date;
+  const saved = JSON.parse(localStorage[key] || "[]"); let i = saved.length;
+  const MAX = [100, 500, 100, 200, 100];
+  const step = () => {
+    if (i >= d.rounds.length) return summary();
+    const c = d.rounds[i]; myPick = null;
+    const body = c.kind === "telepathy" ? `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, j) => `<button class="btn opt" data-v="${j}">${bi(o, c.ok?.[j])}</button>`).join("")}</div>` : grid(c, true);
+    $app.innerHTML = `<small>${T("Daily challenge", "오늘의 챌린지")} ${d.date} · ${i + 1}/5</small><h1 class="big">${roundTitle(c)}</h1>${body}`;
+    document.querySelectorAll("[data-v],.cell").forEach(b => b.onclick = async () => {
+      const v = +(b.dataset.v ?? b.dataset.i); myPick = c.kind === "telepathy" ? null : v;
+      document.querySelectorAll("[data-v],.cell").forEach(x => x.disabled = true);
+      const r = await (await fetch("/api/daily/answer", { method: "POST", body: JSON.stringify({ round: i, v, tok }) })).json();
+      if (r.error) return alert(r.error);
+      saved.push(r.pts); localStorage[key] = JSON.stringify(saved);
+      const crowd = c.kind === "telepathy"
+        ? `<div class="opts">${c.opts.map((o, j) => `<div class="opt">${bi(o, c.ok?.[j])}<br>${Math.round(100 * (r.counts[j] || 0) / r.total)}%<span class="bar" style="width:${100 * (r.counts[j] || 0) / r.total}%"></span></div>`).join("")}</div>`
+        : grid({ ...c, diamond: r.diamond, lavaShown: r.lava }, false, r.counts);
+      $app.innerHTML = `<small>${d.date} · ${i + 1}/5 · ${r.total} ${T(r.total === 1 ? "player today" : "players today", "명 참여")}</small><h1>+${r.pts}</h1><div class="pop">${crowd}</div><button class="btn" id="dn">${T("Next", "다음")}</button>`;
+      document.getElementById("dn").onclick = () => { i++; step(); };
+    });
+  };
+  const summary = () => {
+    const total = saved.reduce((a, b) => a + b, 0), boxes = saved.map((p, j) => p >= MAX[j] * 0.6 ? "🟩" : p > 0 ? "🟨" : "⬛").join("");
+    const share = `Block Party Daily ${d.date} ${boxes} ${total}pts ${location.origin}/?daily=1`;
+    $app.innerHTML = `<h1>${total} pts</h1><p class="big">${boxes}</p><div class="panel"><small>${esc(share)}</small><br><button class="btn alt" id="sh">${T("Copy result", "결과 복사")}</button></div>
+    <p>${T("New challenge every day at midnight (Korea time).", "매일 자정(한국 시간) 새 챌린지!")}</p><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
+    document.getElementById("sh").onclick = () => { navigator.share ? navigator.share({ text: share }).catch(() => {}) : navigator.clipboard?.writeText(share); };
+    document.getElementById("hm").onclick = () => { history.replaceState(null, "", "/"); home(); };
+  };
+  step();
+}
+
+if (new URLSearchParams(location.search).get("daily") === "1") daily(); else home();

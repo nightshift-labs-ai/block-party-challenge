@@ -135,3 +135,25 @@ export function makeEpisode(nPlayers, rnd = Math.random) {
     { kind: "greed", pot: Math.max(8, Math.round(nPlayers * 3)), maxTake: 10, secs: 15 },
   ];
 }
+
+// ---- Daily Challenge (async, same 5 rounds for everyone each Korean day; you play against today's crowd) ----
+export function kstDate(now = Date.now()) { return new Date(now + 9 * 3600e3).toISOString().slice(0, 10); }
+export function seeded(str) { // mulberry32 seeded from a string hash
+  let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  let a = h >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+export function dailyRounds(date) {
+  const rnd = seeded("bp-daily-" + date), t = [...TELEPATHY].sort(() => rnd() - 0.5);
+  return [
+    { kind: "telepathy", ...t[0] }, { kind: "diamond", diamond: Math.floor(rnd() * 25) }, { kind: "blockmatch" },
+    { kind: "lava", lava: pickLava(rnd) }, { kind: "telepathy", ...t[1] },
+  ];
+}
+// counts = today's answer counts for this round (including this player's answer), total = players who answered it.
+export function scoreDaily(round, v, counts, total) {
+  if (round.kind === "telepathy" || round.kind === "blockmatch") return Math.round(100 * (counts[v] || 0) / Math.max(1, total));
+  if (round.kind === "diamond") return scoreDiamond({ x: v }, round.diamond).pts.x;
+  if (round.kind === "lava") return round.lava.includes(v) ? 0 : 150 + (total >= 20 && (counts[v] || 0) / total < 0.05 ? 50 : 0);
+  return 0;
+}
+export const DAILY_MAX = [100, 500, 100, 200, 100];

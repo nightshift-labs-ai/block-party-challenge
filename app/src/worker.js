@@ -1,6 +1,7 @@
 // Extriver prototype backend (Cloudflare Worker, free plan). Static game/app files come from ./public.
 // Endpoints: GET /health, GET /api/leaderboard?board=<id>, POST /api/score {board,name,score}
 import { Room, seasonId } from "./room.js";
+import { kstDate, dailyRounds, validAnswer, scoreDaily } from "./games.js";
 export { Room };
 const VERSION = "0.2.0";
 const MAX_NAME = 16, MAX_ENTRIES = 50;
@@ -57,6 +58,21 @@ export async function handle(req, env) {
     const rank = top.findIndex(e => e.score === score && e.name === cleanName(body.name)) + 1;
     return json({ ok: true, rank: rank || null });
   }
+  // Daily Challenge: GET → today's public rounds (no hidden cells); POST {round, v, tok} → crowd counts, your points, the reveal.
+  if (url.pathname === "/api/daily" && req.method === "GET") {
+    const date = kstDate(), rounds = dailyRounds(date).map(r => ({ kind: r.kind, q: r.q, opts: r.opts, qk: r.qk, ok: r.ok }));
+    return json({ date, rounds });
+  }
+  if (url.pathname === "/api/daily/answer" && req.method === "POST" && env.DAILY) {
+    const ip = req.headers.get("cf-connecting-ip") || "local";
+    if (limited("daily:" + ip, 60)) return json({ error: "slow down" }, 429);
+    let body; try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
+    const date = kstDate(), rounds = dailyRounds(date), i = body.round, r = rounds[i], tok = String(body.tok || "");
+    if (!r || !validAnswer(r, body.v) || !/^[a-z0-9]{8,32}$/.test(tok)) return json({ error: "bad input" }, 400);
+    const res = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/", { method: "POST", body: JSON.stringify({ round: i, v: body.v, tok }) })).json();
+    const v = res.v ?? body.v; // a repeat answer keeps the first one
+    return json({ date, round: i, v, counts: res.counts, total: res.total, pts: scoreDaily(r, v, res.counts, res.total), diamond: r.diamond, lava: r.lava });
+  }
   if (url.pathname === "/api/room" && req.method === "POST" && env.ROOM) {
     const ip = req.headers.get("cf-connecting-ip") || "local";
     if (limited("room:" + ip, 10)) return json({ error: "slow down" }, 429);
@@ -87,6 +103,26 @@ export class Board {
       return Response.json({ rank });
     }
     return Response.json(this.sql.exec("SELECT name, score, at FROM s ORDER BY score DESC, at LIMIT 20").toArray());
+  }
+}
+
+// Daily Challenge aggregate: one SQLite Durable Object per Korean day; counts per (round, answer), one answer per token per round.
+export class Daily {
+  constructor(state) {
+    this.sql = state.storage.sql;
+    this.sql.exec("CREATE TABLE IF NOT EXISTS c (round INTEGER, v INTEGER, n INTEGER, PRIMARY KEY (round, v))");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS seen (tok TEXT, round INTEGER, v INTEGER, PRIMARY KEY (tok, round))");
+  }
+  async fetch(req) {
+    const { round, v, tok } = await req.json();
+    const prev = this.sql.exec("SELECT v FROM seen WHERE tok = ? AND round = ?", tok, round).toArray()[0];
+    if (!prev) {
+      this.sql.exec("INSERT INTO seen VALUES (?,?,?)", tok, round, v);
+      this.sql.exec("INSERT INTO c VALUES (?,?,1) ON CONFLICT(round, v) DO UPDATE SET n = n + 1", round, v);
+    }
+    const counts = {}; let total = 0;
+    for (const row of this.sql.exec("SELECT v, n FROM c WHERE round = ?", round)) { counts[row.v] = row.n; total += row.n; }
+    return Response.json({ counts, total, v: prev ? prev.v : v });
   }
 }
 

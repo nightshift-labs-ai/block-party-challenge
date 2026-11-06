@@ -20,7 +20,8 @@ weaker (13K–755K). The model therefore uses lower view numbers than the median
 
 1. Dname posts a short that *is* a game round ("Don't say ㄹ", "Find the diamond") and ends with "join this week's final: QR / link in the pinned comment".
 2. Viewers play the same round on their phones in the weekly live final. The best moments become his next short.
-3. Players bring friends into private rooms (Fan Pass), and teachers find it through students.
+3. Between finals, the **Daily Challenge** (live now: `/?daily=1`) catches viewers whenever they watch a short. Its shareable 🟩🟨⬛ result brings in friends.
+4. Players bring friends into private rooms (Fan Pass), and teachers find it through students.
 
 | Input (A) | Conservative | Base | Optimistic |
 |---|---|---|---|
