@@ -8,6 +8,16 @@ Live prototype: https://extriver-proto.nightshift-labs.workers.dev · Status pag
 
 Docs: [business model + 4-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) · [creator research](RESEARCH.md) · pitch deck `docs/pitch.pdf` · 2:52 demo video `docs/demo.mp4` (real recorded episode with 10 players; rebuild with `tools/recvideo.mjs` + `tools/makevideo.sh`).
 
+> **Judge it in 60 seconds**
+> 1. Open https://extriver-proto.nightshift-labs.workers.dev and click **"Try it alone (with 6 bots)"**. The big screen shows a room code and a QR code.
+> 2. Scan the QR code with your phone (or open the join link in a second tab) and play the 7 rounds. The bots answer too, so every reveal has a crowd.
+> 3. On the final screen, click **"Make a Short"** to get a 1080×1920 recap video of your episode, made in the browser.
+> Prefer watching? [2:52 demo video with EN/한국어 subtitles](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html).
+
+| Big screen: lobby | Big screen: a reveal | Phone |
+|---|---|---|
+| ![Lobby with room code and QR](docs/shots/1-lobby.png) | ![Find the Diamond reveal](docs/shots/2-reveal3.png) | ![Phone: greed round](docs/shots/p-round2.png) |
+
 ## The idea in one line
 Dname's shorts are already games — "find the diamond and win", greed game, block telepathy, trust game — and his tagline is
 "Subscribe and join the game!". Block Party Challenge lets his viewers actually play those formats **with him and with each other**:
