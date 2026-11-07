@@ -38,6 +38,23 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 2. A bad deploy → roll back (above), then fix forward with a test that reproduces it.
 3. A room is stuck → the host's "Play again" resets it, and players reconnect automatically (1.5 s retry) with their id kept in sessionStorage.
 
+### Incident log
+**2026-11-07, season leaderboard unavailable (first noticed ~17:00 UTC; expected to clear at the daily quota reset, 00:00 UTC Nov 8). Games kept working.**
+- *What happened:* the season leaderboard (`/api/leaderboard`) returned errors. Rooms, the Daily Challenge and the hourly production
+  end-to-end game test kept working: 24 of 24 synthetic episodes passed that day.
+- *Cause:* the Cloudflare free plan's Durable Object "rows read per day" limit is shared by **every** Worker on the account. Another
+  service of ours on the same account (an API request log) ran an unindexed `DELETE` on every request, which scanned its whole table
+  and used up the account's daily quota. Our own code was fine, but it shared the quota.
+- *Detection:* found by our own checks (a leaderboard error in a browser test), not by the monitor, because `/health` did not test the
+  database yet.
+- *Fixes:* (1) the other service now uses an index and prunes rarely. (2) `/health` now checks the leaderboard database, so the
+  monitor alerts on this kind of failure (that is why the status page shows ~2 h of 503s from 18:50 UTC: the new check correctly
+  reporting the ongoing problem). (3) The leaderboard now answers `{entries: [], unavailable: true}` and the home page shows
+  "Leaderboard is taking a short break", instead of an error page. (4) The game Worker has a top-level guard that returns JSON 503,
+  never a raw error page.
+- *Lesson / follow-up:* on the free plan one heavy Durable Object can starve unrelated services. Always index Durable Object SQL filters.
+  Before launch with Dname, move to Workers Paid ($5/month, BUSINESS.md §5), where usage past the included amount is billed instead of blocked.
+
 ## Backups and restore
 - Long-lived data is small: the weekly season leaderboard (Durable Object `Board`, SQLite) and the Daily Challenge results. Rooms are ephemeral by design.
 - The monitor copies the season leaderboard once a day to KV (14-day retention). Restore = re-POST the entries of the chosen day to `/api/score` (same validation as live traffic), or rebuild the week from scratch: a season only lasts 7 days.
@@ -54,7 +71,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 
 ## Kids' safety and privacy (we assume much of the creator's audience is under 14; not verified, so we design for it)
 - **No accounts, no personal data:** a player is a nickname (max 12 chars) plus a random id kept in the phone's sessionStorage. No email, phone number, age, location, cookies for tracking or ads SDKs.
-- **No chat, no free text on screen** except nicknames. Nicknames are filtered before they reach the stream (`app/src/namefilter.js`: English + Korean insults/slurs/sexual terms, leetspeak and spacing tricks; unsafe names become a friendly generated name such as "LuckyFox42"; unit-tested for false positives like "Grape", "Cassie", "한남동").
+- **No chat.** The only typed text that reaches the big screen is nicknames and the one-word answers of the "Don't Say It" round (16-character limit, the same blocklist, hidden if unsafe, and the host can reject any word with one tap). Nicknames are filtered before they reach the stream (`app/src/namefilter.js`: English + Korean insults/slurs/sexual terms, leetspeak and spacing tricks; unsafe names become a friendly generated name such as "LuckyFox42"; unit-tested for false positives like "Grape", "Cassie", "한남동").
 - **Kids never pay to enter** a game. Paid items (Fan Pass, cosmetics) are planned only behind the creator's existing store and parental payment flows; see BUSINESS.md.
 - **Retention:** rooms forget players when they end; leaderboards keep nickname + score only (season board: 7 days live + 14-day backup).
 - Basic security: server-side validation of every answer and score, per-IP rate limits, hidden answers never sent to phones before the reveal, HTTPS/WSS only.
