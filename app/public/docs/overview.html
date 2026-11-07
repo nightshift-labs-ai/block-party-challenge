@@ -10,7 +10,7 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 one big screen (his stream, a classroom TV, a living-room TV) and everyone joins from their phone with a 4-letter code or QR. No app, no account.</p>
 <h2>How it plays</h2>
 <ul>
-<li>Host opens the site on a big screen → room code + QR. Up to <strong>300 phones</strong> per room (streamer mode), 4–12 for friend groups.</li>
+<li>Host opens the site on a big screen → room code + QR. Tested with <strong>200 phones</strong> in one room (bots; room cap 300), 4–12 for friend groups.</li>
 <li>An <em>episode</em> = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:<ul>
 <li><strong>Telepathy</strong> (텔레파시) — pick the answer most people will pick. Points = how many others matched you.</li>
 <li><strong>Greed</strong> (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.</li>
@@ -28,13 +28,14 @@ and lava gives a bonus if under 5% stood on your block. Ends with a Wordle-style
 that brings players between videos. One SQLite Durable Object per day; one answer per device per round.</li>
 <li><strong>Sponsored episodes</strong> (business model, built in): host URL <code>/?title=Dname Final #1&amp;sponsor=Snack Co&amp;prize=Top 3 get a snack box</code> shows a banner on the big
 screen and every phone (&quot;presented by … · free entry&quot;). The prize is only described. Nothing is collected or paid through the game. Works in the overlay URL too.</li>
-<li><strong>Make a Short</strong> (쇼츠 만들기): on the final screen (Korean-first text, English underneath) the host clicks one button and the browser renders a ~25 s 1080×1920 recap video of the episode (title card → one big number per round, e.g. &quot;71% said Left&quot;, &quot;14/18 coins: everyone keeps them&quot; → animated podium; on sponsored episodes the sponsor is credited on the first and last card). Canvas + MediaRecorder, nothing uploaded, no music (the creator adds his own track). Every episode becomes ready-to-edit Shorts material, which is how Dname already publishes. Sample output: <a href="sample-short.mp4">docs/sample-short.mp4</a> (6 bots). Test: <code>node tools/shorttest.mjs &lt;url&gt; /tmp/short.webm</code>.</li>
+<li><strong>Creator skin:</strong> <code>/?creator=dname</code> → &quot;디네임 챌린지 아레나&quot; home, &quot;디네임 파이널 · Dname Final&quot; banner on every screen, Korean-first text (also automatic for Korean browsers; <code>?lang=ko</code> / <code>?lang=en</code> to force), phone QR links open in Korean. Live: <a href="https://extriver-proto.nightshift-labs.workers.dev/?creator=dname">https://extriver-proto.nightshift-labs.workers.dev/?creator=dname</a></li>
+<li><strong>Make a Short</strong> (쇼츠 만들기): on the final screen (Korean-first text, English underneath) the host clicks one button and the browser renders a ~25 s 1080×1920 recap video of the episode (title card → one big number per round, e.g. &quot;71% said Left&quot;, &quot;14/18 coins: everyone keeps them&quot; → animated podium; on sponsored episodes the sponsor is credited on the first and last card). Canvas + MediaRecorder, nothing uploaded, no music (the creator adds his own track). Every episode becomes ready-to-edit Shorts material, which is how Dname already publishes. Sample output: <a href="https://extriver-proto.nightshift-labs.workers.dev/docs/sample-short.mp4">https://extriver-proto.nightshift-labs.workers.dev/docs/sample-short.mp4</a> (6 bots). Test: <code>node tools/shorttest.mjs &lt;url&gt; /tmp/short.webm</code>.</li>
 <li><strong>Streamer overlay</strong>: <code>/?overlay=1</code> as an OBS/stream browser source — transparent background, outlined text, keyboard-driven (Space/Enter: start → reveal → next), so Dname can run a live &quot;Dname Final&quot; with viewers on their phones.</li>
 <li>Results reveal on the big screen (vote bars, the greedy total, the dug-up grid), then a leaderboard. Every finished episode feeds a <strong>weekly season top 10</strong>.</li>
 </ul>
 <h2>Why Dname&#39;s audience (research summary — see RESEARCH.md)</h2>
 <ul>
-<li>Highest reach per video among the five partners: median ≈1.7M views per short (top 5.5M), 270K subscribers (counts from 2026-11-06).</li>
+<li>Highest reach per video among the five partners: median ≈1.7M views over his last 50 shorts (top 5.5M), 270K subscribers (counts from 2026-11-06). Recent uploads are rarer and get far fewer views, so the business model uses 300K (conservative) and 800K (base) per short, not 1.7M.</li>
 <li>Every video is a viewer-prize challenge built on simple game theory (greed, trust, telepathy, luck) — exactly the rounds above.</li>
 <li>Korean kids/teens audience <em>(not verified; no public demographics)</em> → no-install, phone-as-controller, classroom- and friend-group-friendly.</li>
 <li>Content flywheel: the weekly &quot;Dname Final&quot; room is streamed/recorded → becomes his next short → brings new players → next week&#39;s final.</li>
@@ -90,7 +91,7 @@ Margins are therefore set by payment fees and app-store/PG cuts, not servers. Du
 <li><strong>Monitoring + alerts</strong>: separate cron Worker pings <code>/health</code> every 5 min, public status page with 24 h uptime and p50/p95; emails the on-call inbox after 2 failed checks in a row and on recovery; daily leaderboard backup (14 days, <code>/backups.json</code>); an hourly synthetic end-to-end test plays a full episode in production (host + 2 bot phones) and alerts on failure. Maintenance plan, on-call and restore steps: docs/OPS.md.</li>
 <li><strong>Safety</strong>: input validation, per-IP rate limits on room creation and score writes, nicknames sanitised and filtered for English/Korean insults before they reach the stream (kids&#39; audience, <code>app/src/namefilter.js</code>), answers validated server-side, diamonds hidden from clients until reveal.</li>
 <li><strong>Tests</strong>: unit (game scoring, season week ids, API validation), e2e (host + bots over WebSocket), Playwright UI test (host + 2 phones, screenshots).</li>
-<li><strong>Rollback</strong>: every deploy is a versioned Worker (<code>wrangler rollback</code>). CI/CD pipeline: <code>ci/ci.yml</code> (tests → deploy → production smoke test → automatic rollback), ready to enable in GitHub Actions.</li>
+<li><strong>Rollback</strong>: every deploy is a versioned Worker (<code>wrangler rollback</code>). CI/CD pipeline written (<code>ci/ci.yml</code> in the repo: tests → deploy → production smoke test → automatic rollback) but <strong>not yet enabled</strong> in GitHub Actions (our token lacks the <code>workflow</code> scope); today the same steps are run by hand, and an hourly production end-to-end test runs from the monitor.</li>
 </ul>
 <h2>Honest notes</h2>
 <ul>

@@ -14,7 +14,7 @@ Dname's shorts are already games — "find the diamond and win", greed game, blo
 one big screen (his stream, a classroom TV, a living-room TV) and everyone joins from their phone with a 4-letter code or QR. No app, no account.
 
 ## How it plays
-- Host opens the site on a big screen → room code + QR. Up to **300 phones** per room (streamer mode), 4–12 for friend groups.
+- Host opens the site on a big screen → room code + QR. Tested with **200 phones** in one room (bots; room cap 300), 4–12 for friend groups.
 - An *episode* = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:
   - **Telepathy** (텔레파시) — pick the answer most people will pick. Points = how many others matched you.
   - **Greed** (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.
@@ -30,12 +30,13 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
   that brings players between videos. One SQLite Durable Object per day; one answer per device per round.
 - **Sponsored episodes** (business model, built in): host URL `/?title=Dname Final #1&sponsor=Snack Co&prize=Top 3 get a snack box` shows a banner on the big
   screen and every phone ("presented by … · free entry"). The prize is only described. Nothing is collected or paid through the game. Works in the overlay URL too.
-- **Make a Short** (쇼츠 만들기): on the final screen (Korean-first text, English underneath) the host clicks one button and the browser renders a ~25 s 1080×1920 recap video of the episode (title card → one big number per round, e.g. "71% said Left", "14/18 coins: everyone keeps them" → animated podium; on sponsored episodes the sponsor is credited on the first and last card). Canvas + MediaRecorder, nothing uploaded, no music (the creator adds his own track). Every episode becomes ready-to-edit Shorts material, which is how Dname already publishes. Sample output: [docs/sample-short.mp4](docs/sample-short.mp4) (6 bots). Test: `node tools/shorttest.mjs <url> /tmp/short.webm`.
+- **Creator skin:** `/?creator=dname` → "디네임 챌린지 아레나" home, "디네임 파이널 · Dname Final" banner on every screen, Korean-first text (also automatic for Korean browsers; `?lang=ko` / `?lang=en` to force), phone QR links open in Korean. Live: https://extriver-proto.nightshift-labs.workers.dev/?creator=dname
+- **Make a Short** (쇼츠 만들기): on the final screen (Korean-first text, English underneath) the host clicks one button and the browser renders a ~25 s 1080×1920 recap video of the episode (title card → one big number per round, e.g. "71% said Left", "14/18 coins: everyone keeps them" → animated podium; on sponsored episodes the sponsor is credited on the first and last card). Canvas + MediaRecorder, nothing uploaded, no music (the creator adds his own track). Every episode becomes ready-to-edit Shorts material, which is how Dname already publishes. Sample output: [https://extriver-proto.nightshift-labs.workers.dev/docs/sample-short.mp4](https://extriver-proto.nightshift-labs.workers.dev/docs/sample-short.mp4) (6 bots). Test: `node tools/shorttest.mjs <url> /tmp/short.webm`.
 - **Streamer overlay**: `/?overlay=1` as an OBS/stream browser source — transparent background, outlined text, keyboard-driven (Space/Enter: start → reveal → next), so Dname can run a live "Dname Final" with viewers on their phones.
 - Results reveal on the big screen (vote bars, the greedy total, the dug-up grid), then a leaderboard. Every finished episode feeds a **weekly season top 10**.
 
 ## Why Dname's audience (research summary — see RESEARCH.md)
-- Highest reach per video among the five partners: median ≈1.7M views per short (top 5.5M), 270K subscribers (counts from 2026-11-06).
+- Highest reach per video among the five partners: median ≈1.7M views over his last 50 shorts (top 5.5M), 270K subscribers (counts from 2026-11-06). Recent uploads are rarer and get far fewer views, so the business model uses 300K (conservative) and 800K (base) per short, not 1.7M.
 - Every video is a viewer-prize challenge built on simple game theory (greed, trust, telepathy, luck) — exactly the rounds above.
 - Korean kids/teens audience *(not verified; no public demographics)* → no-install, phone-as-controller, classroom- and friend-group-friendly.
 - Content flywheel: the weekly "Dname Final" room is streamed/recorded → becomes his next short → brings new players → next week's final.
@@ -69,7 +70,7 @@ Margins are therefore set by payment fees and app-store/PG cuts, not servers. Du
 - **Monitoring + alerts**: separate cron Worker pings `/health` every 5 min, public status page with 24 h uptime and p50/p95; emails the on-call inbox after 2 failed checks in a row and on recovery; daily leaderboard backup (14 days, `/backups.json`); an hourly synthetic end-to-end test plays a full episode in production (host + 2 bot phones) and alerts on failure. Maintenance plan, on-call and restore steps: docs/OPS.md.
 - **Safety**: input validation, per-IP rate limits on room creation and score writes, nicknames sanitised and filtered for English/Korean insults before they reach the stream (kids' audience, `app/src/namefilter.js`), answers validated server-side, diamonds hidden from clients until reveal.
 - **Tests**: unit (game scoring, season week ids, API validation), e2e (host + bots over WebSocket), Playwright UI test (host + 2 phones, screenshots).
-- **Rollback**: every deploy is a versioned Worker (`wrangler rollback`). CI/CD pipeline: `ci/ci.yml` (tests → deploy → production smoke test → automatic rollback), ready to enable in GitHub Actions.
+- **Rollback**: every deploy is a versioned Worker (`wrangler rollback`). CI/CD pipeline written (`ci/ci.yml` in the repo: tests → deploy → production smoke test → automatic rollback) but **not yet enabled** in GitHub Actions (our token lacks the `workflow` scope); today the same steps are run by hand, and an hourly production end-to-end test runs from the monitor.
 
 ## Honest notes
 - Built by **Nightshift Labs, an AI-agent-run studio** (the code, research and design were produced by an AI agent; a human owner registers and signs).

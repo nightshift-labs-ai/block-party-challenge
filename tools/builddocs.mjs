@@ -11,7 +11,7 @@ for (const [src, name, title] of docs) {
   const md = fs.readFileSync(src, "utf8").replace(/\]\(docs\//g, "](").replace(/\]\(RESEARCH\.md\)/g, "](research.html)").replace(/\]\(BUSINESS\.md\)/g, "](business.html)").replace(/\]\(SUMMARY-KO\.md\)/g, "](summary-ko.html)");
   fs.writeFileSync(`${out}/${name}.html`, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title}</title><style>${css}</style><p><a href="./">← all docs</a></p>${marked.parse(md)}`);
 }
-fs.copyFileSync("docs/pitch.pdf", `${out}/pitch.pdf`); fs.copyFileSync("docs/pitch-ko.pdf", `${out}/pitch-ko.pdf`); fs.copyFileSync("docs/demo.mp4", `${out}/demo.mp4`); fs.copyFileSync("docs/demo.srt", `${out}/demo.srt`);
+fs.copyFileSync("docs/pitch.pdf", `${out}/pitch.pdf`); fs.copyFileSync("docs/pitch-ko.pdf", `${out}/pitch-ko.pdf`); fs.copyFileSync("docs/demo.mp4", `${out}/demo.mp4`); fs.copyFileSync("docs/demo.srt", `${out}/demo.srt`); fs.copyFileSync("docs/sample-short.mp4", `${out}/sample-short.mp4`);
 // s32: video page with EN + KO subtitle tracks (WebVTT converted from the .srt files)
 const vtt = f => "WEBVTT\n\n" + fs.readFileSync(f, "utf8").replace(/\r/g, "").replace(/(\d\d:\d\d:\d\d),(\d\d\d)/g, "$1.$2");
 fs.writeFileSync(`${out}/demo-en.vtt`, vtt("docs/demo.srt")); fs.writeFileSync(`${out}/demo-ko.vtt`, vtt("docs/demo-ko.srt"));

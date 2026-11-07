@@ -2,8 +2,13 @@
 import { addRound, resetRecap, makeShort } from "/short.js";
 let short = { busy: false, label: "", html: "" };
 const $app = document.getElementById("app");
-const T = (en, ko) => `${en} <span class="ko">${ko}</span>`;
-const bi = (en, ko) => ko && ko !== en ? `${esc(en)} <span class="ko">${esc(ko)}</span>` : esc(en);
+// Creator skin (?creator=dname) + Korean-first text (Korean browsers, ?lang=ko, or the Dname skin; ?lang=en forces English-first).
+const QS = new URLSearchParams(location.search);
+const CREATOR = QS.get("creator") === "dname";
+const KO_FIRST = QS.get("lang") === "ko" || (QS.get("lang") !== "en" && (CREATOR || /^ko\b/i.test(navigator.language || "")));
+if (KO_FIRST) document.documentElement.lang = "ko";
+const T = (en, ko) => KO_FIRST ? `${ko} <span class="ko">${en}</span>` : `${en} <span class="ko">${ko}</span>`;
+const bi = (en, ko) => ko && ko !== en ? (KO_FIRST ? `${esc(ko)} <span class="ko">${esc(en)}</span>` : `${esc(en)} <span class="ko">${esc(ko)}</span>`) : esc(en);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // Streamer overlay: ?overlay=1 → transparent background for an OBS/stream "browser source"; host keys: Space/Enter = start/reveal/next.
 const OVERLAY = new URLSearchParams(location.search).get("overlay") === "1";
@@ -36,11 +41,11 @@ let botsStarted = false, brandSent = false, phoneKey = null, lastTick = 0, ws = 
 function home() {
   const q = new URLSearchParams(location.search).get("code") || "";
   $app.innerHTML = `
-  <h1>Block Party Challenge<br><span class="ko">블록 파티 챌린지</span></h1>
+  ${CREATOR ? `<h1>${T("Dname Challenge Arena", "디네임 챌린지 아레나")}</h1><div class="panel"><p>${T("The games from Dname's shorts — now you play them on your phone, against everyone watching.", "디네임 쇼츠 속 게임, 이제 폰으로 직접! 보는 사람 모두와 대결.")}</p><small>${T("Prototype made for Hack the Audience 2026, not an official channel product.", "Hack the Audience 2026 출품 프로토타입이며, 채널 공식 제품이 아닙니다.")}</small></div>` : `<h1>${T("Block Party Challenge", "블록 파티 챌린지")}</h1>`}
   <div class="panel"><p>${T("One big screen, everyone plays on their phone. Read the crowd, don't get greedy, find the diamond.", "큰 화면 하나, 모두 폰으로 참가! 눈치 보고, 욕심 내지 말고, 다이아를 찾아라.")}</p>
   <button class="btn alt" id="host">${T("Host on this screen", "이 화면에서 방 만들기")}</button>
   <button class="btn" id="solo">${T("Try it alone (with 6 bots)", "혼자 체험하기 (봇 6명)")}</button>
-  <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1" style="color:var(--gold)">${esc(location.host)}/?overlay=1</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
+  <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1${CREATOR ? "&creator=dname" : ""}" style="color:var(--gold)">${esc(location.host)}/?overlay=1${CREATOR ? "&amp;creator=dname" : ""}</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
   <div class="panel"><b>${T("Daily challenge", "오늘의 챌린지")}</b> <small>${T("5 rounds, no room needed: play against everyone who played today.", "방 없이 5라운드! 오늘 플레이한 모두와 대결.")}</small><br>
   <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button></div>
   <div class="panel"><b>${T("Join a room", "방 참가")}</b>
@@ -90,7 +95,8 @@ function connect(q) {
       if (role === "host" && m.phase === "lobby" && !botsStarted) { botsStarted = true; startBots(+new URLSearchParams(location.search).get("bots") || 0); }
       if (role === "host" && m.phase === "lobby" && !brandSent) {
         brandSent = true; const u = new URLSearchParams(location.search);
-        if (u.get("title") || u.get("sponsor") || u.get("prize")) send({ t: "brand", title: u.get("title"), sponsor: u.get("sponsor"), prize: u.get("prize") });
+        const title = u.get("title") || (CREATOR ? "디네임 파이널 · Dname Final" : null);
+        if (title || u.get("sponsor") || u.get("prize")) send({ t: "brand", title, sponsor: u.get("sponsor"), prize: u.get("prize") });
       }
       render();
       const b = S.brand;
@@ -153,7 +159,7 @@ function reveal(c, r) {
 function render() {
   const c = S.current, me = S.players.find(p => p.pid === S.you);
   if (role === "host") {
-    const join = `${location.origin}/?code=${code}`;
+    const join = `${location.origin}/?code=${code}${CREATOR ? "&lang=ko" : ""}`;
     if (S.phase === "lobby") {
       $app.innerHTML = `<h1>${T("Join on your phone", "폰으로 참가하세요")}</h1>
       <div class="panel center"><div>${esc(location.host)}</div><div class="code">${code}</div><small>${esc(join)}</small><br><div class="qr">${qrSvg(join)}</div></div>

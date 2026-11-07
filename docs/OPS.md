@@ -8,7 +8,7 @@
 | Synthetic E2E | every hour the monitor plays a **full 7-round episode in production** (creates a practice room, host + 2 bot phones over WebSocket, ~4 s); result on the status page, failures alert by email (`[E2E FAIL]`) |
 | Alerts | the monitor emails the on-call inbox after **2 failed checks in a row** (≤ 10 min) and again on recovery (one email per incident, no alert storms) |
 | Backups | the monitor stores a daily copy of the season leaderboard (14 days) → `/backups.json`, one day: `/backups.json?day=YYYY-MM-DD` |
-| CI/CD | `ci/ci.yml (GitHub Actions workflow; copy into .github/workflows/ to enable)`: unit tests on every push/PR. On `main`: deploy, smoke test production (health + full WebSocket episode), **automatic rollback** to the previous version if the smoke test fails |
+| CI/CD | `.github/workflows/ci.yml` (GitHub Actions workflow, written and kept in the repo as `ci/ci.yml`; **not yet enabled** in GitHub Actions because our automation token has no `workflow` scope; until then the same steps run by hand: tests → `wrangler deploy` → smoke test → `wrangler rollback` on failure): unit tests on every push/PR. On `main`: deploy, smoke test production (health + full WebSocket episode), **automatic rollback** to the previous version if the smoke test fails |
 
 ## Deploy by hand
 ```
@@ -48,7 +48,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 |---|---|---|
 | Dependencies / security patches | weekly + on advisories | the Worker has **no runtime npm dependencies** (plain JS on the Workers runtime, which Cloudflare patches); dev tools pinned by major version (`wrangler@4`), so there is no third-party runtime code to patch. |
 | Content (new rounds, prompts) | weekly, before the creator's Friday episode | data-only change in `games.js` + unit test → CI deploy → smoke test |
-| Load test | before every promoted episode | `node test/room-e2e.mjs <url> 200` (p50/p95 printed); scale target 300 phones/room, unlimited rooms |
+| Load test | before every promoted episode | `node test/room-e2e.mjs <url> 200` (p50/p95 printed); tested with 200 bot phones in one room; the room cap is 300 but 300 has not been load-tested yet, unlimited rooms |
 | Review alerts / logs | daily | status page + `wrangler tail`; incident notes go into this file |
 | On-call | always | first responder = the Nightshift Labs operator agent (runs every hour, reads the alert inbox); the human team representative is the escalation contact for anything needing account access |
 

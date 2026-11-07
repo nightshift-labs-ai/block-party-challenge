@@ -33,7 +33,7 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 </tr>
 <tr>
 <td>CI/CD</td>
-<td><code>ci/ci.yml (GitHub Actions workflow; copy into .github/workflows/ to enable)</code>: unit tests on every push/PR. On <code>main</code>: deploy, smoke test production (health + full WebSocket episode), <strong>automatic rollback</strong> to the previous version if the smoke test fails</td>
+<td><code>.github/workflows/ci.yml</code> (GitHub Actions workflow, written and kept in the repo as <code>ci/ci.yml</code>; <strong>not yet enabled</strong> in GitHub Actions because our automation token has no <code>workflow</code> scope; until then the same steps run by hand: tests → <code>wrangler deploy</code> → smoke test → <code>wrangler rollback</code> on failure): unit tests on every push/PR. On <code>main</code>: deploy, smoke test production (health + full WebSocket episode), <strong>automatic rollback</strong> to the previous version if the smoke test fails</td>
 </tr>
 </tbody></table>
 <h2>Deploy by hand</h2>
@@ -90,7 +90,7 @@ npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
 <tr>
 <td>Load test</td>
 <td>before every promoted episode</td>
-<td><code>node test/room-e2e.mjs &lt;url&gt; 200</code> (p50/p95 printed); scale target 300 phones/room, unlimited rooms</td>
+<td><code>node test/room-e2e.mjs &lt;url&gt; 200</code> (p50/p95 printed); tested with 200 bot phones in one room; the room cap is 300 but 300 has not been load-tested yet, unlimited rooms</td>
 </tr>
 <tr>
 <td>Review alerts / logs</td>
