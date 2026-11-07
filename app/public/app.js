@@ -73,6 +73,8 @@ function home() {
     const pid = sessionStorage["bp" + c] || "";
     connect(`name=${encodeURIComponent(n)}&pid=${pid}`);
   };
+  // s58: RECORDING mode (?overlay=1 as an OBS browser source): create the room right away, so the source shows code + QR with no clicks (once per page load)
+  if (OVERLAY && !q && !window.__autoHosted) { window.__autoHosted = 1; document.getElementById("host").click(); }
 }
 
 function connect(q) {
