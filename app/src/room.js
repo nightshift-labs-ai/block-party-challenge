@@ -77,7 +77,7 @@ export class Room {
   async alarm() { await this.load(); if (this.phase === "question" && Date.now() >= this.deadline) this.reveal(); }
 
   onHost(m) {
-    if (m.t === "start" && this.phase === "lobby" && this.players.size >= 1) { this.episode = makeEpisode(this.players.size); if (this.brand?.sq) this.episode[0] = { kind: "telepathy", q: this.brand.sq, opts: this.brand.so, secs: 15, sponsored: true }; this.round = -1; this.next(); }
+    if (m.t === "start" && this.phase === "lobby" && this.players.size >= 1) { this.episode = makeEpisode(this.players.size); if (this.brand?.sq) this.episode[0] = { kind: "telepathy", q: this.brand.sq, opts: this.brand.so, qk: this.brand.sqk, ok: this.brand.sok, secs: 15, sponsored: true }; this.round = -1; this.next(); }
     else if (m.t === "next" && this.phase === "reveal") this.next();
     else if (m.t === "skip" && this.phase === "question") this.reveal();
     else if (m.t === "veto" && this.phase === "reveal" && this.episode?.[this.round]?.kind === "taboo" && typeof m.w === "string") this.veto(m.w);
@@ -177,5 +177,7 @@ export function cleanBrand(m) {
   // s61: optional sponsored question (round 1 becomes a telepathy round with the sponsor's question and 2-4 options)
   const so = (Array.isArray(m.so) ? m.so : []).map(o => c(o, 24)).filter(Boolean).slice(0, 4), sq = c(m.sq, 80);
   if (sq && so.length >= 2) Object.assign(b, { sq, so });
+  const sok = (Array.isArray(m.sok) ? m.sok : []).map(o => c(o, 24)).slice(0, so.length), sqk = c(m.sqk, 80); // optional Korean text
+  if (b.sq && sqk) b.sqk = sqk; if (b.sq && sok.length === so.length && sok.every(Boolean)) b.sok = sok;
   return b.title || b.sponsor || b.prize ? b : null;
 }

@@ -6,7 +6,7 @@ const [base = "http://localhost:8799", out = "/tmp/ext"] = process.argv.slice(2)
 const b = await chromium.launch(); const errs = [];
 const host = await b.newPage({ viewport: { width: 1280, height: 720 } });
 host.on("pageerror", e => errs.push("host " + e.message));
-await host.goto(base + "/?practice=1&sponsor=Snack%20Co&title=Dname%20Final%20%231&sq=Best%20snack%20flavour%3F&so=Honey|Spicy|Cheese|Onion"); await host.click("#host"); await host.waitForSelector(".code");
+await host.goto(base + "/?practice=1&sponsor=Snack%20Co&title=Dname%20Final%20%231&sq=Best%20snack%20flavour%3F&so=Honey|Spicy|Cheese|Onion&sqk=%EC%B5%9C%EA%B3%A0%EC%9D%98%20%EA%B3%BC%EC%9E%90%20%EB%A7%9B%EC%9D%80%3F&sok=%ED%97%88%EB%8B%88|%EB%A7%A4%EC%9A%B4%EB%A7%9B|%EC%B9%98%EC%A6%88|%EC%96%91%ED%8C%8C"); await host.click("#host"); await host.waitForSelector(".code");
 const code = (await host.textContent(".code")).trim();
 const phones = [];
 for (const n of ["Mina", "Joon"]) {

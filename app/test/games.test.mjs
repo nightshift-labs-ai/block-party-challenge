@@ -62,3 +62,8 @@ test("cleanBrand: sponsored question needs a question and 2-4 options", () => {
   assert.equal(b.sq, "Which flavour b?"); assert.deepEqual(b.so, ["Honey", "Spicy", "Cheese", "Onion"]);
   assert.equal(cleanBrand({ sponsor: "S", sq: "Q?", so: ["only one"] }).sq, undefined);
 });
+test("cleanBrand: Korean text for the sponsored question only when complete", () => {
+  const b = cleanBrand({ sponsor: "S", sq: "Best flavour?", so: ["Honey", "Spicy"], sqk: "최고의 맛은?", sok: ["허니", "매운맛"] });
+  assert.equal(b.sqk, "최고의 맛은?"); assert.deepEqual(b.sok, ["허니", "매운맛"]);
+  assert.equal(cleanBrand({ sponsor: "S", sq: "Q?", so: ["A", "B"], sok: ["가"] }).sok, undefined);
+});
