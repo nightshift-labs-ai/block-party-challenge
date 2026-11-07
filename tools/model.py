@@ -7,7 +7,7 @@ S = {  # scenario: shorts/month featuring the game, views/short, view->player jo
   "Recent reach": dict(shorts=2, views=24_000, join=0.01, ret=0.30, fp=0.01, cos=0.02, spons=0, cls=40),
   "Optimistic":   dict(shorts=2, views=1_700_000, join=0.02, ret=0.35, fp=0.015, cos=0.03, spons=2, cls=100),
 }
-FP, COS, SPONS, CLS, FEES, CREATOR = 4900, 3000, 2_000_000, 9900, 0.10, 0.20
+FP, COS, SPONS, CLS, FEES, CREATOR = 4900, 3000, 2_000_000, 9900, 0.10, 0.20  # CREATOR = the dev team's 20% revenue share (hackathon terms: the winning TEAM gets 20% for 24 months); Dname + Extriver keep 80%
 KRW_USD = 1 / 1380
 out = {}
 for name, a in S.items():
@@ -20,7 +20,7 @@ for name, a in S.items():
         rows.append((m, mau, gross))
     y = sum(r[2] for r in rows); net = y * (1 - FEES)
     out[name] = (rows[-1][1], rows[-1][2], y, net, net * CREATOR)
-    print(f"{name:13s} MAU m12 {rows[-1][1]:>9,.0f}  gross m12 ₩{rows[-1][2]:>12,.0f}  year-1 gross ₩{y:>13,.0f} (${y*KRW_USD:,.0f})  net ₩{net:,.0f}  creator 20% ₩{net*CREATOR:,.0f} (${net*CREATOR*KRW_USD:,.0f})")
+    print(f"{name:13s} MAU m12 {rows[-1][1]:>9,.0f}  gross m12 ₩{rows[-1][2]:>12,.0f}  year-1 gross ₩{y:>13,.0f} (${y*KRW_USD:,.0f})  net ₩{net:,.0f}  team 20% ₩{net*CREATOR:,.0f} (${net*CREATOR*KRW_USD:,.0f})")
 
 # --- Sensitivity (python3 tools/model.py): Base scenario, varying the two least-known inputs (views per short, join rate). ---
 def run(a):
@@ -30,12 +30,12 @@ def run(a):
         p = [mau * a["fp"] * FP + mau * a["cos"] * COS, a["spons"] * SPONS if m >= 3 else 0, round(a["cls"] * m / 12) * CLS]
         g = sum(p); y += g; parts = [parts[0] + p[0], parts[1] + p[1], parts[2] + p[2], g]
     return y, parts
-print("\nSensitivity (Base, year-1 gross ₩; creator 20% of net per month, average)")
+print("\nSensitivity (Base, year-1 gross ₩; in brackets Dname + Extriver 80% of net, average per month)")
 print(f"{'views/short':>12s} " + " ".join(f"{'join ' + str(j*100) + '%':>22s}" for j in (0.005, 0.01, 0.02)))
 for v in (24_000, 300_000, 800_000):
     cells = []
     for j in (0.005, 0.01, 0.02):
-        y, _ = run(dict(S["Base"], views=v, join=j)); cells.append(f"₩{y/1e6:6.1f}M (₩{y*(1-FEES)*CREATOR/12/1e3:5.0f}K/mo)")
+        y, _ = run(dict(S["Base"], views=v, join=j)); cells.append(f"₩{y/1e6:6.1f}M (₩{y*(1-FEES)*(1-CREATOR)/12/1e6:4.1f}M/mo)")
     print(f"{v:>12,d} " + " ".join(f"{c:>22s}" for c in cells))
 print("\nRevenue mix, year 1 (fan pass+cosmetics / sponsors / classroom licences)")
 for name, a in S.items():

@@ -53,7 +53,7 @@ weaker (13K–755K). The model therefore uses lower view numbers than the median
 | Classroom licences by month 12 | 10 | 40 | 100 |
 
 ## 3. Results (year 1, `python3 tools/model.py`, ₩1,380 = $1)
-| | Monthly players at m12 | Gross revenue m12 | **Year-1 gross** | Year-1 net of ~10% payment fees | Creator's 20% share |
+| | Monthly players at m12 | Gross revenue m12 | **Year-1 gross** | Year-1 net of ~10% payment fees | Dev team's 20% (hackathon terms; Dname + Extriver keep 80%) |
 |---|---|---|---|---|---|
 | Conservative | 2,000 | ₩0.2M | ₩1.9M ($1.4K) | ₩1.7M | ₩0.34M ($250) |
 | **Base** | 22,900 | ₩4.9M | **₩51M ($37K)** | ₩46M | **₩9.3M ($6.7K)** |
@@ -75,13 +75,13 @@ What the model shows:
 - Infrastructure is not a meaningful cost (README "Unit cost": ≈$1–5 per million player-episodes). Margin is set by payment fees and support.
 
 ### Sensitivity: the two inputs we know least (Base scenario, `python3 tools/model.py`)
-Year-1 gross revenue, and in brackets the creator's 20% share as an **average per month**:
+Year-1 gross revenue, and in brackets the **Dname + Extriver side (80% of net)** as an average per month. Under the hackathon terms the winning team receives 20% of net revenue for 24 months:
 
 | Views per short ↓ / join rate → | 0.5% | 1% | 2% |
 |---|---|---|---|
-| 24K (his recent median) | ₩23.0M (₩345K/mo) | ₩23.4M (₩352K/mo) | ₩24.3M (₩365K/mo) |
-| 300K | ₩28.0M (₩420K/mo) | ₩33.4M (₩501K/mo) | ₩44.2M (₩663K/mo) |
-| 800K (Base) | ₩37.0M (₩555K/mo) | **₩51.4M (₩771K/mo)** | ₩80.2M (₩1.2M/mo) |
+| 24K (his recent median) | ₩23.0M (₩1.4M/mo) | ₩23.4M (₩1.4M/mo) | ₩24.3M (₩1.5M/mo) |
+| 300K | ₩28.0M (₩1.7M/mo) | ₩33.4M (₩2.0M/mo) | ₩44.2M (₩2.7M/mo) |
+| 800K (Base) | ₩37.0M (₩2.2M/mo) | **₩51.4M (₩3.1M/mo)** | ₩80.2M (₩4.8M/mo) |
 
 Revenue mix in year 1 (players' Fan Pass + cosmetics / sponsors / classroom licences): Conservative 66/0/34 % · Base 56/39/5 % ·
 Recent reach 25/0/75 % · Optimistic 81/16/3 %.
@@ -89,8 +89,8 @@ Recent reach 25/0/75 % · Optimistic 81/16/3 %.
 What this tells us, honestly:
 - **The model's sponsor income does not scale with views.** At 24K views the table still counts one ₩2M sponsor a month, which is
   unlikely. A brand pays for reach, so the realistic low-views case is the "Recent reach" row (no sponsors, ₩3.4M a year).
-- **For Dname this is extra income, not a replacement for brand deals.** In the Base case his share averages about ₩0.77M a month,
-  far below one brand deal for a channel his size (Korean press: ₩100M+ per promotion for 1M+ channels). What the game gives him is
+- **For Dname this is extra income, not a replacement for brand deals.** In the Base case the Dname + Extriver side averages about ₩3.1M a month,
+  well below one brand deal for a channel his size (Korean press: ₩100M+ per promotion for 1M+ channels). What the game gives him is
   a **new format he can sell**: "play my brand's round with Dname", where the sponsor pays for minutes of play instead of a 5-second
   mention. The more sponsored finals he books, the more both sides earn.
 - **Classroom licences are the least proven line.** They are only 5% of the Base case, but 75% of "Recent reach". We keep them because
