@@ -36,8 +36,10 @@ export async function handle(req, env) {
   if (url.pathname === "/api/leaderboard" && req.method === "GET") {
     const board = cleanBoard(url.searchParams.get("board") === "season" ? seasonId() : url.searchParams.get("board"));
     if (!board) return json({ error: "bad board" }, 400);
-    const list = env.BOARD ? await (await env.BOARD.get(env.BOARD.idFromName(board)).fetch("https://do/")).json()
-      : env.SCORES ? (await env.SCORES.get("lb:" + board, "json")) || [] : [];
+    let list;
+    try { list = env.BOARD ? await (await env.BOARD.get(env.BOARD.idFromName(board)).fetch("https://do/")).json()
+      : env.SCORES ? (await env.SCORES.get("lb:" + board, "json")) || [] : []; }
+    catch { return json({ board, entries: [], unavailable: true }); } // storage hiccup (e.g. platform quota): home page shows a friendly line instead of hanging on "…"
     return json({ board, entries: list.slice(0, 20) }, 200, { "cache-control": "public, max-age=5" });
   }
   if (url.pathname === "/api/score" && req.method === "POST") {
@@ -128,4 +130,5 @@ export class Daily {
   }
 }
 
-export default { fetch: (req, env) => handle(req, env) };
+// Last-resort guard: any storage/platform failure becomes a clear JSON 503 instead of a raw Cloudflare 1101 page.
+export default { async fetch(req, env) { try { return await handle(req, env); } catch (e) { console.error("unhandled", String(e?.message || e).slice(0, 200)); return json({ error: "Server is busy, please try again in a minute. / 잠시 후 다시 시도해 주세요." }, 503); } } };

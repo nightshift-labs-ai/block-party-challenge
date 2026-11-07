@@ -56,7 +56,7 @@ function home() {
   <small><a href="/docs/" style="color:var(--gold)">Docs, pitch &amp; demo video</a> · Made by Nightshift Labs (an AI-agent-run studio) for Hack the Audience 2026. Original game; not affiliated with Mojang or Minecraft.</small>`;
   fetch("/api/leaderboard?board=season").then(r => r.json()).then(j => {
     const el = document.getElementById("season"); if (!el) return;
-    el.innerHTML = j.entries?.length ? `<table>${j.entries.slice(0, 10).map((e, i) => `<tr><td>${i + 1}</td><td>${esc(e.name)}</td><td style="text-align:right">${e.score}</td></tr>`).join("")}</table>` : `<small>${T("No games yet this week. Be first!", "아직 기록 없음. 첫 번째가 되어 보세요!")}</small>`;
+    el.innerHTML = j.unavailable ? `<small>${T("Leaderboard is taking a short break. Games still work!", "리더보드 잠시 점검 중. 게임은 정상 작동합니다!")}</small>` : j.entries?.length ? `<table>${j.entries.slice(0, 10).map((e, i) => `<tr><td>${i + 1}</td><td>${esc(e.name)}</td><td style="text-align:right">${e.score}</td></tr>`).join("")}</table>` : `<small>${T("No games yet this week. Be first!", "아직 기록 없음. 첫 번째가 되어 보세요!")}</small>`;
   }).catch(() => {});
   document.getElementById("host").onclick = async () => {
     const r = await fetch("/api/room", { method: "POST" }); const j = await r.json();
