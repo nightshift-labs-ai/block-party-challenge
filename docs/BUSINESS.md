@@ -7,7 +7,7 @@ marked (A). The model is in `tools/model.py`, so judges and the creator can chan
 | Payer | What they get | Why they pay |
 |---|---|---|
 | **Brands** (snacks, kids' food, stationery, mobile games) | A sponsored weekly "Dname Final" episode: branded round, logo on the big screen, the prize. **Built in the prototype:** the banner on every screen, round 1 asks the sponsor's question (e.g. "Best snack flavour?"), and a downloadable sponsor report after the episode (players, minutes of play, answers, vote split; no personal data) | They already buy kids' attention through creators. Here it comes as *play time*, not a 5-second mention. |
-| **Fans' parents** (Fan Pass ₩4,900/mo) | Private rooms for friend groups, custom question packs, cosmetics, a season badge | The kid wants to play "Dname's game" with friends between videos. Price is in the range of one snack run. |
+| **Fans' parents** (Fan Pass ₩4,900/mo) | Private rooms for friend groups, custom question packs, cosmetics, a season badge. **Demo built:** `/?pass=demo` lets the host type their own questions (no payment in the prototype) | The kid wants to play "Dname's game" with friends between videos. Price is in the range of one snack run. |
 | **Fans** (cosmetics ₩1,000–5,000) | Blocky avatars, reveal effects, emotes. No pay-to-win. | Status inside the room, and on Dname's stream. |
 | **Teachers / academies** (group licence ₩9,900/mo) | Ad-free classroom mode, custom quiz packs on school topics | Phones-as-buzzers party games are already used in classrooms. Jackbox and Kahoot prove the format. |
 
