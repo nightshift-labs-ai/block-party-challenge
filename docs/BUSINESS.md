@@ -84,7 +84,7 @@ What the model shows:
 | **Chat polls / prediction widgets** | Easy for streamers | One question, no game, no score. Block Party has episodes, a season leaderboard and a one-click **"Make a Short"** button that turns each episode into a 9:16 recap video. |
 
 The moat is not the technology. It is **his formats + his audience + the weekly final + the season leaderboard**, which a generic tool cannot copy.
-(Product descriptions are from each product's public pages. We did not verify current prices, so none are quoted.)
+(Product descriptions are from each product's public pages. Gimkit, Blooket and Jackbox prices are quoted with sources in section 1; other products were not price-checked.)
 
 ## 5. Costs and risks
 - **Costs:** Cloudflare Workers Paid ($5/mo) once past the free tier; payment gateway fees (≈3–10%, assumed 10%); question-pack

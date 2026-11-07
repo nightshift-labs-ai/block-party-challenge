@@ -6,10 +6,10 @@ Live prototype: https://extriver-proto.nightshift-labs.workers.dev · Status pag
 
 **한국어:** [한 쪽 요약](docs/SUMMARY-KO.md) · [피치덱 PDF](docs/pitch-ko.pdf) · [데모 영상 (한국어 자막)](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html)
 
-Docs: [business model + 4-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) · [creator research](RESEARCH.md) · pitch deck `docs/pitch.pdf` · 2:52 demo video `docs/demo.mp4` (real recorded episode with 10 players; rebuild with `tools/recvideo.mjs` + `tools/makevideo.sh`).
+Docs: [business model + 4-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) · [creator research](RESEARCH.md) · pitch deck `docs/pitch.pdf` · 2:52 demo video `docs/demo.mp4` (a real episode recorded in production: one phone played by a script plus 9 bot players over WebSocket; rebuild with `tools/recvideo.mjs` + `tools/makevideo.sh`).
 
 > **Judge it in 60 seconds**
-> 1. Open https://extriver-proto.nightshift-labs.workers.dev and click **"Try it alone (with 6 bots)"**. The big screen shows a room code and a QR code.
+> 1. Open the Dname version https://extriver-proto.nightshift-labs.workers.dev/?creator=dname (Korean first; plain English version: https://extriver-proto.nightshift-labs.workers.dev/?lang=en) and click **"혼자 체험하기 (봇 6명)"** ("Try it alone (with 6 bots)"). The big screen shows a room code and a QR code.
 > 2. Scan the QR code with your phone (or open the join link in a second tab) and play the 7 rounds. The bots answer too, so every reveal has a crowd.
 > 3. On the final screen, click **"Make a Short"** to get a 1080×1920 recap video of your episode, made in the browser.
 > Prefer watching? [2:52 demo video with EN/한국어 subtitles](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html).
@@ -57,7 +57,7 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 - **Cosmetics ₩1,000–5,000**: blocky avatars, reveal effects, emotes — no pay-to-win.
 - **Sponsored episodes**: a brand sponsors a weekly episode and its prizes (snack/food brands already appear in his niche). Prizes are always **free-entry and sponsor-funded, never paid by players** (no gambling/lottery mechanics).
 - **Group licence** for classrooms/academies (Jackbox-style party games show people pay for this format).
-- Costs: serverless (Cloudflare Workers + Durable Objects) — near-zero at rest, scales per room; numbers to be measured in the load test.
+- Costs: serverless (Cloudflare Workers + Durable Objects) — near-zero at rest, scales per room; measured unit costs are in "Unit cost" below.
 - Open checks before a commercial launch: Korean game rating (GRAC) for online games, payment rules for minors.
 
 ## Unit cost (estimate from Cloudflare's published Durable Objects pricing, checked 2026-11-06)
@@ -72,14 +72,14 @@ Pricing: requests $0.15 per million (incoming WebSocket messages count 20:1), du
 
 **Measured in production (Cloudflare analytics, 2026-11-06 09:00 → 11-07 09:00 UTC):** the Room Durable Object served the 24 hourly synthetic episodes (host + 2 bot phones, full episode) plus a little manual testing: 146.9 s active time in total (≈6.1 s per episode → ≈0.8 GB-s at 128 MB), 1.06 s CPU (≈44 ms per episode), 1,390 requests (≈58 per episode, an upper bound because it includes manual tests). That is ≈$0.00002 per 3-player episode, the same order as the estimate above, so the 0.3 s-per-burst assumption is not too low for small rooms. Big 300-player rooms are still an estimate (the 200-phone load test measures latency, not billing).
 
-So 1 million player-episodes cost roughly **$1–5** in infrastructure, and the free plan alone covers about 250 streamer-size episodes a day by request count (caveat: the Durable Object quota is shared by every Worker on the account; on Nov 7 a bug in another service of ours used it up for a day, which is fixed, and the game now shows a friendly "short break" line instead of failing) (its 100k-request limit binds before the 13,000 GB-s duration limit); beyond that the paid plan ($5/month base) applies.
-Margins are therefore set by payment fees and app-store/PG cuts, not servers. Duration per burst is an assumption to be replaced with measured analytics after the load test.
+So 1 million player-episodes cost roughly **$1–5** in infrastructure, and the free plan (100k Durable Object requests a day) is enough for testing and friend-group rooms. We do not claim a number of stream-size episodes per day on the free plan (not measured at 300 phones yet); stream use is budgeted on the paid plan ($5/month base). Caveat: the free Durable Object quota is shared by every Worker on the account; on Nov 7 a bug in another service of ours used it up for a day (fixed; the game shows a friendly "short break" line instead of failing).
+Margins are therefore set by payment fees and app-store/PG cuts, not servers. Still an assumption: the per-burst duration of a full 300-player room, which the 300-phone load test will measure.
 
 ## Tech & operations (DevOps bonus)
 - **Edge-native realtime**: each room is one Durable Object holding the WebSocket connections and the authoritative game state; static assets on Cloudflare's CDN.
 - **Hibernation**: rooms use hibernatable WebSockets; state is snapshotted to Durable Object storage and round timers are storage alarms, so an idle room costs nothing and survives eviction (`app/test/alarm-e2e.mjs`).
 - **Scale test (latest 2026-11-06, current 7-round episode incl. the typed-word round, hibernation + persisted state)**: one room, 200 simulated phones over the public internet, full episode, 1,400 answers, answer→reveal latency **p50 219 ms, p95 260 ms**, 0 errors, 0 handshake retries (`app/test/room-e2e.mjs <url> 200`). Earlier runs the same day: p50 192–238 ms.
-- **Monitoring + alerts**: separate cron Worker pings `/health` every 5 min, public status page with 24 h uptime and p50/p95; emails the on-call inbox after 2 failed checks in a row and on recovery; daily leaderboard backup (14 days, `/backups.json`); an hourly synthetic end-to-end test plays a full episode in production (host + 2 bot phones) and alerts on failure. Maintenance plan, on-call and restore steps: docs/OPS.md.
+- **Monitoring + alerts**: separate cron Worker pings `/health` every 5 min, public status page with 24 h uptime and p50/p95; emails the on-call inbox (read by the operator agent, see docs/OPS.md) after 2 failed checks in a row and on recovery; daily leaderboard backup (14 days, `/backups.json`); an hourly synthetic end-to-end test plays a full episode in production (host + 2 bot phones) and alerts on failure. Maintenance plan, on-call and restore steps: docs/OPS.md.
 - **Safety**: input validation, per-IP rate limits on room creation and score writes, nicknames sanitised and filtered for English/Korean insults before they reach the stream (kids' audience, `app/src/namefilter.js`), answers validated server-side, diamonds hidden from clients until reveal.
 - **Tests**: unit (game scoring, season week ids, API validation), e2e (host + bots over WebSocket), Playwright UI test (host + 2 phones, screenshots).
 - **Rollback**: every deploy is a versioned Worker (`wrangler rollback`). CI/CD pipeline written (`ci/ci.yml` in the repo: tests → deploy → production smoke test → automatic rollback) but **not yet enabled** in GitHub Actions (our token lacks the `workflow` scope); today the same steps are run by hand, and an hourly production end-to-end test runs from the monitor.

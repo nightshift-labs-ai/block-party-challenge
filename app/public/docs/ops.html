@@ -62,6 +62,24 @@ npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
 <li>A bad deploy → roll back (above), then fix forward with a test that reproduces it.</li>
 <li>A room is stuck → the host&#39;s &quot;Play again&quot; resets it, and players reconnect automatically (1.5 s retry) with their id kept in sessionStorage.</li>
 </ol>
+<h3>Incident log</h3>
+<p><strong>2026-11-07, season leaderboard unavailable (first noticed ~17:00 UTC, until the daily quota reset at 00:00 UTC Nov 8). Games kept working.</strong></p>
+<ul>
+<li><em>What happened:</em> the season leaderboard (<code>/api/leaderboard</code>) returned errors. Rooms, the Daily Challenge and the hourly production
+end-to-end game test kept working: 24 of 24 synthetic episodes passed that day.</li>
+<li><em>Cause:</em> the Cloudflare free plan&#39;s Durable Object &quot;rows read per day&quot; limit is shared by <strong>every</strong> Worker on the account. Another
+service of ours on the same account (an API request log) ran an unindexed <code>DELETE</code> on every request, which scanned its whole table
+and used up the account&#39;s daily quota. Our own code was fine, but it shared the quota.</li>
+<li><em>Detection:</em> found by our own checks (a leaderboard error in a browser test), not by the monitor, because <code>/health</code> did not test the
+database yet.</li>
+<li><em>Fixes:</em> (1) the other service now uses an index and prunes rarely. (2) <code>/health</code> now checks the leaderboard database, so the
+monitor alerts on this kind of failure (that is why the status page shows ~2 h of 503s from 18:50 UTC: the new check correctly
+reporting the ongoing problem). (3) The leaderboard now answers <code>{entries: [], unavailable: true}</code> and the home page shows
+&quot;Leaderboard is taking a short break&quot;, instead of an error page. (4) The game Worker has a top-level guard that returns JSON 503,
+never a raw error page.</li>
+<li><em>Lesson / follow-up:</em> on the free plan one heavy Durable Object can starve unrelated services. Always index Durable Object SQL filters.
+Before launch with Dname, move to Workers Paid ($5/month, BUSINESS.md §5), where usage past the included amount is billed instead of blocked.</li>
+</ul>
 <h2>Backups and restore</h2>
 <ul>
 <li>Long-lived data is small: the weekly season leaderboard (Durable Object <code>Board</code>, SQLite) and the Daily Challenge results. Rooms are ephemeral by design.</li>
@@ -106,7 +124,7 @@ npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
 <h2>Kids&#39; safety and privacy (we assume much of the creator&#39;s audience is under 14; not verified, so we design for it)</h2>
 <ul>
 <li><strong>No accounts, no personal data:</strong> a player is a nickname (max 12 chars) plus a random id kept in the phone&#39;s sessionStorage. No email, phone number, age, location, cookies for tracking or ads SDKs.</li>
-<li><strong>No chat, no free text on screen</strong> except nicknames. Nicknames are filtered before they reach the stream (<code>app/src/namefilter.js</code>: English + Korean insults/slurs/sexual terms, leetspeak and spacing tricks; unsafe names become a friendly generated name such as &quot;LuckyFox42&quot;; unit-tested for false positives like &quot;Grape&quot;, &quot;Cassie&quot;, &quot;한남동&quot;).</li>
+<li><strong>No chat.</strong> The only typed text that reaches the big screen is nicknames and the one-word answers of the &quot;Don&#39;t Say It&quot; round (16-character limit, the same blocklist, hidden if unsafe, and the host can reject any word with one tap). Nicknames are filtered before they reach the stream (<code>app/src/namefilter.js</code>: English + Korean insults/slurs/sexual terms, leetspeak and spacing tricks; unsafe names become a friendly generated name such as &quot;LuckyFox42&quot;; unit-tested for false positives like &quot;Grape&quot;, &quot;Cassie&quot;, &quot;한남동&quot;).</li>
 <li><strong>Kids never pay to enter</strong> a game. Paid items (Fan Pass, cosmetics) are planned only behind the creator&#39;s existing store and parental payment flows; see BUSINESS.md.</li>
 <li><strong>Retention:</strong> rooms forget players when they end; leaderboards keep nickname + score only (season board: 7 days live + 14-day backup).</li>
 <li>Basic security: server-side validation of every answer and score, per-IP rate limits, hidden answers never sent to phones before the reveal, HTTPS/WSS only.</li>
