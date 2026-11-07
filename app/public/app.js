@@ -19,7 +19,8 @@ addEventListener("keydown", e => {
   const id = { lobby: "start", question: "skip", reveal: "next", final: "again" }[S.phase];
   document.getElementById(id)?.click();
 });
-const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "") + (new URLSearchParams(location.search).get("final") === "1" ? "&final=1" : "");
+const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "") + (new URLSearchParams(location.search).get("final") === "1" ? "&final=1" + (sessionStorage.bpHk ? "&hk=" + encodeURIComponent(sessionStorage.bpHk) : "") : "");
+if (QS.get("hk")) { sessionStorage.bpHk = QS.get("hk"); const u = new URL(location.href); u.searchParams.delete("hk"); history.replaceState(null, "", u); } // keep the creator's host key off the on-stream address bar
 const mySeat = () => { const k = Object.keys(localStorage).filter(k => k.startsWith("bpSeat")).sort().pop(); return k ? "&seat=" + encodeURIComponent(localStorage[k]) : ""; }; // s62: newest Daily seat
 // Tiny WebAudio synth (no audio files): ticks, reveal sting, join pop. Host screen only; starts after a user click.
 let actx = null;
@@ -191,7 +192,7 @@ function render() {
     if (S.phase === "lobby") {
       $app.innerHTML = `<h1>${T("Join on your phone", "폰으로 참가하세요")}</h1>
       <div class="panel center"><div>${esc(location.host)}</div><div class="code">${code}</div><small>${esc(join)}</small><br><div class="qr">${qrSvg(join)}</div></div>
-      ${S.final ? `<div class="panel"><b>🎟️ ${T("WEEKLY FINAL: seat holders only", "주간 파이널: 좌석 보유자만 입장")}</b> <small>${T("Seats are won in the Daily Challenge (top 3 each day).", "좌석은 오늘의 챌린지 일일 상위 3명에게.")}</small></div>` : ""}
+      ${S.final ? `<div class="panel"><b>🎟️ ${S.official ? T("WEEKLY FINAL: seat holders only", "주간 파이널: 좌석 보유자만 입장") : T("DEMO FINAL (unofficial): seat holders only", "데모 파이널 (비공식): 좌석 보유자만 입장")}</b> <small>${T("Seats are won in the Daily Challenge (top 3 each day).", "좌석은 오늘의 챌린지 일일 상위 3명에게.")}</small></div>` : ""}
       <div class="panel"><b>${S.playerCount} ${T("players", "명")}</b><div class="players">${S.players.slice(0, 30).map(p => `<span class="chip ${p.online ? "" : "off"}">${p.seat ? "🎟️ " : ""}${esc(p.name)}</span>`).join("") || T("Waiting for players…", "참가자 기다리는 중…")}${S.playerCount > 30 ? `<span class="chip">+${S.playerCount - 30}</span>` : ""}</div></div>
       ${QS.get("pass") === "demo" ? `<div class="panel"><b>🎟 ${T("Fan Pass demo: your own questions", "팬 패스 데모: 나만의 질문")}</b><br><small>${T("One per line, up to 5: Question? | A | B | C | D. They become the first rounds; this room is never ranked.", "한 줄에 하나, 최대 5개: 질문? | A | B | C | D. 처음 라운드가 되며 시즌 순위에 들어가지 않습니다.")}</small><textarea id="pack" rows="4" style="width:100%;font:16px system-ui" placeholder="Who in our class sleeps the most? | Minho | Yuna | Joon | Me">${esc(packText)}</textarea></div>` : ""}
       <button class="btn" id="start" ${S.players.length ? "" : "disabled"}>${T("Start episode", "게임 시작")}</button><span class="keys">Space / Enter</span>`;

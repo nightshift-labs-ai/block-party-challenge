@@ -1,2 +1,5 @@
 node_modules
 .wrangler
+.secrets
+.dev.vars
+app/.dev.vars

@@ -21,11 +21,11 @@ export class Room {
   async _load() {
     const g = await this.state.storage.get("g");
     this.players = new Map((g?.players || []).map(p => [p.pid, p]));
-    Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false, brand: null, final: false }, g ? { final: !!g.final, brand: g.brand || null, phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
+    Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false, brand: null, final: false, official: false }, g ? { final: !!g.final, official: !!g.official, brand: g.brand || null, phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
     this.loaded = true;
   }
   async save() {
-    await this.state.storage.put("g", { phase: this.phase, round: this.round, episode: this.episode, answers: this.answers, result: this.result, deadline: this.deadline, noSeason: this.noSeason, final: this.final, brand: this.brand, players: [...this.players.values()] });
+    await this.state.storage.put("g", { phase: this.phase, round: this.round, episode: this.episode, answers: this.answers, result: this.result, deadline: this.deadline, noSeason: this.noSeason, final: this.final, official: this.official, brand: this.brand, players: [...this.players.values()] });
   }
   reset() { this.phase = "lobby"; this.round = -1; this.episode = null; this.answers = {}; this.result = null; this.deadline = 0; this.state.storage.deleteAlarm(); }
   hostWs() { return this.state.getWebSockets("host")[0] || null; }
@@ -40,7 +40,7 @@ export class Room {
     if (role === "host") {
       for (const old of this.state.getWebSockets("host")) try { old.close(1000, "replaced"); } catch {}
       this.state.acceptWebSocket(server, ["host"]); server.serializeAttachment({ role: "host" });
-      if (this.phase === "lobby") { this.noSeason = url.searchParams.get("practice") === "1"; this.final = url.searchParams.get("final") === "1"; } // s62: weekly final = seat holders only
+      if (this.phase === "lobby") { this.noSeason = url.searchParams.get("practice") === "1"; this.final = url.searchParams.get("final") === "1"; this.official = this.final && !!this.env?.FINAL_HOST_KEY && url.searchParams.get("hk") === this.env.FINAL_HOST_KEY; } // s62: only the creator's host key makes an OFFICIAL final; without it = labelled demo final // s62: weekly final = seat holders only
       this.broadcast();
     } else {
       const seat = url.searchParams.get("seat") ? await checkSeat(this.env || {}, url.searchParams.get("seat")) : null;
@@ -145,7 +145,7 @@ export class Room {
     const pub = r && { kind: r.kind, q: r.q, opts: r.opts, qk: r.qk, ok: r.ok, pot: r.pot, maxTake: r.maxTake, secs: r.secs };
     if (r && this.phase !== "question" && r.kind === "diamond") pub.diamond = r.diamond; // hidden until reveal
     return {
-      t: "state", phase: this.phase, final: this.final, brand: this.brand, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
+      t: "state", phase: this.phase, final: this.final, official: this.official, brand: this.brand, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
       current: pub, result: this.phase === "question" || !this.result ? null : full ? this.result : { ...this.result, answers: undefined, verdict: undefined, pts: forPid ? { [forPid]: this.result.pts[forPid] } : {} },
       answered: full ? Object.keys(this.answers) : forPid && forPid in this.answers ? [forPid] : [],
       answeredCount: Object.keys(this.answers).length, playerCount: this.players.size,
