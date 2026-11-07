@@ -32,14 +32,14 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
   screen and every phone ("presented by … · free entry"). The prize is only described. Nothing is collected or paid through the game. Works in the overlay URL too.
 - **Creator skin:** `/?creator=dname` → "디네임 챌린지 아레나" home, "디네임 파이널 · Dname Final" banner on every screen, Korean-first text (also automatic for Korean browsers; `?lang=ko` / `?lang=en` to force), phone QR links open in Korean. Live: https://extriver-proto.nightshift-labs.workers.dev/?creator=dname
 - **Make a Short** (쇼츠 만들기): on the final screen (Korean-first text, English underneath) the host clicks one button and the browser renders a ~25 s 1080×1920 recap video of the episode (title card → one big number per round, e.g. "71% said Left", "14/18 coins: everyone keeps them" → animated podium; on sponsored episodes the sponsor is credited on the first and last card). Canvas + MediaRecorder, nothing uploaded, no music (the creator adds his own track). Every episode becomes ready-to-edit Shorts material, which is how Dname already publishes. Sample output: [https://extriver-proto.nightshift-labs.workers.dev/docs/sample-short.mp4](https://extriver-proto.nightshift-labs.workers.dev/docs/sample-short.mp4) (6 bots). Test: `node tools/shorttest.mjs <url> /tmp/short.webm`.
-- **Streamer overlay**: `/?overlay=1` as an OBS/stream browser source — transparent background, outlined text, keyboard-driven (Space/Enter: start → reveal → next), so Dname can run a live "Dname Final" with viewers on their phones.
+- **Recording mode / overlay**: `/?overlay=1` as an OBS browser source — transparent background, outlined text, keyboard-driven (Space/Enter: start → reveal → next). Dname makes shorts, not streams, so the main use is **recording** a weekly "Dname Final" played by viewers on their phones (announced in a short + pinned comment), then cutting it into his next short with the Make a Short button. It also works live if he ever streams.
 - Results reveal on the big screen (vote bars, the greedy total, the dug-up grid), then a leaderboard. Every finished episode feeds a **weekly season top 10**.
 
 ## Why Dname's audience (research summary — see RESEARCH.md)
 - Highest reach per video among the five partners: median ≈1.7M views over his last 50 shorts (top 5.5M), 270K subscribers (counts from 2026-11-06). Recent uploads are rarer and get far fewer views, so the business model uses 300K (conservative) and 800K (base) per short, not 1.7M.
 - Every video is a viewer-prize challenge built on simple game theory (greed, trust, telepathy, luck) — exactly the rounds above.
 - Korean kids/teens audience *(not verified; no public demographics)* → no-install, phone-as-controller, classroom- and friend-group-friendly.
-- Content flywheel: the weekly "Dname Final" room is streamed/recorded → becomes his next short → brings new players → next week's final.
+- Content flywheel: the weekly "Dname Final" room is recorded (or streamed) → becomes his next short → brings new players → next week's final.
 
 ## Business model (draft)
 - **Free to play** — a game must spread before it can earn.

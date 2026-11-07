@@ -39,12 +39,18 @@ weaker (13K–755K). The model therefore uses lower view numbers than the median
 |---|---|---|---|---|---|
 | Conservative | 2,000 | ₩0.2M | ₩1.9M ($1.4K) | ₩1.7M | ₩0.34M ($250) |
 | **Base** | 22,900 | ₩4.9M | **₩51M ($37K)** | ₩46M | **₩9.3M ($6.7K)** |
+| Recent reach* | 700 | ₩0.5M | ₩3.4M ($2.5K) | ₩3.1M | ₩0.62M ($450) |
 | Optimistic | 104,600 | ₩22M | ₩242M ($176K) | ₩218M | ₩44M ($32K) |
+
+\* **Recent reach** = Base rates, but 24K views per short (the median of his three latest uploads: 755K, 13K, 24K) and **no sponsor deals**.
+It is the honest floor if his posting stays as it is now: most of that revenue is classroom licences. The Base case assumes the game
+becomes his regular content again (2 game shorts a month at 800K, below his 1.7M 50-short median). That is the bet, and the reason
+the product is built to make a short cheap to produce (Make a Short button, recorded "Dname Final").
 
 What the model shows:
 - **Sponsorship is the biggest line** in the base case (≈40% of revenue). The game turns his audience into a sellable ad format
   without asking kids to pay. That matters most for a kids' audience.
-- Revenue depends on **shorts featuring the game**. The game is built to *be* his content, with a streamer overlay, keyboard-driven
+- Revenue depends on **shorts featuring the game**. The game is built to *be* his content, with a recording overlay (he makes shorts, not streams), keyboard-driven
   host and replayable rounds, so making that short costs him less effort than his current Minecraft setups.
 - Infrastructure is not a meaningful cost (README "Unit cost": ≈$1–5 per million player-episodes). Margin is set by payment fees and support.
 
