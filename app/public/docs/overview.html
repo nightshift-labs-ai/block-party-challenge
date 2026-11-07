@@ -25,7 +25,7 @@ from the host page. Open the join link on your phone or in a second tab and play
 <li><strong>Daily Challenge</strong> (<code>/?daily=1</code>, 오늘의 챌린지): shorts viewers arrive at any hour, not just during the weekly live final. Every Korean day has
 the same 5 rounds for everyone (seeded by date). You play against <em>today&#39;s crowd</em>: telepathy scores the % of players who picked what you picked,
 and lava gives a bonus if under 5% stood on your block. Ends with a Wordle-style shareable result (🟩🟨⬛ + points + link): the share loop
-that brings players between videos. One SQLite Durable Object per day; one answer per device per round.</li>
+that brings players between videos. One SQLite Durable Object per day; one answer per browser per round (anonymous token; best effort: clearing browser storage gives a new token, so the crowd counts are for fun, not prizes).</li>
 <li><strong>Sponsored episodes</strong> (business model, built in): host URL <code>/?title=Dname Final #1&amp;sponsor=Snack Co&amp;prize=Top 3 get a snack box</code> shows a banner on the big
 screen and every phone (&quot;presented by … · free entry&quot;). The prize is only described. Nothing is collected or paid through the game. Works in the overlay URL too.</li>
 <li><strong>Creator skin:</strong> <code>/?creator=dname</code> → &quot;디네임 챌린지 아레나&quot; home, &quot;디네임 파이널 · Dname Final&quot; banner on every screen, Korean-first text (also automatic for Korean browsers; <code>?lang=ko</code> / <code>?lang=en</code> to force), phone QR links open in Korean. Live: <a href="https://extriver-proto.nightshift-labs.workers.dev/?creator=dname">https://extriver-proto.nightshift-labs.workers.dev/?creator=dname</a></li>

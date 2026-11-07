@@ -103,7 +103,7 @@ npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
 <td>first responder = the Nightshift Labs operator agent (runs every hour, reads the alert inbox); the human team representative is the escalation contact for anything needing account access</td>
 </tr>
 </tbody></table>
-<h2>Kids&#39; safety and privacy (the creator&#39;s audience is mostly under 14)</h2>
+<h2>Kids&#39; safety and privacy (we assume much of the creator&#39;s audience is under 14; not verified, so we design for it)</h2>
 <ul>
 <li><strong>No accounts, no personal data:</strong> a player is a nickname (max 12 chars) plus a random id kept in the phone&#39;s sessionStorage. No email, phone number, age, location, cookies for tracking or ads SDKs.</li>
 <li><strong>No chat, no free text on screen</strong> except nicknames. Nicknames are filtered before they reach the stream (<code>app/src/namefilter.js</code>: English + Korean insults/slurs/sexual terms, leetspeak and spacing tricks; unsafe names become a friendly generated name such as &quot;LuckyFox42&quot;; unit-tested for false positives like &quot;Grape&quot;, &quot;Cassie&quot;, &quot;한남동&quot;).</li>

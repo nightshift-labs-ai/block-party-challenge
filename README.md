@@ -27,7 +27,7 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 - **Daily Challenge** (`/?daily=1`, 오늘의 챌린지): shorts viewers arrive at any hour, not just during the weekly live final. Every Korean day has
   the same 5 rounds for everyone (seeded by date). You play against *today's crowd*: telepathy scores the % of players who picked what you picked,
   and lava gives a bonus if under 5% stood on your block. Ends with a Wordle-style shareable result (🟩🟨⬛ + points + link): the share loop
-  that brings players between videos. One SQLite Durable Object per day; one answer per device per round.
+  that brings players between videos. One SQLite Durable Object per day; one answer per browser per round (anonymous token; best effort: clearing browser storage gives a new token, so the crowd counts are for fun, not prizes).
 - **Sponsored episodes** (business model, built in): host URL `/?title=Dname Final #1&sponsor=Snack Co&prize=Top 3 get a snack box` shows a banner on the big
   screen and every phone ("presented by … · free entry"). The prize is only described. Nothing is collected or paid through the game. Works in the overlay URL too.
 - **Creator skin:** `/?creator=dname` → "디네임 챌린지 아레나" home, "디네임 파이널 · Dname Final" banner on every screen, Korean-first text (also automatic for Korean browsers; `?lang=ko` / `?lang=en` to force), phone QR links open in Korean. Live: https://extriver-proto.nightshift-labs.workers.dev/?creator=dname

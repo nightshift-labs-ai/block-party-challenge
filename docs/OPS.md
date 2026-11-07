@@ -52,7 +52,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 | Review alerts / logs | daily | status page + `wrangler tail`; incident notes go into this file |
 | On-call | always | first responder = the Nightshift Labs operator agent (runs every hour, reads the alert inbox); the human team representative is the escalation contact for anything needing account access |
 
-## Kids' safety and privacy (the creator's audience is mostly under 14)
+## Kids' safety and privacy (we assume much of the creator's audience is under 14; not verified, so we design for it)
 - **No accounts, no personal data:** a player is a nickname (max 12 chars) plus a random id kept in the phone's sessionStorage. No email, phone number, age, location, cookies for tracking or ads SDKs.
 - **No chat, no free text on screen** except nicknames. Nicknames are filtered before they reach the stream (`app/src/namefilter.js`: English + Korean insults/slurs/sexual terms, leetspeak and spacing tricks; unsafe names become a friendly generated name such as "LuckyFox42"; unit-tested for false positives like "Grape", "Cassie", "한남동").
 - **Kids never pay to enter** a game. Paid items (Fan Pass, cosmetics) are planned only behind the creator's existing store and parental payment flows; see BUSINESS.md.
