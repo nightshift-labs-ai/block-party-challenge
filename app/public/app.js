@@ -148,7 +148,7 @@ function scores(players, limit = 12) {
 function reveal(c, r) {
   if (c.kind === "telepathy") {
     const tot = Object.values(r.count).reduce((a, b) => a + b, 0) || 1;
-    return `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt">${bi(o, c.ok?.[i])}<br>${r.count[i] || 0}<span class="bar" style="width:${100 * (r.count[i] || 0) / tot}%"></span></div>`).join("")}</div>`;
+    return `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt"><span>${bi(o, c.ok?.[i])}</span><b class="cnt">${r.count[i] || 0}</b><span class="bar" style="width:${100 * (r.count[i] || 0) / tot}%"></span></div>`).join("")}</div>`;
   }
   if (c.kind === "greed") return `<p class="big center">${r.total} / ${r.pot} ${r.ok ? "✅ " + T("Everyone keeps their coins!", "모두 획득!") : "💥 " + T("Too greedy! Nobody gets anything.", "욕심 폭발! 모두 0점")}</p>`;
   if (c.kind === "blockmatch") return grid(c, false, r.count);
@@ -279,7 +279,7 @@ async function daily() {
       if (r.error) return alert(r.error);
       saved.push(r.pts); localStorage[key] = JSON.stringify(saved);
       const crowd = c.kind === "telepathy"
-        ? `<div class="opts">${c.opts.map((o, j) => `<div class="opt">${bi(o, c.ok?.[j])}<br>${Math.round(100 * (r.counts[j] || 0) / r.total)}%<span class="bar" style="width:${100 * (r.counts[j] || 0) / r.total}%"></span></div>`).join("")}</div>`
+        ? `<div class="opts">${c.opts.map((o, j) => `<div class="opt"><span>${bi(o, c.ok?.[j])}</span><b class="cnt">${Math.round(100 * (r.counts[j] || 0) / r.total)}%</b><span class="bar" style="width:${100 * (r.counts[j] || 0) / r.total}%"></span></div>`).join("")}</div>`
         : grid({ ...c, diamond: r.diamond, lavaShown: r.lava }, false, r.counts);
       $app.innerHTML = `<small>${d.date} · ${i + 1}/5 · ${r.total} ${T(r.total === 1 ? "player today" : "players today", "명 참여")}</small><h1>+${r.pts}</h1><div class="pop">${crowd}</div><button class="btn" id="dn">${T("Next", "다음")}</button>`;
       document.getElementById("dn").onclick = () => { i++; step(); };
