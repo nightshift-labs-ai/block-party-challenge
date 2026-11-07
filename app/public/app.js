@@ -48,13 +48,17 @@ function home() {
   <button class="btn" id="solo">${T("Try it alone (with 6 bots)", "혼자 체험하기 (봇 6명)")}</button>
   <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1${CREATOR ? "&creator=dname" : ""}" style="color:var(--gold)">${esc(location.host)}/?overlay=1${CREATOR ? "&amp;creator=dname" : ""}</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
   <div class="panel"><b>${T("Daily challenge", "오늘의 챌린지")}</b> <small>${T("5 rounds, no room needed: play against everyone who played today.", "방 없이 5라운드! 오늘 플레이한 모두와 대결.")}</small><br>
-  <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button></div>
+  <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button><div id="dtop"></div></div>
   <div class="panel"><b>${T("Join a room", "방 참가")}</b>
   <input id="code" maxlength="4" placeholder="CODE" value="${esc(q)}" autocapitalize="characters">
   <input id="name" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}">
   <button class="btn" id="join">${T("Join", "참가")}</button><div id="err" style="color:var(--red)"></div></div>
   <div class="panel"><b>${T("This week's season top 10", "이번 주 시즌 TOP 10")}</b><div id="season"><small>…</small></div></div>
   <small><a href="/docs/" style="color:var(--gold)">Docs, pitch &amp; demo video</a> · Made by Nightshift Labs (an AI-agent-run studio) for Hack the Audience 2026. Original game; not affiliated with Mojang or Minecraft.</small>`;
+  fetch("/api/daily/top").then(r => r.json()).then(j => { // s62: today's qualifier (top 3 win a weekly-final seat)
+    const el = document.getElementById("dtop"); if (!el || j.unavailable) return;
+    el.innerHTML = `<small>🎟️ ${T("Top 3 today win a seat in Saturday's final", "오늘 상위 3명은 토요일 파이널 좌석")}${j.top?.length ? ": " + j.top.slice(0, 3).map(e => `${esc(e.name)} ${e.total}`).join(" · ") : ""}</small>`;
+  }).catch(() => {});
   fetch("/api/leaderboard?board=season").then(r => r.json()).then(j => {
     const el = document.getElementById("season"); if (!el) return;
     el.innerHTML = j.unavailable ? `<small>${T("Leaderboard is taking a short break. Games still work!", "리더보드 잠시 점검 중. 게임은 정상 작동합니다!")}</small>` : j.entries?.length ? `<table>${j.entries.slice(0, 10).map((e, i) => `<tr><td>${i + 1}</td><td>${esc(e.name)}</td><td style="text-align:right">${e.score}</td></tr>`).join("")}</table>` : `<small>${T("No games yet this week. Be first!", "아직 기록 없음. 첫 번째가 되어 보세요!")}</small>`;
