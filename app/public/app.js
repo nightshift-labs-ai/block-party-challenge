@@ -158,8 +158,28 @@ function reveal(c, r) {
   return grid(c, false, picks);
 }
 
+// s61: per-episode report for the sponsor / creator, collected on the host screen from the public state (nothing extra stored).
+const rep = { start: 0, end: 0, peak: 0, rounds: {} };
+function noteReport() {
+  if (S.phase === "lobby") { rep.start = rep.end = rep.peak = 0; rep.rounds = {}; return; }
+  rep.peak = Math.max(rep.peak, S.playerCount || 0);
+  if (S.phase === "question" && !rep.start) rep.start = Date.now();
+  if (S.phase === "question" && S.current) rep.rounds[S.round] = { ...(rep.rounds[S.round] || {}), kind: S.current.kind, q: S.current.q, opts: S.current.opts || null, answered: S.answeredCount || 0, players: S.playerCount || 0 };
+  if (S.phase === "reveal" && rep.rounds[S.round]) { const r = rep.rounds[S.round]; r.answered = Math.max(r.answered, S.answeredCount || 0); r.players = Math.max(r.players, S.playerCount || 0); if (S.result?.count) r.count = S.result.count; }
+  if (S.phase === "final" && !rep.end) rep.end = Date.now();
+}
+function reportHtml() {
+  const b = S.brand || {}, mins = rep.start && rep.end ? (rep.end - rep.start) / 60000 : 0, rs = Object.keys(rep.rounds).sort((x, y) => x - y).map(k => rep.rounds[k]);
+  const answers = rs.reduce((n, r) => n + r.answered, 0), row = (r, i) => `<tr><td>${i + 1}</td><td>${esc(r.kind)}</td><td>${esc(r.q || "")}</td><td>${r.answered} / ${r.players}</td><td>${r.count && r.opts ? r.opts.map((o, j) => `${esc(o)}: ${r.count[j] || 0}`).join(" · ") : ""}</td></tr>`;
+  return `<!doctype html><meta charset="utf-8"><title>Episode report</title><style>body{font:15px system-ui;max-width:860px;margin:2em auto;padding:0 1em}td,th{border-bottom:1px solid #ccc;padding:4px 8px;text-align:left}table{border-collapse:collapse}</style>
+<h1>Episode report${b.sponsor ? " · presented by " + esc(b.sponsor) : ""}</h1><p>${esc(b.title || "Block Party Challenge")}${b.prize ? " · prize: " + esc(b.prize) : ""} · ${new Date(rep.end || Date.now()).toISOString().slice(0, 16).replace("T", " ")} UTC</p>
+<ul><li><b>${rep.peak}</b> players in the room (peak)</li><li><b>${mins.toFixed(1)}</b> minutes of play, so about <b>${Math.round(rep.peak * mins)}</b> player-minutes with the sponsor banner on every phone and on the big screen</li><li><b>${answers}</b> answers in ${rs.length} rounds</li></ul>
+<table><tr><th>#</th><th>Round</th><th>Question</th><th>Answered</th><th>Votes</th></tr>${rs.map(row).join("")}</table>
+<p><small>Counted on the host screen from the live game state. No personal data: nicknames are not included. Made with Block Party Challenge.</small></p>`;
+}
 function render() {
   const c = S.current, me = S.players.find(p => p.pid === S.you);
+  if (role === "host") noteReport();
   if (role === "host") {
     const join = `${location.origin}/?code=${code}${CREATOR ? "&lang=ko" : ""}`;
     if (S.phase === "lobby") {
@@ -181,7 +201,7 @@ function render() {
       document.querySelectorAll("[data-w]").forEach(el => el.onclick = () => send({ t: "veto", w: el.dataset.w }));
     } else if (S.phase === "final") {
       const w = S.players[0];
-      $app.innerHTML = `<h1>🏆 ${esc(w?.name || "")}</h1><div class="panel">${scores(S.players)}</div><button class="btn" id="again">${T("Play again", "다시 하기")}</button> <button class="btn" id="short" ${short.busy || short.html ? "disabled" : ""}>${short.label || `🎬 ${T("Make a Short (9:16)", "쇼츠 만들기")}`}</button><div id="shortout">${short.html}</div>`;
+      $app.innerHTML = `<h1>🏆 ${esc(w?.name || "")}</h1><div class="panel">${scores(S.players)}</div><button class="btn" id="again">${T("Play again", "다시 하기")}</button> <a class="btn" id="report" download="episode-report.html" href="${URL.createObjectURL(new Blob([reportHtml()], { type: "text/html" }))}">📊 ${S.brand?.sponsor ? T("Sponsor report", "스폰서 리포트") : T("Episode report", "에피소드 리포트")}</a> <button class="btn" id="short" ${short.busy || short.html ? "disabled" : ""}>${short.label || `🎬 ${T("Make a Short (9:16)", "쇼츠 만들기")}`}</button><div id="shortout">${short.html}</div>`;
       document.getElementById("again").onclick = () => send({ t: "again" });
       document.getElementById("short").onclick = async () => {
         if (short.busy) return; short.busy = true; render();
