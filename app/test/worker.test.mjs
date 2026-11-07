@@ -28,7 +28,8 @@ test("health: leaderboard DB failure = degraded (200), strict readiness = 503", 
 test("qualifier: final date + seat signature", async () => {
   const { finalFor } = await import("../src/worker.js");
   assert.equal(finalFor("2026-11-08"), "2026-11-14 20:00 KST"); // Sunday → next Saturday
-  assert.equal(finalFor("2026-11-14"), "2026-11-14 20:00 KST"); // Saturday → same day
+  assert.equal(finalFor("2026-11-14"), "2026-11-21 20:00 KST"); // Saturday qualifier closes at midnight → next week
+  assert.equal(finalFor("2026-11-13"), "2026-11-14 20:00 KST"); // Friday → seat issued Saturday 00:00, final that evening
   const bad = await (await handle(req("/api/seat?s=2026-11-08.1.abcd1234.0000000000000000"), {})).json();
   assert.equal(bad.valid, false);
 });

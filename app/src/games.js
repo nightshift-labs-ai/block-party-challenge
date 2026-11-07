@@ -157,3 +157,5 @@ export function scoreDaily(round, v, counts, total) {
   return 0;
 }
 export const DAILY_MAX = [100, 500, 100, 200, 100];
+// Round indexes whose points depend on the crowd (telepathy, blockmatch): recomputed from the latest counts for the qualifier table.
+export const DAILY_CROWD = [0, 2, 4];

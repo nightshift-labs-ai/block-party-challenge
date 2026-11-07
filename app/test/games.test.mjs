@@ -73,3 +73,9 @@ test("cleanPack: up to 5 custom telepathy rounds, 2-4 options, junk dropped", as
   assert.equal(p.length, 4); assert.deepEqual(p[0].opts, ["Minho", "Yuna", "Joon", "Me"]); assert.equal(p[1].q, "bBest snack?/b");
   assert.deepEqual(cleanPack(undefined), []);
 });
+
+import { DAILY_CROWD } from "../src/games.js";
+test("daily: DAILY_CROWD = the crowd-scored rounds", () => {
+  const r = dailyRounds("2026-11-08");
+  assert.deepEqual(r.map((x, i) => ["telepathy", "blockmatch"].includes(x.kind) ? i : -1).filter(i => i >= 0), DAILY_CROWD);
+});

@@ -22,6 +22,21 @@ addEventListener("keydown", e => {
 const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "") + (new URLSearchParams(location.search).get("final") === "1" ? "&final=1" + (sessionStorage.bpHk ? "&hk=" + encodeURIComponent(sessionStorage.bpHk) : "") : "");
 if (QS.get("hk")) { sessionStorage.bpHk = QS.get("hk"); const u = new URL(location.href); u.searchParams.delete("hk"); history.replaceState(null, "", u); } // keep the creator's host key off the on-stream address bar
 const mySeat = () => { const k = Object.keys(localStorage).filter(k => k.startsWith("bpSeat")).sort().pop(); return k ? "&seat=" + encodeURIComponent(localStorage[k]) : ""; }; // s62: newest Daily seat
+// s63: qualifier ranks are provisional during the Korean day (crowd points move); after midnight KST we ask for the final result once.
+const kstToday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+async function collectSeats() {
+  const out = [];
+  for (const k of Object.keys(localStorage).filter(k => k.startsWith("bpFin")).sort()) {
+    const date = k.slice(5), rk = "bpRes" + date;
+    if (date >= kstToday()) continue;
+    if (!localStorage[rk]) {
+      try { const r = await (await fetch(`/api/daily/result?date=${date}&tok=${localStorage.bpTok}`)).json(); if (r.open || r.unavailable || r.error) continue; localStorage[rk] = JSON.stringify(r); if (r.seat) localStorage["bpSeat" + date] = r.seat; }
+      catch { continue; }
+    }
+    out.push({ date, ...JSON.parse(localStorage[rk]) });
+  }
+  return out;
+}
 // Tiny WebAudio synth (no audio files): ticks, reveal sting, join pop. Host screen only; starts after a user click.
 let actx = null;
 function beep(freq, dur = 0.08, type = "square", vol = 0.08, when = 0) {
@@ -49,16 +64,23 @@ function home() {
   <button class="btn" id="solo">${T("Try it alone (with 6 bots)", "혼자 체험하기 (봇 6명)")}</button>
   <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1${CREATOR ? "&creator=dname" : ""}" style="color:var(--gold)">${esc(location.host)}/?overlay=1${CREATOR ? "&amp;creator=dname" : ""}</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
   <div class="panel"><b>${T("Daily challenge", "오늘의 챌린지")}</b> <small>${T("5 rounds, no room needed: play against everyone who played today.", "방 없이 5라운드! 오늘 플레이한 모두와 대결.")}</small><br>
-  <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button><div id="dtop"></div></div>
+  <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button><div id="dres"></div><div id="dtop"></div></div>
   <div class="panel"><b>${T("Join a room", "방 참가")}</b>
   <input id="code" maxlength="4" placeholder="CODE" value="${esc(q)}" autocapitalize="characters">
   <input id="name" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}">
   <button class="btn" id="join">${T("Join", "참가")}</button><div id="err" style="color:var(--red)"></div></div>
   <div class="panel"><b>${T("This week's season top 10", "이번 주 시즌 TOP 10")}</b><div id="season"><small>…</small></div></div>
   <small><a href="/docs/" style="color:var(--gold)">Docs, pitch &amp; demo video</a> · Made by Nightshift Labs (an AI-agent-run studio) for Hack the Audience 2026. Original game; not affiliated with Mojang or Minecraft.</small>`;
+  collectSeats().then(rs => { // s63: final results of the days you entered (newest unseen one)
+    const r = rs.filter(x => x.entered && !localStorage["bpSeen" + x.date]).pop(), el = document.getElementById("dres"); if (!r || !el) return;
+    localStorage["bpSeen" + r.date] = "1";
+    el.innerHTML = r.seat ? `<p class="big">🎟️ ${T("You qualified on", "예선 통과")} ${esc(r.date)}: #${r.rank} / ${r.players}</p><a class="btn" href="/?seat=${encodeURIComponent(r.seat)}${CREATOR ? "&creator=dname" : ""}">${T("Open my seat ticket", "내 좌석 티켓 열기")}</a>`
+      : `<small>${T("Final result", "최종 결과")} ${esc(r.date)}: <b>#${r.rank}</b> / ${r.players}. ${T("Top 3 qualify. Try again today!", "상위 3명 진출. 오늘 다시 도전!")}</small>`;
+    if (r.seat) el.scrollIntoView({ block: "center" }); // the seat is the big news: don't leave it below the fold
+  }).catch(() => {});
   fetch("/api/daily/top").then(r => r.json()).then(j => { // s62: today's qualifier (top 3 win a weekly-final seat)
     const el = document.getElementById("dtop"); if (!el || j.unavailable) return;
-    el.innerHTML = `<small>🎟️ ${T("Top 3 today win a seat in Saturday's final", "오늘 상위 3명은 토요일 파이널 좌석")}${j.top?.length ? ": " + j.top.slice(0, 3).map(e => `${esc(e.name)} ${e.total}`).join(" · ") : ""}</small>`;
+    el.innerHTML = `<small>🎟️ ${T("Top 3 today win a seat in Saturday's final (live ranking)", "오늘 상위 3명은 토요일 파이널 좌석 (실시간 순위)")}${j.top?.length ? ": " + j.top.slice(0, 3).map(e => `${esc(e.name)} ${e.total}`).join(" · ") : ""}</small>`;
   }).catch(() => {});
   fetch("/api/leaderboard?board=season").then(r => r.json()).then(j => {
     const el = document.getElementById("season"); if (!el) return;
@@ -324,11 +346,9 @@ async function daily() {
     <p>${T("New challenge every day at midnight (Korea time).", "매일 자정(한국 시간) 새 챌린지!")}</p><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
     const showQ = r => {
       const rows = (r.top || []).map((e, j) => `<tr><td>${j + 1}${j < r.seats ? " 🎟️" : ""}</td><td>${esc(e.name)}</td><td style="text-align:right">${e.total}</td></tr>`).join("");
-      const seat = r.seat ? `<p class="big">🎟️ ${T("You qualified! Seat", "예선 통과! 좌석")} #${r.rank}</p><a class="btn" id="seat" href="/?seat=${encodeURIComponent(r.seat)}${CREATOR ? "&creator=dname" : ""}">${T("Open my seat ticket", "내 좌석 티켓 열기")}</a>`
-        : `<p>${T("Your rank today", "오늘 내 순위")}: <b>#${r.rank}</b> / ${r.players}. ${T("Top 3 qualify; come back tomorrow!", "상위 3명 진출, 내일 또 도전!")}</p>`;
+      const seat = `<p>${T("Your rank right now", "현재 내 순위")}: <b>#${r.rank}</b> / ${r.players}${r.rank <= r.seats ? " 🎟️" : ""}</p><small>${T("Crowd rounds are re-scored against everyone who plays today, so ranks can still move. The table closes at midnight (Korea time): open this site tomorrow to collect your seat if you finish in the top 3.", "군중 라운드 점수는 오늘 참여한 모두를 기준으로 다시 계산되어 순위가 바뀔 수 있어요. 자정(한국 시간)에 마감: 상위 3명이면 내일 이 사이트에서 좌석을 받으세요.")}</small>`;
       document.getElementById("qr").innerHTML = `${seat}<table>${rows}</table>`;
       document.getElementById("qn").style.display = document.getElementById("qb").style.display = "none";
-      if (r.seat) localStorage["bpSeat" + d.date] = r.seat;
     };
     document.getElementById("qb").onclick = async () => {
       const name = document.getElementById("qn").value.trim(); if (!name) return;

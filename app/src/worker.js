@@ -3,12 +3,13 @@ import { seatSig, seatCode, checkSeat } from "./seat.js";
 // Extriver prototype backend (Cloudflare Worker, free plan). Static game/app files come from ./public.
 // Endpoints: GET /health, GET /api/leaderboard?board=<id>, POST /api/score {board,name,score}
 import { Room, seasonId } from "./room.js";
-import { kstDate, dailyRounds, validAnswer, scoreDaily } from "./games.js";
+import { kstDate, dailyRounds, validAnswer, scoreDaily, DAILY_CROWD } from "./games.js";
 export { Room };
 const VERSION = "0.4.0";
 const MAX_NAME = 16, MAX_ENTRIES = 50, QUAL_SEATS = 3;
-// The weekly final is the Saturday on or after the qualifying day (Korean dates), 20:00 KST.
-export function finalFor(date) { const d = new Date(date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7)); return d.toISOString().slice(0, 10) + " 20:00 KST"; }
+// The weekly final is a Saturday, 20:00 KST (Korean dates).
+// s63: seats are handed out only after the qualifying day closes (final crowd counts), so the final is the Saturday on or after the NEXT day.
+export function finalFor(date) { const d = new Date(date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7)); return d.toISOString().slice(0, 10) + " 20:00 KST"; }
 const json = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store", ...h } });
 
 function cleanName(n) {
@@ -98,8 +99,21 @@ export async function handle(req, env) {
     if (!/^[a-z0-9]{8,32}$/.test(tok)) return json({ error: "bad input" }, 400);
     const res = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/finish", { method: "POST", body: JSON.stringify({ tok, name: cleanName(body.name) }) })).json();
     if (res.error) return json(res, 400);
+    // s63: today's rank is PROVISIONAL (crowd points move as more people play); seats come from /api/daily/result after midnight KST
+    return json({ date, ...res, seats: QUAL_SEATS, provisional: true, closesAt: date + " 24:00 KST", seat: null });
+  }
+  // s63: final result of a CLOSED Korean day (immutable: answers/entries only ever go to today's table). Top QUAL_SEATS get a seat link.
+  if (url.pathname === "/api/daily/result" && req.method === "GET" && env.DAILY) {
+    const date = url.searchParams.get("date") || "", tok = url.searchParams.get("tok") || "";
+    if (!/^\d{4}-\d\d-\d\d$/.test(date) || !/^[a-z0-9]{8,32}$/.test(tok)) return json({ error: "bad input" }, 400);
+    if (date >= kstDate()) return json({ date, open: true, closesAt: date + " 24:00 KST" });
+    const ip = req.headers.get("cf-connecting-ip") || "local";
+    if (limited("res:" + ip, 30)) return json({ error: "slow down" }, 429);
+    let res; try { res = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/result", { method: "POST", body: JSON.stringify({ tok }) })).json(); }
+    catch { return json({ date, unavailable: true }, 503); }
+    if (!res.rank) return json({ date, entered: false });
     const seat = res.rank <= QUAL_SEATS ? await seatCode(env, date, res.rank, tok) : null;
-    return json({ date, ...res, seats: QUAL_SEATS, seat });
+    return json({ date, entered: true, total: res.total, rank: res.rank, players: res.players, seats: QUAL_SEATS, seat, final: seat ? finalFor(date) : undefined });
   }
   if (url.pathname === "/api/daily/top" && req.method === "GET" && env.DAILY) {
     const date = /^\d{4}-\d\d-\d\d$/.test(url.searchParams.get("date") || "") ? url.searchParams.get("date") : kstDate();
@@ -155,7 +169,23 @@ export class Daily {
     this.sql.exec("CREATE INDEX IF NOT EXISTS fi ON fin (total DESC, at)");
   }
   async alarm() { await this.state.storage.deleteAll(); } // the day's table, tokens and counts are deleted after 8 days
-  top() { return { top: this.sql.exec("SELECT name, total FROM fin ORDER BY total DESC, at LIMIT 10").toArray(), players: this.sql.exec("SELECT COUNT(*) AS c FROM fin").one().c }; }
+  // s63 fair crowd scoring: telepathy/blockmatch points are recomputed from the CURRENT crowd counts (the final counts once the day
+  // has closed), so early players aren't judged against a tiny crowd. Diamond/lava points are fixed at answer time.
+  // One SQL pass over the entered players, cached until the next answer/entry (keeps Durable Object rows-read low).
+  standings() {
+    if (this.cache && !this.dirty) return this.cache;
+    const crowd = DAILY_CROWD.join(",");
+    const rows = this.sql.exec(`SELECT f.tok AS tok, f.name AS name, f.at AS at,
+        SUM(CASE WHEN s.round IN (${crowd}) THEN CAST(ROUND(100.0 * COALESCE(c.n, 0) / MAX(1, t.tot)) AS INTEGER) ELSE COALESCE(s.pts, 0) END) AS total
+      FROM fin f JOIN seen s ON s.tok = f.tok
+      LEFT JOIN c ON c.round = s.round AND c.v = s.v
+      LEFT JOIN (SELECT round, SUM(n) AS tot FROM c GROUP BY round) t ON t.round = s.round
+      GROUP BY f.tok ORDER BY total DESC, f.at`).toArray();
+    const rank = new Map(rows.map((r, i) => [r.tok, i + 1]));
+    this.cache = { rows, rank }; this.dirty = false;
+    return this.cache;
+  }
+  top() { const { rows } = this.standings(); return { top: rows.slice(0, 10).map(r => ({ name: r.name, total: r.total })), players: rows.length }; }
   async fetch(req) {
     const path = new URL(req.url).pathname;
     if (path === "/top") return Response.json(this.top());
@@ -169,8 +199,13 @@ export class Daily {
         this.sql.exec("INSERT INTO fin VALUES (?,?,?,?)", tok, name, me.total, me.at);
         if (!(await this.state.storage.getAlarm())) await this.state.storage.setAlarm(Date.now() + 8 * 864e5); // s62: nicknames kept ~1 week (OPS privacy)
       }
-      const rank = this.sql.exec("SELECT COUNT(*) AS c FROM fin WHERE total > ? OR (total = ? AND at < ?)", me.total, me.total, me.at).one().c + 1;
-      return Response.json({ total: me.total, rank, ...this.top() });
+      this.dirty = true;
+      const st = this.standings(), mine = st.rows[st.rank.get(tok) - 1];
+      return Response.json({ total: mine ? mine.total : me.total, rank: st.rank.get(tok), ...this.top() });
+    }
+    if (path === "/result") { // a closed day: same standings, nothing changes any more
+      const { tok } = await req.json(), st = this.standings(), i = st.rank.get(tok);
+      return Response.json(i ? { rank: i, total: st.rows[i - 1].total, players: st.rows.length } : {});
     }
     const { round, v, tok, r } = await req.json();
     const prev = this.sql.exec("SELECT v, pts FROM seen WHERE tok = ? AND round = ?", tok, round).toArray()[0];
@@ -179,6 +214,7 @@ export class Daily {
     for (const row of this.sql.exec("SELECT v, n FROM c WHERE round = ?", round)) { counts[row.v] = row.n; total += row.n; }
     const pts = prev ? prev.pts : r ? scoreDaily(r, v, counts, total) : null;
     if (!prev) this.sql.exec("INSERT INTO seen VALUES (?,?,?,?)", tok, round, v, pts);
+    if (!prev) this.dirty = true;
     return Response.json({ counts, total, v: prev ? prev.v : v, pts: pts ?? undefined });
   }
 }

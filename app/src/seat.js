@@ -13,7 +13,7 @@ export async function checkSeat(env, code, now = Date.now()) {
   const p = String(code || "").split(".");
   if (p.length !== 4 || !/^\d{4}-\d\d-\d\d$/.test(p[0]) || !/^[1-9]$/.test(p[1])) return null;
   if ((await seatSig(env, `${p[0]}.${p[1]}.${p[2]}`)) !== p[3]) return null;
-  // valid from its qualifying day until the end of that week's final day (the Saturday on/after it, Korean time)
-  const day = Date.parse(p[0] + "T00:00:00Z"), fin = day + ((6 - new Date(day).getUTCDay() + 7) % 7) * 864e5, today = Date.parse(new Date(now + 9 * 3600e3).toISOString().slice(0, 10) + "T00:00:00Z");
+  // valid from its qualifying day until the end of its final day (the Saturday on/after the NEXT day, Korean time; s63)
+  const day = Date.parse(p[0] + "T00:00:00Z"), next = day + 864e5, fin = next + ((6 - new Date(next).getUTCDay() + 7) % 7) * 864e5, today = Date.parse(new Date(now + 9 * 3600e3).toISOString().slice(0, 10) + "T00:00:00Z");
   return today >= day && today <= fin ? { date: p[0], rank: +p[1], id: `${p[0]}.${p[1]}.${p[2]}` } : null;
 }
