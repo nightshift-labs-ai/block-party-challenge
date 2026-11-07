@@ -4,9 +4,10 @@
 |---|---|
 | Production | https://extriver-proto.nightshift-labs.workers.dev (Cloudflare Worker `extriver-proto`, static assets + Durable Objects `Room`, `Board`, `Daily`) |
 | Health | `GET /health` → `{ok, version, kv, time}` (503 if storage fails) |
+| Health checks | `/health` = liveness: 200 while games work, with `"degraded": true` if the leaderboard database fails (rooms are separate Durable Objects and keep running); `/health?ready=1` = strict readiness, 503 on any failure (use before promoting a deploy) |
 | Uptime monitor | separate cron Worker `extriver-monitor`, pings /health every 5 min, keeps 24 h → https://extriver-monitor.nightshift-labs.workers.dev/status (+ `/status.json`) |
 | Synthetic E2E | every hour the monitor plays a **full 7-round episode in production** (creates a practice room, host + 2 bot phones over WebSocket, ~4 s); result on the status page, failures alert by email (`[E2E FAIL]`) |
-| Alerts | the monitor emails the on-call inbox after **2 failed checks in a row** (≤ 10 min) and again on recovery (one email per incident, no alert storms) |
+| Alerts | the monitor emails the on-call inbox after **2 failed or degraded checks in a row** (subject `[DOWN]` or `[DEGRADED]`); the status page shows game uptime and full-service % (incl. leaderboard) separately, orange bars = degraded (≤ 10 min) and again on recovery (one email per incident, no alert storms) |
 | Backups | the monitor stores a daily copy of the season leaderboard (14 days) → `/backups.json`, one day: `/backups.json?day=YYYY-MM-DD` |
 | CI/CD | `.github/workflows/ci.yml` (GitHub Actions workflow, written and kept in the repo as `ci/ci.yml`; **not yet enabled** in GitHub Actions because our automation token has no `workflow` scope; until then the same steps run by hand: tests → `wrangler deploy` → smoke test → `wrangler rollback` on failure): unit tests on every push/PR. On `main`: deploy, smoke test production (health + full WebSocket episode), **automatic rollback** to the previous version if the smoke test fails |
 
@@ -49,7 +50,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
   database yet.
 - *Fixes:* (1) the other service now uses an index and prunes rarely. (2) `/health` now checks the leaderboard database, so the
   monitor alerts on this kind of failure (that is why the status page shows ~2 h of 503s from 18:50 UTC: the new check correctly
-  reporting the ongoing problem). (3) The leaderboard now answers `{entries: [], unavailable: true}` and the home page shows
+  reporting the ongoing problem; from 21:08 UTC `/health` reports this case as "degraded" (orange), since games kept working). (3) The leaderboard now answers `{entries: [], unavailable: true}` and the home page shows
   "Leaderboard is taking a short break", instead of an error page. (4) The game Worker has a top-level guard that returns JSON 503,
   never a raw error page.
 - *Lesson / follow-up:* on the free plan one heavy Durable Object can starve unrelated services. Always index Durable Object SQL filters.

@@ -33,8 +33,11 @@ export async function handle(req, env) {
     if (env.SCORES) { try { await env.SCORES.get("__ping"); kv = "ok"; } catch { kv = "error"; } }
     let db = "absent"; // s58: also check Durable Object storage (leaderboards/rooms), so the status page can't be green while boards fail
     if (env.BOARD) { try { const r = await env.BOARD.get(env.BOARD.idFromName("health-check")).fetch("https://do/"); await r.text(); db = r.ok ? "ok" : "error"; } catch { db = "error"; } }
-    const bad = kv === "error" || db === "error";
-    return json({ ok: !bad, version: VERSION, kv, db, time: new Date().toISOString() }, bad ? 503 : 200);
+    // s61: liveness vs readiness. Games run without the leaderboard DB (rooms are their own Durable Objects), so a DB failure is
+    // "degraded" (200) for the uptime monitor, which tracks it separately; ?ready=1 is the strict readiness check (503 on any failure).
+    const down = kv === "error", degraded = db === "error";
+    const strict = url.searchParams.get("ready") === "1";
+    return json({ ok: !down, degraded, version: VERSION, kv, db, time: new Date().toISOString() }, down || (strict && degraded) ? 503 : 200);
   }
   if (url.pathname === "/api/leaderboard" && req.method === "GET") {
     const board = cleanBoard(url.searchParams.get("board") === "season" ? seasonId() : url.searchParams.get("board"));

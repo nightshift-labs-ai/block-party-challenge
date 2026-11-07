@@ -16,6 +16,10 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 <td><code>GET /health</code> → <code>{ok, version, kv, time}</code> (503 if storage fails)</td>
 </tr>
 <tr>
+<td>Health checks</td>
+<td><code>/health</code> = liveness: 200 while games work, with <code>&quot;degraded&quot;: true</code> if the leaderboard database fails (rooms are separate Durable Objects and keep running); <code>/health?ready=1</code> = strict readiness, 503 on any failure (use before promoting a deploy)</td>
+</tr>
+<tr>
 <td>Uptime monitor</td>
 <td>separate cron Worker <code>extriver-monitor</code>, pings /health every 5 min, keeps 24 h → <a href="https://extriver-monitor.nightshift-labs.workers.dev/status">https://extriver-monitor.nightshift-labs.workers.dev/status</a> (+ <code>/status.json</code>)</td>
 </tr>
@@ -25,7 +29,7 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 </tr>
 <tr>
 <td>Alerts</td>
-<td>the monitor emails the on-call inbox after <strong>2 failed checks in a row</strong> (≤ 10 min) and again on recovery (one email per incident, no alert storms)</td>
+<td>the monitor emails the on-call inbox after <strong>2 failed or degraded checks in a row</strong> (subject <code>[DOWN]</code> or <code>[DEGRADED]</code>); the status page shows game uptime and full-service % (incl. leaderboard) separately, orange bars = degraded (≤ 10 min) and again on recovery (one email per incident, no alert storms)</td>
 </tr>
 <tr>
 <td>Backups</td>
@@ -74,7 +78,7 @@ and used up the account&#39;s daily quota. Our own code was fine, but it shared 
 database yet.</li>
 <li><em>Fixes:</em> (1) the other service now uses an index and prunes rarely. (2) <code>/health</code> now checks the leaderboard database, so the
 monitor alerts on this kind of failure (that is why the status page shows ~2 h of 503s from 18:50 UTC: the new check correctly
-reporting the ongoing problem). (3) The leaderboard now answers <code>{entries: [], unavailable: true}</code> and the home page shows
+reporting the ongoing problem; from 21:08 UTC <code>/health</code> reports this case as &quot;degraded&quot; (orange), since games kept working). (3) The leaderboard now answers <code>{entries: [], unavailable: true}</code> and the home page shows
 &quot;Leaderboard is taking a short break&quot;, instead of an error page. (4) The game Worker has a top-level guard that returns JSON 503,
 never a raw error page.</li>
 <li><em>Lesson / follow-up:</em> on the free plan one heavy Durable Object can starve unrelated services. Always index Durable Object SQL filters.

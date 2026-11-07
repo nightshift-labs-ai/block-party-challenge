@@ -20,3 +20,8 @@ test("rate limit", async () => {
   let last; for (let i = 0; i < 25; i++) last = await handle(post({ board: "r", score: i }, "9.9.9.9"), env);
   assert.equal(last.status, 429);
 });
+test("health: leaderboard DB failure = degraded (200), strict readiness = 503", async () => {
+  const e = { SCORES: kv(), BOARD: { idFromName: () => "x", get: () => ({ fetch: async () => { throw new Error("Exceeded allowed rows read"); } }) } };
+  const r = await handle(req("/health"), e); assert.equal(r.status, 200); const j = await r.json(); assert.equal(j.degraded, true); assert.equal(j.db, "error"); assert.equal(j.ok, true);
+  const s = await handle(req("/health?ready=1"), e); assert.equal(s.status, 503);
+});

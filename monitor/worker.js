@@ -2,8 +2,9 @@
 const KEEP = 288;
 async function probe(env) {
   const t0 = Date.now(); let ok = false, code = 0;
-  try { const r = await fetch(env.TARGET + "/health", { cf: { cacheTtl: 0 } }); code = r.status; ok = r.ok; } catch { code = -1; }
-  const s = { at: t0, ok, code, ms: Date.now() - t0 };
+  let deg = false;
+  try { const r = await fetch(env.TARGET + "/health", { cf: { cacheTtl: 0 } }); code = r.status; ok = r.ok; try { deg = !!(await r.json()).degraded; } catch {} } catch { code = -1; }
+  const s = { at: t0, ok, code, ms: Date.now() - t0, ...(deg ? { deg: true } : {}) }; // deg = game up, leaderboard DB failing
   const hist = (await env.MON.get("hist", "json")) || [];
   hist.push(s); await env.MON.put("hist", JSON.stringify(hist.slice(-KEEP)));
   await alertIfNeeded(env, hist);
@@ -60,12 +61,12 @@ async function sendAlert(env, subject, text) {
   } catch (e) { console.log("alert send failed", String(e)); }
 }
 async function alertIfNeeded(env, hist) {
-  const last2 = hist.slice(-2), down = last2.length === 2 && last2.every(x => !x.ok);
+  const last2 = hist.slice(-2), down = last2.length === 2 && last2.every(x => !x.ok || x.deg), hard = last2.some(x => !x.ok);
   const was = (await env.MON.get("alerting")) === "1";
   if (down && !was) {
     await env.MON.put("alerting", "1");
-    await sendAlert(env, "[DOWN] " + env.TARGET, `Health check failed twice in a row.\nLast: ${JSON.stringify(last2)}\nRunbook: docs/OPS.md → Incidents.`);
-  } else if (was && hist[hist.length - 1]?.ok) {
+    await sendAlert(env, (hard ? "[DOWN] " : "[DEGRADED] ") + env.TARGET, `Health check failed twice in a row.\nLast: ${JSON.stringify(last2)}\nRunbook: docs/OPS.md → Incidents.`);
+  } else if (was && hist[hist.length - 1]?.ok && !hist[hist.length - 1]?.deg) {
     await env.MON.put("alerting", "0");
     await sendAlert(env, "[RECOVERED] " + env.TARGET, `Health check OK again at ${new Date().toISOString()}.`);
   }
@@ -82,7 +83,8 @@ async function backupDaily(env) {
 }
 function summary(h) {
   const up = h.filter(x => x.ok).length, ms = h.map(x => x.ms).sort((a, b) => a - b);
-  return { samples: h.length, uptimePct: h.length ? +(100 * up / h.length).toFixed(2) : null, p50ms: ms[ms.length >> 1] ?? null, p95ms: ms[Math.floor(ms.length * 0.95)] ?? null, last: h[h.length - 1] || null };
+  const full = h.filter(x => x.ok && !x.deg).length;
+  return { samples: h.length, uptimePct: h.length ? +(100 * up / h.length).toFixed(2) : null, fullServicePct: h.length ? +(100 * full / h.length).toFixed(2) : null, p50ms: ms[ms.length >> 1] ?? null, p95ms: ms[Math.floor(ms.length * 0.95)] ?? null, last: h[h.length - 1] || null };
 }
 export default {
   async scheduled(_e, env, ctx) { ctx.waitUntil(probe(env)); },
@@ -96,7 +98,7 @@ export default {
     }
     const deep = (await env.MON.get("deep", "json")) || [];
     if (u.pathname === "/status.json") return Response.json({ target: env.TARGET, ...s, history: h.slice(-48), e2e: deep.slice(-24) });
-    const bars = h.slice(-96).map(x => `<i title="${new Date(x.at).toISOString()} ${x.code} ${x.ms}ms" style="background:${x.ok ? "#2a2" : "#c33"}"></i>`).join("");
-    return new Response(`<!doctype html><meta name=viewport content="width=device-width"><title>Status</title><style>body{font:16px system-ui;max-width:720px;margin:2em auto;padding:0 1em}i{display:inline-block;width:6px;height:28px;margin-right:1px}</style><h1>Service status</h1><p>${s.last?.ok ? "✅ Operational" : "⚠️ Problem detected"} · uptime 24 h: ${s.uptimePct ?? "–"}% · p50 ${s.p50ms ?? "–"} ms · p95 ${s.p95ms ?? "–"} ms</p><div>${bars}</div><p>Hourly end-to-end game test (host + 2 bot phones play a full episode): ${deep.length ? deep.slice(-24).map(x => x.ok ? "✅" : "❌").join("") + " · last " + (deep[deep.length - 1].ms / 1000).toFixed(1) + " s" : "no runs yet"}</p><p><small>Checked every 5 minutes from Cloudflare's edge. <a href="/status.json">JSON</a></small></p>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+    const bars = h.slice(-96).map(x => `<i title="${new Date(x.at).toISOString()} ${x.code} ${x.ms}ms" style="background:${!x.ok ? "#c33" : x.deg ? "#e90" : "#2a2"}"></i>`).join("");
+    return new Response(`<!doctype html><meta name=viewport content="width=device-width"><title>Status</title><style>body{font:16px system-ui;max-width:720px;margin:2em auto;padding:0 1em}i{display:inline-block;width:6px;height:28px;margin-right:1px}</style><h1>Service status</h1><p>${!s.last?.ok ? "⚠️ Problem detected" : s.last?.deg ? "🟧 Games OK, leaderboard degraded" : "✅ Operational"} · game uptime 24 h: ${s.uptimePct ?? "–"}% · full service incl. leaderboard: ${s.fullServicePct ?? "–"}% · p50 ${s.p50ms ?? "–"} ms · p95 ${s.p95ms ?? "–"} ms</p><div>${bars}</div><p>Hourly end-to-end game test (host + 2 bot phones play a full episode): ${deep.length ? deep.slice(-24).map(x => x.ok ? "✅" : "❌").join("") + " · last " + (deep[deep.length - 1].ms / 1000).toFixed(1) + " s" : "no runs yet"}</p><p><small>Checked every 5 minutes from Cloudflare's edge. <a href="/status.json">JSON</a></small></p>`, { headers: { "content-type": "text/html; charset=utf-8" } });
   }
 };
