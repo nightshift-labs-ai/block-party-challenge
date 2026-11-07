@@ -1,6 +1,6 @@
 <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Overview, how it plays, tech & unit cost</title><style>body{font:16px/1.55 system-ui,"Noto Sans KR",sans-serif;max-width:900px;margin:2em auto;padding:0 1em;background:#14161f;color:#e8e8ee}a{color:#f2c94c}
-table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px solid #333a4d;padding:6px 8px;vertical-align:top}th{background:#262b3b}code{background:#262b3b;padding:1px 4px}h1,h2,h3{color:#f2c94c}</style><p><a href="./">← all docs</a></p><h1>Block Party Challenge · 블록 파티 챌린지 (working title)</h1>
-<p><strong>For creator partner: GodDot / Dname (YouTube @d_name0)</strong> — Hack the Audience 2026 (Extriver Partners). DRAFT.</p>
+table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px solid #333a4d;padding:6px 8px;vertical-align:top}th{background:#262b3b}code{background:#262b3b;padding:1px 4px}h1,h2,h3{color:#f2c94c}</style><p><a href="./">← all docs</a></p><h1>Block Party Challenge · 블록 파티 챌린지</h1>
+<p><strong>For creator partner: GodDot / Dname (YouTube @d_name0)</strong> — Hack the Audience 2026 (Extriver Partners).</p>
 <p>Live prototype: <a href="https://extriver-proto.nightshift-labs.workers.dev">https://extriver-proto.nightshift-labs.workers.dev</a> · Status page: <a href="https://extriver-monitor.nightshift-labs.workers.dev/status">https://extriver-monitor.nightshift-labs.workers.dev/status</a></p>
 <p><strong>한국어:</strong> <a href="summary-ko.html">한 쪽 요약</a> · <a href="pitch-ko.pdf">피치덱 PDF</a> · <a href="https://extriver-proto.nightshift-labs.workers.dev/docs/video.html">데모 영상 (한국어 자막)</a></p>
 <p>Docs: <a href="business.html">business model + 4-scenario funnel</a> (<code>tools/model.py</code>) · <a href="research.html">creator research</a> · pitch deck <code>docs/pitch.pdf</code> · 2:52 demo video <code>docs/demo.mp4</code> (real recorded episode with 10 players; rebuild with <code>tools/recvideo.mjs</code> + <code>tools/makevideo.sh</code>).</p>
@@ -10,7 +10,7 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 one big screen (his stream, a classroom TV, a living-room TV) and everyone joins from their phone with a 4-letter code or QR. No app, no account.</p>
 <h2>How it plays</h2>
 <ul>
-<li>Host opens the site on a big screen → room code + QR. Tested with <strong>200 phones</strong> in one room (bots; room cap 300), 4–12 for friend groups.</li>
+<li>Host opens the site on a big screen → room code + QR. Load-tested with <strong>200 simulated phones</strong> in one room (bot clients from one machine; room cap 300), 4–12 for friend groups.</li>
 <li>An <em>episode</em> = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:<ul>
 <li><strong>Telepathy</strong> (텔레파시) — pick the answer most people will pick. Points = how many others matched you.</li>
 <li><strong>Greed</strong> (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.</li>
@@ -40,7 +40,7 @@ screen and every phone (&quot;presented by … · free entry&quot;). The prize i
 <li>Korean kids/teens audience <em>(not verified; no public demographics)</em> → no-install, phone-as-controller, classroom- and friend-group-friendly.</li>
 <li>Content flywheel: the weekly &quot;Dname Final&quot; room is recorded (or streamed) → becomes his next short → brings new players → next week&#39;s final.</li>
 </ul>
-<h2>Business model (draft)</h2>
+<h2>Business model</h2>
 <ul>
 <li><strong>Free to play</strong> — a game must spread before it can earn.</li>
 <li><strong>Fan Pass ₩4,900/month</strong>: private rooms with custom question packs, extra cosmetics, a season badge. (Payments by parents/vouchers; minors protections apply.)</li>
@@ -82,7 +82,7 @@ screen and every phone (&quot;presented by … · free entry&quot;). The prize i
 </tr>
 </tbody></table>
 <p><strong>Measured in production (Cloudflare analytics, 2026-11-06 09:00 → 11-07 09:00 UTC):</strong> the Room Durable Object served the 24 hourly synthetic episodes (host + 2 bot phones, full episode) plus a little manual testing: 146.9 s active time in total (≈6.1 s per episode → ≈0.8 GB-s at 128 MB), 1.06 s CPU (≈44 ms per episode), 1,390 requests (≈58 per episode, an upper bound because it includes manual tests). That is ≈$0.00002 per 3-player episode, the same order as the estimate above, so the 0.3 s-per-burst assumption is not too low for small rooms. Big 300-player rooms are still an estimate (the 200-phone load test measures latency, not billing).</p>
-<p>So 1 million player-episodes cost roughly <strong>$1–5</strong> in infrastructure, and the free plan alone covers about 250 streamer-size episodes a day (its 100k-request limit binds before the 13,000 GB-s duration limit); beyond that the paid plan ($5/month base) applies.
+<p>So 1 million player-episodes cost roughly <strong>$1–5</strong> in infrastructure, and the free plan alone covers about 250 streamer-size episodes a day by request count (caveat: the Durable Object quota is shared by every Worker on the account; on Nov 7 a bug in another service of ours used it up for a day, which is fixed, and the game now shows a friendly &quot;short break&quot; line instead of failing) (its 100k-request limit binds before the 13,000 GB-s duration limit); beyond that the paid plan ($5/month base) applies.
 Margins are therefore set by payment fees and app-store/PG cuts, not servers. Duration per burst is an assumption to be replaced with measured analytics after the load test.</p>
 <h2>Tech &amp; operations (DevOps bonus)</h2>
 <ul>

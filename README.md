@@ -1,6 +1,6 @@
-# Block Party Challenge · 블록 파티 챌린지 (working title)
+# Block Party Challenge · 블록 파티 챌린지
 
-**For creator partner: GodDot / Dname (YouTube @d_name0)** — Hack the Audience 2026 (Extriver Partners). DRAFT.
+**For creator partner: GodDot / Dname (YouTube @d_name0)** — Hack the Audience 2026 (Extriver Partners).
 
 Live prototype: https://extriver-proto.nightshift-labs.workers.dev · Status page: https://extriver-monitor.nightshift-labs.workers.dev/status
 
@@ -14,7 +14,7 @@ Dname's shorts are already games — "find the diamond and win", greed game, blo
 one big screen (his stream, a classroom TV, a living-room TV) and everyone joins from their phone with a 4-letter code or QR. No app, no account.
 
 ## How it plays
-- Host opens the site on a big screen → room code + QR. Tested with **200 phones** in one room (bots; room cap 300), 4–12 for friend groups.
+- Host opens the site on a big screen → room code + QR. Load-tested with **200 simulated phones** in one room (bot clients from one machine; room cap 300), 4–12 for friend groups.
 - An *episode* = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:
   - **Telepathy** (텔레파시) — pick the answer most people will pick. Points = how many others matched you.
   - **Greed** (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.
@@ -41,7 +41,7 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 - Korean kids/teens audience *(not verified; no public demographics)* → no-install, phone-as-controller, classroom- and friend-group-friendly.
 - Content flywheel: the weekly "Dname Final" room is recorded (or streamed) → becomes his next short → brings new players → next week's final.
 
-## Business model (draft)
+## Business model
 - **Free to play** — a game must spread before it can earn.
 - **Fan Pass ₩4,900/month**: private rooms with custom question packs, extra cosmetics, a season badge. (Payments by parents/vouchers; minors protections apply.)
 - **Cosmetics ₩1,000–5,000**: blocky avatars, reveal effects, emotes — no pay-to-win.
@@ -62,7 +62,7 @@ Pricing: requests $0.15 per million (incoming WebSocket messages count 20:1), du
 
 **Measured in production (Cloudflare analytics, 2026-11-06 09:00 → 11-07 09:00 UTC):** the Room Durable Object served the 24 hourly synthetic episodes (host + 2 bot phones, full episode) plus a little manual testing: 146.9 s active time in total (≈6.1 s per episode → ≈0.8 GB-s at 128 MB), 1.06 s CPU (≈44 ms per episode), 1,390 requests (≈58 per episode, an upper bound because it includes manual tests). That is ≈$0.00002 per 3-player episode, the same order as the estimate above, so the 0.3 s-per-burst assumption is not too low for small rooms. Big 300-player rooms are still an estimate (the 200-phone load test measures latency, not billing).
 
-So 1 million player-episodes cost roughly **$1–5** in infrastructure, and the free plan alone covers about 250 streamer-size episodes a day (its 100k-request limit binds before the 13,000 GB-s duration limit); beyond that the paid plan ($5/month base) applies.
+So 1 million player-episodes cost roughly **$1–5** in infrastructure, and the free plan alone covers about 250 streamer-size episodes a day by request count (caveat: the Durable Object quota is shared by every Worker on the account; on Nov 7 a bug in another service of ours used it up for a day, which is fixed, and the game now shows a friendly "short break" line instead of failing) (its 100k-request limit binds before the 13,000 GB-s duration limit); beyond that the paid plan ($5/month base) applies.
 Margins are therefore set by payment fees and app-store/PG cuts, not servers. Duration per burst is an assumption to be replaced with measured analytics after the load test.
 
 ## Tech & operations (DevOps bonus)
