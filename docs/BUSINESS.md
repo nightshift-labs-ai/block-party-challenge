@@ -1,4 +1,4 @@
-# Block Party Challenge: business model (draft, 2026-11-06)
+# Block Party Challenge: business model (updated 2026-11-07)
 
 Partner creator: **GodDot / Dname** (YouTube @d_name0). Every number below that is not a public count is an **assumption**,
 marked (A). The model is in `tools/model.py`, so judges and the creator can change the inputs and re-run it.
