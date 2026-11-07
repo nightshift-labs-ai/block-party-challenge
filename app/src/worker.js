@@ -43,6 +43,8 @@ export async function handle(req, env) {
     return json({ board, entries: list.slice(0, 20) }, 200, { "cache-control": "public, max-age=5" });
   }
   if (url.pathname === "/api/score" && req.method === "POST") {
+    // s58: in production (Durable Object boards) season scores are written ONLY by game rooms (room.js); the public endpoint is closed
+    if (env.BOARD) return json({ error: "scores are recorded by game rooms" }, 403);
     const ip = req.headers.get("cf-connecting-ip") || "local";
     if (limited(ip)) return json({ error: "slow down" }, 429);
     let body; try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
