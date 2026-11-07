@@ -3,8 +3,8 @@
 Block Party Challenge. A party game made for the creator Dee name, for Hack the Audience.
 
 2
-00:00:07,500 --> 00:00:14,487
-Dee name's shorts are already games. Find the diamond, the greed game, don't say the letter. His median short gets about one point seven million views.
+00:00:07,500 --> 00:00:13,814
+Dee name's shorts are already games. Find the diamond, the greed game, don't say the letter. Every short is a game his viewers can play along with.
 
 3
 00:00:14,500 --> 00:00:18,655
@@ -59,8 +59,8 @@ Every round is timed by the server, so nobody can cheat the clock.
 Then the winner, and every episode feeds a weekly season leaderboard.
 
 16
-00:02:01,000 --> 00:02:08,254
-The weekly final runs live on his stream, as an overlay, and becomes his next short. Between finals, a daily challenge lets viewers play any time.
+00:02:01,000 --> 00:02:07,523
+The weekly final is recorded with the game overlay, and becomes his next short. Between finals, a daily challenge lets viewers play any time.
 
 17
 00:02:11,000 --> 00:02:19,450
