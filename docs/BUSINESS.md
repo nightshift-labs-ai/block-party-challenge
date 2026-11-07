@@ -14,6 +14,19 @@ marked (A). The model is in `tools/model.py`, so judges and the creator can chan
 Prizes are **always sponsor-funded with free entry**. Players never pay to enter, and nothing random can be bought.
 This keeps it out of gambling/lottery rules and is a hard design rule, not a later fix.
 
+### Price anchors (public list prices, checked 2026-11-07)
+Our prices sit inside the range people already pay for phone-as-controller and classroom games:
+
+| Product | Public price | Our closest price |
+|---|---|---|
+| Gimkit Pro (classroom game show), individual teacher | $14.99/month, or $59.88/year ([Gimkit help center](https://help.gimkit.com/en/article/gimkit-pro-faq-14h6d62/)) | Classroom licence ₩9,900/mo ≈ $7.20: under Gimkit's monthly price, above its annual rate ($4.99/mo) |
+| Gimkit Groups | $650/year per department (≤20 teachers), $1,000/year per school (same page) | Academy licences (not in the model yet; upside) |
+| Blooket Plus (classroom games) | ≈$4.99/month billed yearly, $9.99 monthly (third-party reviews, e.g. [Nibble](https://nibble-app.com/blog/blooket-pricing); Blooket shows prices only in-account) | same range |
+| Jackbox Party Pack (phones as controllers, living room) | $24.99–29.99 per pack on Steam, one-time (e.g. [The Jackbox Party Pack](https://store.steampowered.com/app/331670/) $24.99; newer packs $29.99) | Fan Pass ₩4,900/mo ≈ $3.55, cancel any time |
+
+US prices, not Korean ones. They show that a teacher or a family already pays this much for the format. They don't prove Korean demand:
+the first Dname Final (milestone 1) is the test for that.
+
 ## 2. Funnel (how players arrive)
 Public counts (2026-11-06): 270K subscribers, median **≈1.7M views** over the last 50 shorts, but recent uploads are rare and
 weaker (13K–755K). The model therefore uses lower view numbers than the median.
