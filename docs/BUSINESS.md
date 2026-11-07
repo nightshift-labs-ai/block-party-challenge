@@ -42,6 +42,8 @@ weaker (13K–755K). The model therefore uses lower view numbers than the median
 | Recent reach* | 700 | ₩0.5M | ₩3.4M ($2.5K) | ₩3.1M | ₩0.62M ($450) |
 | Optimistic | 104,600 | ₩22M | ₩242M ($176K) | ₩218M | ₩44M ($32K) |
 
+**Why ₩2M per sponsored episode is a low assumption:** creator-marketing guides quote YouTube sponsorships at "$10 to $50 per 1,000 expected views for a dedicated integration" and price a Short at 0.25–0.5× of an integration ([1of10, Aug 2026](https://www.1of10.com/blog/youtube-sponsorship-rates/)), i.e. roughly $2.5–25 per 1,000 Short views. At the Base 800K views that is ≈$2K–20K (₩2.8M–28M) per sponsored Short; we use ₩2M (≈$1.4K, ≈$1.8 per 1,000 views), below the bottom of that range. These are vendor-blog figures for mostly US channels, not a Korean rate card, so the input stays labelled (A).
+
 \* **Recent reach** = Base rates, but 24K views per short (the median of his three latest uploads: 755K, 13K, 24K) and **no sponsor deals**.
 It is the honest floor if his posting stays as it is now: most of that revenue is classroom licences. The Base case assumes the game
 becomes his regular content again (2 game shorts a month at 800K, below his 1.7M 50-short median). That is the bet, and the reason
