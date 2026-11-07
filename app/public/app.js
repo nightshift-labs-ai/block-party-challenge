@@ -98,7 +98,7 @@ function connect(q) {
       if (role === "host" && m.phase === "lobby" && !brandSent) {
         brandSent = true; const u = new URLSearchParams(location.search);
         const title = u.get("title") || (CREATOR ? "디네임 파이널 · Dname Final" : null);
-        if (title || u.get("sponsor") || u.get("prize")) send({ t: "brand", title, sponsor: u.get("sponsor"), prize: u.get("prize") });
+        if (title || u.get("sponsor") || u.get("prize")) send({ t: "brand", title, sponsor: u.get("sponsor"), prize: u.get("prize"), sq: u.get("sq"), so: (u.get("so") || "").split("|") });
       }
       render();
       const b = S.brand;

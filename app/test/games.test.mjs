@@ -57,3 +57,8 @@ test("brand: sanitised + capped", () => {
   assert.deepEqual(cleanBrand({ title: "<b>Dname Final</b>", sponsor: "Snack Co", prize: "x".repeat(99) }), { title: "bDname Final/b", sponsor: "Snack Co", prize: "x".repeat(60) });
   assert.equal(cleanBrand({}), null);
 });
+test("cleanBrand: sponsored question needs a question and 2-4 options", () => {
+  const b = cleanBrand({ sponsor: "Snack Co", sq: "Which flavour <b>?", so: ["Honey", "Spicy", "", "Cheese", "Onion", "Extra"] });
+  assert.equal(b.sq, "Which flavour b?"); assert.deepEqual(b.so, ["Honey", "Spicy", "Cheese", "Onion"]);
+  assert.equal(cleanBrand({ sponsor: "S", sq: "Q?", so: ["only one"] }).sq, undefined);
+});
