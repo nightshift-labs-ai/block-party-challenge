@@ -33,7 +33,7 @@ Prefer watching? <a href="https://extriver-proto.nightshift-labs.workers.dev/doc
 one big screen (his stream, a classroom TV, a living-room TV) and everyone joins from their phone with a 4-letter code or QR. No app, no account.</p>
 <h2>How it plays</h2>
 <ul>
-<li>Host opens the site on a big screen → room code + QR. Load-tested with <strong>200 simulated phones</strong> in one room (bot clients from one machine; room cap 300), 4–12 for friend groups.</li>
+<li>Host opens the site on a big screen → room code + QR. Load-tested at the room cap: <strong>300 simulated phones</strong> in one room (bot clients from one machine; p50 0.46 s answer→reveal, <a href="loadtest-300-2026-11-07.txt">raw output</a>), 4–12 for friend groups.</li>
 <li>An <em>episode</em> = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:<ul>
 <li><strong>Telepathy</strong> (텔레파시) — pick the answer most people will pick. Points = how many others matched you.</li>
 <li><strong>Greed</strong> (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.</li>

@@ -55,7 +55,7 @@ npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
 <p>Durable Object storage is not rolled back. Schema changes are additive only (<code>CREATE TABLE IF NOT EXISTS</code>, new classes through new migration tags), so an older version still reads the data.</p>
 <h2>Scaling and limits</h2>
 <ul>
-<li>One Durable Object per room: rooms scale out independently. Measured: 200 phones in one room, p50 ≈ 0.2 s answer→reveal (README).</li>
+<li>One Durable Object per room: rooms scale out independently. Measured: 200 phones in one room, p50 ≈ 0.2 s answer→reveal; at the 300-phone cap (2026-11-07) 300 simulated phones (the room cap): all joined in 5.0 s, answer→reveal p50 0.46 s, p95 0.71 s (raw output: docs/loadtest-300-2026-11-07.txt).</li>
 <li>Answer bursts are coalesced into one broadcast per 120 ms in rooms over 20 players. Snapshots are throttled to ≤ 1/s.</li>
 <li>Rooms hibernate when idle (no duration billing). Round timers are storage alarms, so a room evicted mid-round still reveals on time.</li>
 <li>Abuse: per-IP rate limits (room creation 10/min, scores 20/min, daily answers 60/min), server-side validation of every answer, hidden cells never sent before the reveal.</li>
@@ -112,7 +112,7 @@ Before launch with Dname, move to Workers Paid ($5/month, BUSINESS.md §5), wher
 <tr>
 <td>Load test</td>
 <td>before every promoted episode</td>
-<td><code>node test/room-e2e.mjs &lt;url&gt; 200</code> (p50/p95 printed); tested with 200 bot phones in one room; the room cap is 300 but 300 has not been load-tested yet, unlimited rooms</td>
+<td><code>node test/room-e2e.mjs &lt;url&gt; 200</code> (p50/p95 printed); tested with 200 and (2026-11-07) 300 bot phones in one room (300 = the room cap); rooms are unlimited</td>
 </tr>
 <tr>
 <td>Review alerts / logs</td>

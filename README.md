@@ -24,7 +24,7 @@ Dname's shorts are already games — "find the diamond and win", greed game, blo
 one big screen (his stream, a classroom TV, a living-room TV) and everyone joins from their phone with a 4-letter code or QR. No app, no account.
 
 ## How it plays
-- Host opens the site on a big screen → room code + QR. Load-tested with **200 simulated phones** in one room (bot clients from one machine; room cap 300), 4–12 for friend groups.
+- Host opens the site on a big screen → room code + QR. Load-tested at the room cap: **300 simulated phones** in one room (bot clients from one machine; p50 0.46 s answer→reveal, [raw output](docs/loadtest-300-2026-11-07.txt)), 4–12 for friend groups.
 - An *episode* = 7 fast rounds (12–15 s each), timed by the server so nobody can cheat the clock:
   - **Telepathy** (텔레파시) — pick the answer most people will pick. Points = how many others matched you.
   - **Greed** (욕심 게임) — a shared pot; everyone secretly takes 0–10 coins. If the total fits, everyone keeps theirs; if the room gets greedy, everyone gets 0.

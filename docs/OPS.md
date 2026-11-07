@@ -29,7 +29,7 @@ npx wrangler@4 rollback <version-id> -m "reason"
 Durable Object storage is not rolled back. Schema changes are additive only (`CREATE TABLE IF NOT EXISTS`, new classes through new migration tags), so an older version still reads the data.
 
 ## Scaling and limits
-- One Durable Object per room: rooms scale out independently. Measured: 200 phones in one room, p50 ≈ 0.2 s answer→reveal (README).
+- One Durable Object per room: rooms scale out independently. Measured: 200 phones in one room, p50 ≈ 0.2 s answer→reveal; at the 300-phone cap (2026-11-07) 300 simulated phones (the room cap): all joined in 5.0 s, answer→reveal p50 0.46 s, p95 0.71 s (raw output: docs/loadtest-300-2026-11-07.txt).
 - Answer bursts are coalesced into one broadcast per 120 ms in rooms over 20 players. Snapshots are throttled to ≤ 1/s.
 - Rooms hibernate when idle (no duration billing). Round timers are storage alarms, so a room evicted mid-round still reveals on time.
 - Abuse: per-IP rate limits (room creation 10/min, scores 20/min, daily answers 60/min), server-side validation of every answer, hidden cells never sent before the reveal.
@@ -66,7 +66,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 |---|---|---|
 | Dependencies / security patches | weekly + on advisories | the Worker has **no runtime npm dependencies** (plain JS on the Workers runtime, which Cloudflare patches); dev tools pinned by major version (`wrangler@4`), so there is no third-party runtime code to patch. |
 | Content (new rounds, prompts) | weekly, before the creator's Friday episode | data-only change in `games.js` + unit test → CI deploy → smoke test |
-| Load test | before every promoted episode | `node test/room-e2e.mjs <url> 200` (p50/p95 printed); tested with 200 bot phones in one room; the room cap is 300 but 300 has not been load-tested yet, unlimited rooms |
+| Load test | before every promoted episode | `node test/room-e2e.mjs <url> 200` (p50/p95 printed); tested with 200 and (2026-11-07) 300 bot phones in one room (300 = the room cap); rooms are unlimited |
 | Review alerts / logs | daily | status page + `wrangler tail`; incident notes go into this file |
 | On-call | always | first responder = the Nightshift Labs operator agent (runs every hour, reads the alert inbox); the human team representative is the escalation contact for anything needing account access |
 
