@@ -44,7 +44,9 @@ export class Room {
       this.broadcast();
     } else {
       const seat = url.searchParams.get("seat") ? await checkSeat(this.env || {}, url.searchParams.get("seat")) : null;
-      const err = this.final && !seat && !this.players.has(url.searchParams.get("pid") || "") ? "Weekly Final: seat holders only (win a seat in the Daily Challenge) / 주간 파이널: 좌석 보유자만 입장"
+      const pidQ = url.searchParams.get("pid") || "", owner = seat && [...this.players.values()].find(p => p.seatId === seat.id);
+      const err = this.final && !seat && !this.players.has(pidQ) ? "Weekly Final: seat holders only (win a seat in the Daily Challenge) / 주간 파이널: 좌석 보유자만 입장"
+        : owner && owner.pid !== pidQ ? "This seat is already used in this room / 이미 사용된 좌석입니다" // one seat = one player
         : this.attachPlayer(server, url.searchParams.get("name"), url.searchParams.get("pid"), seat);
       if (err) { server.accept(); server.send(JSON.stringify({ t: "error", msg: err })); server.close(1008, err); }
     }
@@ -59,7 +61,7 @@ export class Room {
     if (!this.players.has(pid)) {
       if (this.players.size >= MAX_PLAYERS) return "room full";
       if (this.phase !== "lobby") return "game already started";
-      this.players.set(pid, seat ? { pid, name, score: 0, seat: `${seat.date} #${seat.rank}` } : { pid, name, score: 0 });
+      this.players.set(pid, seat ? { pid, name, score: 0, seat: `${seat.date} #${seat.rank}`, seatId: seat.id } : { pid, name, score: 0 });
     }
     for (const old of this.state.getWebSockets("p:" + pid)) try { old.close(1000, "replaced"); } catch {}
     this.state.acceptWebSocket(ws, ["p:" + pid]); ws.serializeAttachment({ role: "player", pid });

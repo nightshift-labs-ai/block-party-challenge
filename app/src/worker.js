@@ -1,5 +1,5 @@
 import { safeName } from "./namefilter.js";
-import { seatSig, seatCode } from "./seat.js";
+import { seatSig, seatCode, checkSeat } from "./seat.js";
 // Extriver prototype backend (Cloudflare Worker, free plan). Static game/app files come from ./public.
 // Endpoints: GET /health, GET /api/leaderboard?board=<id>, POST /api/score {board,name,score}
 import { Room, seasonId } from "./room.js";
@@ -75,14 +75,14 @@ export async function handle(req, env) {
   }
   // Daily Challenge: GET → today's public rounds (no hidden cells); POST {round, v, tok} → crowd counts, your points, the reveal.
   if (url.pathname === "/api/daily" && req.method === "GET") {
-    const date = kstDate(), rounds = dailyRounds(date).map(r => ({ kind: r.kind, q: r.q, opts: r.opts, qk: r.qk, ok: r.ok }));
+    const date = kstDate(), rounds = dailyRounds(date, env.SEAT_SECRET || "").map(r => ({ kind: r.kind, q: r.q, opts: r.opts, qk: r.qk, ok: r.ok }));
     return json({ date, rounds });
   }
   if (url.pathname === "/api/daily/answer" && req.method === "POST" && env.DAILY) {
     const ip = req.headers.get("cf-connecting-ip") || "local";
     if (limited("daily:" + ip, 60)) return json({ error: "slow down" }, 429);
     let body; try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
-    const date = kstDate(), rounds = dailyRounds(date), i = body.round, r = rounds[i], tok = String(body.tok || "");
+    const date = kstDate(), rounds = dailyRounds(date, env.SEAT_SECRET || ""), i = body.round, r = rounds[i], tok = String(body.tok || "");
     if (!r || !validAnswer(r, body.v) || !/^[a-z0-9]{8,32}$/.test(tok)) return json({ error: "bad input" }, 400);
     const res = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/", { method: "POST", body: JSON.stringify({ round: i, v: body.v, tok, r: { kind: r.kind, diamond: r.diamond, lava: r.lava } }) })).json();
     const v = res.v ?? body.v; // a repeat answer keeps the first one
@@ -108,10 +108,8 @@ export async function handle(req, env) {
     return json({ date, seats: QUAL_SEATS, ...top }, 200, { "cache-control": "public, max-age=10" });
   }
   if (url.pathname === "/api/seat" && req.method === "GET") { // checks a seat link: <date>.<rank>.<id>.<sig>
-    const p = String(url.searchParams.get("s") || "").split(".");
-    if (p.length !== 4 || !/^\d{4}-\d\d-\d\d$/.test(p[0]) || !/^[1-9]$/.test(p[1])) return json({ valid: false }, 400);
-    const ok = (await seatSig(env, `${p[0]}.${p[1]}.${p[2]}`)) === p[3];
-    return json({ valid: ok, date: p[0], rank: +p[1], final: ok ? finalFor(p[0]) : null });
+    const seat = await checkSeat(env, url.searchParams.get("s")); // same signature + expiry check as the final room
+    return json(seat ? { valid: true, date: seat.date, rank: seat.rank, final: finalFor(seat.date) } : { valid: false });
   }
   if (url.pathname === "/api/room" && req.method === "POST" && env.ROOM) {
     const ip = req.headers.get("cf-connecting-ip") || "local";

@@ -142,8 +142,8 @@ export function seeded(str) { // mulberry32 seeded from a string hash
   let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
   let a = h >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
-export function dailyRounds(date) {
-  const rnd = seeded("bp-daily-" + date), t = [...TELEPATHY].sort(() => rnd() - 0.5);
+export function dailyRounds(date, salt = "") { // s62: production salts the seed with a secret, so hidden cells can't be computed from the public repo
+  const rnd = seeded("bp-daily-" + date + salt), t = [...TELEPATHY].sort(() => rnd() - 0.5);
   return [
     { kind: "telepathy", ...t[0] }, { kind: "diamond", diamond: Math.floor(rnd() * 25) }, { kind: "blockmatch" },
     { kind: "lava", lava: pickLava(rnd) }, { kind: "telepathy", ...t[1] },

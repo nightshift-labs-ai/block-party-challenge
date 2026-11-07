@@ -3,7 +3,7 @@
 | What | Where |
 |---|---|
 | Production | https://extriver-proto.nightshift-labs.workers.dev (Cloudflare Worker `extriver-proto`, static assets + Durable Objects `Room`, `Board`, `Daily`) |
-| Health | `GET /health` → `{ok, version, kv, time}` (503 if storage fails) |
+| Health | `GET /health` → `{ok, degraded, version, kv, db, time}`: liveness (503 only if KV fails; a leaderboard DB failure = 200 with `degraded:true`). `GET /health?ready=1` = strict readiness (503 on any failure) |
 | Health checks | `/health` = liveness: 200 while games work, with `"degraded": true` if the leaderboard database fails (rooms are separate Durable Objects and keep running); `/health?ready=1` = strict readiness, 503 on any failure (use before promoting a deploy) |
 | Uptime monitor | separate cron Worker `extriver-monitor`, pings /health every 5 min, keeps 24 h → https://extriver-monitor.nightshift-labs.workers.dev/status (+ `/status.json`) |
 | Synthetic E2E | every hour the monitor plays a **full 7-round episode in production** (creates a practice room, host + 2 bot phones over WebSocket, ~4 s); result on the status page, failures alert by email (`[E2E FAIL]`) |
@@ -58,7 +58,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 
 ## Backups and restore
 - Long-lived data is small: the weekly season leaderboard (Durable Object `Board`, SQLite) and the Daily Challenge results. Rooms are ephemeral by design.
-- The monitor copies the season leaderboard once a day to KV (14-day retention). Restore = re-POST the entries of the chosen day to `/api/score` (same validation as live traffic), or rebuild the week from scratch: a season only lasts 7 days.
+- The monitor copies the season leaderboard once a day to KV (14-day retention). Restore = write the entries of the chosen day back into the season Board Durable Object with a one-off admin script (the public `/api/score` is closed in production: only game rooms record scores), or rebuild the week from scratch: a season only lasts 7 days.
 - Code and docs: GitHub (public repo) is the source of truth; every deploy is an immutable Worker version (rollback above).
 
 ## Maintenance and on-call
