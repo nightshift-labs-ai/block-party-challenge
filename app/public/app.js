@@ -19,7 +19,8 @@ addEventListener("keydown", e => {
   const id = { lobby: "start", question: "skip", reveal: "next", final: "again" }[S.phase];
   document.getElementById(id)?.click();
 });
-const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "");
+const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "") + (new URLSearchParams(location.search).get("final") === "1" ? "&final=1" : "");
+const mySeat = () => { const k = Object.keys(localStorage).filter(k => k.startsWith("bpSeat")).sort().pop(); return k ? "&seat=" + encodeURIComponent(localStorage[k]) : ""; }; // s62: newest Daily seat
 // Tiny WebAudio synth (no audio files): ticks, reveal sting, join pop. Host screen only; starts after a user click.
 let actx = null;
 function beep(freq, dur = 0.08, type = "square", vol = 0.08, when = 0) {
@@ -71,7 +72,7 @@ function home() {
     if (!/^[A-Z]{4}$/.test(c) || !n) { document.getElementById("err").textContent = "Enter a 4-letter code and a nickname"; return; }
     localStorage.bpName = n; code = c; role = "player";
     const pid = sessionStorage["bp" + c] || "";
-    connect(`name=${encodeURIComponent(n)}&pid=${pid}`);
+    connect(`name=${encodeURIComponent(n)}&pid=${pid}${mySeat()}`);
   };
   // s58: RECORDING mode (?overlay=1 as an OBS browser source): create the room right away, so the source shows code + QR with no clicks (once per page load)
   if (OVERLAY && !q && !window.__autoHosted) { window.__autoHosted = 1; document.getElementById("host").click(); }
@@ -186,7 +187,8 @@ function render() {
     if (S.phase === "lobby") {
       $app.innerHTML = `<h1>${T("Join on your phone", "폰으로 참가하세요")}</h1>
       <div class="panel center"><div>${esc(location.host)}</div><div class="code">${code}</div><small>${esc(join)}</small><br><div class="qr">${qrSvg(join)}</div></div>
-      <div class="panel"><b>${S.playerCount} ${T("players", "명")}</b><div class="players">${S.players.slice(0, 30).map(p => `<span class="chip ${p.online ? "" : "off"}">${esc(p.name)}</span>`).join("") || T("Waiting for players…", "참가자 기다리는 중…")}${S.playerCount > 30 ? `<span class="chip">+${S.playerCount - 30}</span>` : ""}</div></div>
+      ${S.final ? `<div class="panel"><b>🎟️ ${T("WEEKLY FINAL: seat holders only", "주간 파이널: 좌석 보유자만 입장")}</b> <small>${T("Seats are won in the Daily Challenge (top 3 each day).", "좌석은 오늘의 챌린지 일일 상위 3명에게.")}</small></div>` : ""}
+      <div class="panel"><b>${S.playerCount} ${T("players", "명")}</b><div class="players">${S.players.slice(0, 30).map(p => `<span class="chip ${p.online ? "" : "off"}">${p.seat ? "🎟️ " : ""}${esc(p.name)}</span>`).join("") || T("Waiting for players…", "참가자 기다리는 중…")}${S.playerCount > 30 ? `<span class="chip">+${S.playerCount - 30}</span>` : ""}</div></div>
       ${QS.get("pass") === "demo" ? `<div class="panel"><b>🎟 ${T("Fan Pass demo: your own questions", "팬 패스 데모: 나만의 질문")}</b><br><small>${T("One per line, up to 5: Question? | A | B | C | D. They become the first rounds; this room is never ranked.", "한 줄에 하나, 최대 5개: 질문? | A | B | C | D. 처음 라운드가 되며 시즌 순위에 들어가지 않습니다.")}</small><textarea id="pack" rows="4" style="width:100%;font:16px system-ui" placeholder="Who in our class sleeps the most? | Minho | Yuna | Joon | Me">${esc(packText)}</textarea></div>` : ""}
       <button class="btn" id="start" ${S.players.length ? "" : "disabled"}>${T("Start episode", "게임 시작")}</button><span class="keys">Space / Enter</span>`;
       const pa = document.getElementById("pack"); if (pa) { pa.oninput = () => { packText = pa.value; }; if (packFocus) { pa.focus(); pa.selectionStart = pa.selectionEnd = pa.value.length; } pa.onfocus = () => { packFocus = true; }; pa.onblur = () => { packFocus = false; }; pa.onkeydown = e => e.stopPropagation(); }
@@ -342,8 +344,9 @@ async function daily() {
 // ---- Seat ticket for the weekly final (link from the Daily qualifier); the server checks the signature. ----
 async function seatPage(code) {
   let r; try { r = await (await fetch("/api/seat?s=" + encodeURIComponent(code))).json(); } catch { r = { valid: false }; }
+  if (r.valid) localStorage["bpSeat" + r.date] = code; // opening the ticket on another phone moves the seat there too
   $app.innerHTML = r.valid
-    ? `<h1>🎟️ ${T("Weekly Final seat", "주간 파이널 좌석")}</h1><div class="panel"><p class="big">${T("Qualifier", "예선")} ${esc(r.date)} · #${r.rank}</p><p>${T("Live final", "라이브 파이널")}: <b>${esc(r.final)}</b></p><small>${T("Keep this link. When the host opens the final room, the code appears on stream; join with the nickname you used today.", "이 링크를 보관하세요. 파이널 방이 열리면 방송에 코드가 나옵니다. 오늘 사용한 닉네임으로 입장하세요.")}</small><br><small>${T("Prototype: seat checks are signed, final-room gating is planned.", "프로토타입: 좌석은 서명으로 확인되며, 파이널 방 입장 제한은 예정 기능입니다.")}</small></div><button class="btn" id="hm">${T("Home", "처음으로")}</button>`
+    ? `<h1>🎟️ ${T("Weekly Final seat", "주간 파이널 좌석")}</h1><div class="panel"><p class="big">${T("Qualifier", "예선")} ${esc(r.date)} · #${r.rank}</p><p>${T("Live final", "라이브 파이널")}: <b>${esc(r.final)}</b></p><small>${T("Keep this link. When the host opens the final room, the code appears on stream; join with the nickname you used today.", "이 링크를 보관하세요. 파이널 방이 열리면 방송에 코드가 나옵니다. 오늘 사용한 닉네임으로 입장하세요.")}</small><br><small>${T("Your seat is saved in this browser: the final room only lets seat holders in.", "좌석은 이 브라우저에 저장됩니다. 파이널 방은 좌석 보유자만 입장할 수 있어요.")}</small></div><button class="btn" id="hm">${T("Home", "처음으로")}</button>`
     : `<h1>${T("Seat link not valid", "유효하지 않은 좌석 링크")}</h1><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
   document.getElementById("hm").onclick = () => { history.replaceState(null, "", "/"); home(); };
 }

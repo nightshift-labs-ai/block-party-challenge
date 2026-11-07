@@ -1,4 +1,5 @@
 import { safeName } from "./namefilter.js";
+import { seatSig, seatCode } from "./seat.js";
 // Extriver prototype backend (Cloudflare Worker, free plan). Static game/app files come from ./public.
 // Endpoints: GET /health, GET /api/leaderboard?board=<id>, POST /api/score {board,name,score}
 import { Room, seasonId } from "./room.js";
@@ -6,16 +7,6 @@ import { kstDate, dailyRounds, validAnswer, scoreDaily } from "./games.js";
 export { Room };
 const VERSION = "0.4.0";
 const MAX_NAME = 16, MAX_ENTRIES = 50, QUAL_SEATS = 3;
-// Seat links are HMAC-signed (secret SEAT_SECRET; a fixed dev value locally) so a seat can't be typed by hand.
-async function seatSig(env, msg) {
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.SEAT_SECRET || "dev-only-seat-secret"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg)));
-  return [...mac.slice(0, 8)].map(b => b.toString(16).padStart(2, "0")).join("");
-}
-async function seatCode(env, date, rank, tok) {
-  const id = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(tok)))].slice(0, 4).map(b => b.toString(16).padStart(2, "0")).join("");
-  const msg = `${date}.${rank}.${id}`; return `${msg}.${await seatSig(env, msg)}`;
-}
 // The weekly final is the Saturday on or after the qualifying day (Korean dates), 20:00 KST.
 export function finalFor(date) { const d = new Date(date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7)); return d.toISOString().slice(0, 10) + " 20:00 KST"; }
 const json = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store", ...h } });

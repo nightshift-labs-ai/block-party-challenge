@@ -1,4 +1,5 @@
 import { safeName } from "./namefilter.js";
+import { checkSeat } from "./seat.js";
 // Party room: one Durable Object per 4-letter code. Host screen (TV / stream) + up to 300 phones via WebSocket.
 // Phases: lobby → question → reveal → … → final. Server owns timers and scoring (clients can't cheat the clock).
 import { makeEpisode, validAnswer, scoreTelepathy, scoreGreed, scoreDiamond, scoreLava, scoreTaboo, normWord } from "./games.js";
@@ -20,11 +21,11 @@ export class Room {
   async _load() {
     const g = await this.state.storage.get("g");
     this.players = new Map((g?.players || []).map(p => [p.pid, p]));
-    Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false, brand: null }, g ? { brand: g.brand || null, phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
+    Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false, brand: null, final: false }, g ? { final: !!g.final, brand: g.brand || null, phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
     this.loaded = true;
   }
   async save() {
-    await this.state.storage.put("g", { phase: this.phase, round: this.round, episode: this.episode, answers: this.answers, result: this.result, deadline: this.deadline, noSeason: this.noSeason, brand: this.brand, players: [...this.players.values()] });
+    await this.state.storage.put("g", { phase: this.phase, round: this.round, episode: this.episode, answers: this.answers, result: this.result, deadline: this.deadline, noSeason: this.noSeason, final: this.final, brand: this.brand, players: [...this.players.values()] });
   }
   reset() { this.phase = "lobby"; this.round = -1; this.episode = null; this.answers = {}; this.result = null; this.deadline = 0; this.state.storage.deleteAlarm(); }
   hostWs() { return this.state.getWebSockets("host")[0] || null; }
@@ -39,16 +40,18 @@ export class Room {
     if (role === "host") {
       for (const old of this.state.getWebSockets("host")) try { old.close(1000, "replaced"); } catch {}
       this.state.acceptWebSocket(server, ["host"]); server.serializeAttachment({ role: "host" });
-      if (this.phase === "lobby") this.noSeason = url.searchParams.get("practice") === "1";
+      if (this.phase === "lobby") { this.noSeason = url.searchParams.get("practice") === "1"; this.final = url.searchParams.get("final") === "1"; } // s62: weekly final = seat holders only
       this.broadcast();
     } else {
-      const err = this.attachPlayer(server, url.searchParams.get("name"), url.searchParams.get("pid"));
+      const seat = url.searchParams.get("seat") ? await checkSeat(this.env || {}, url.searchParams.get("seat")) : null;
+      const err = this.final && !seat && !this.players.has(url.searchParams.get("pid") || "") ? "Weekly Final: seat holders only (win a seat in the Daily Challenge) / 주간 파이널: 좌석 보유자만 입장"
+        : this.attachPlayer(server, url.searchParams.get("name"), url.searchParams.get("pid"), seat);
       if (err) { server.accept(); server.send(JSON.stringify({ t: "error", msg: err })); server.close(1008, err); }
     }
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  attachPlayer(ws, name, pid) {
+  attachPlayer(ws, name, pid, seat = null) {
     name = String(name || "").replace(/[^\p{L}\p{N} _.-]/gu, "").trim().slice(0, 12);
     if (!name) return "name required";
     pid = /^[a-z0-9]{8,24}$/.test(pid || "") ? pid : crypto.randomUUID().replace(/-/g, "").slice(0, 16);
@@ -56,7 +59,7 @@ export class Room {
     if (!this.players.has(pid)) {
       if (this.players.size >= MAX_PLAYERS) return "room full";
       if (this.phase !== "lobby") return "game already started";
-      this.players.set(pid, { pid, name, score: 0 });
+      this.players.set(pid, seat ? { pid, name, score: 0, seat: `${seat.date} #${seat.rank}` } : { pid, name, score: 0 });
     }
     for (const old of this.state.getWebSockets("p:" + pid)) try { old.close(1000, "replaced"); } catch {}
     this.state.acceptWebSocket(ws, ["p:" + pid]); ws.serializeAttachment({ role: "player", pid });
@@ -140,7 +143,7 @@ export class Room {
     const pub = r && { kind: r.kind, q: r.q, opts: r.opts, qk: r.qk, ok: r.ok, pot: r.pot, maxTake: r.maxTake, secs: r.secs };
     if (r && this.phase !== "question" && r.kind === "diamond") pub.diamond = r.diamond; // hidden until reveal
     return {
-      t: "state", phase: this.phase, brand: this.brand, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
+      t: "state", phase: this.phase, final: this.final, brand: this.brand, round: this.round, rounds: this.episode?.length || 0, deadline: this.deadline, now: Date.now(),
       current: pub, result: this.phase === "question" || !this.result ? null : full ? this.result : { ...this.result, answers: undefined, verdict: undefined, pts: forPid ? { [forPid]: this.result.pts[forPid] } : {} },
       answered: full ? Object.keys(this.answers) : forPid && forPid in this.answers ? [forPid] : [],
       answeredCount: Object.keys(this.answers).length, playerCount: this.players.size,
@@ -160,7 +163,7 @@ export class Room {
   flush() {
     const send = (ws, o) => { try { ws?.send(JSON.stringify(o)); } catch {} };
     const online = new Set(this.state.getWebSockets().map(w => w.deserializeAttachment()?.pid).filter(Boolean));
-    this.ranked = [...this.players.values()].map(p => ({ pid: p.pid, name: p.name, score: p.score, online: online.has(p.pid) })).sort((a, b) => b.score - a.score);
+    this.ranked = [...this.players.values()].map(p => ({ pid: p.pid, name: p.name, score: p.score, online: online.has(p.pid), ...(p.seat ? { seat: p.seat } : {}) })).sort((a, b) => b.score - a.score);
     send(this.hostWs(), this.view(null, true));
     for (const w of this.state.getWebSockets()) { const a = w.deserializeAttachment(); if (a?.role === "player") send(w, this.view(a.pid)); }
     // Persist on every phase/round change; during a question with many answers, at most once per second.
