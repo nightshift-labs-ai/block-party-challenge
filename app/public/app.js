@@ -242,13 +242,19 @@ function render() {
 function startBots(n) {
   n = Math.min(12, Math.max(0, n | 0)); if (!n || new URLSearchParams(location.search).get("practice") !== "1") return;
   const names = ["Bot Ari", "Bot Joon", "Bot Hana", "Bot Seo", "Bot Yuna", "Bot Doha", "Bot Minho", "Bot Taeo", "Bot Jiwoo", "Bot Rin", "Bot Sol", "Bot Ha"];
+  // on-topic words per taboo category (most avoid ㄹ; a few deliberately contain it, so bots sometimes bust like real players)
+  const TW = { "음식 이름": ["피자", "김밥", "떡볶이", "비빔밥", "치킨", "라면"], "동물 이름": ["고양이", "강아지", "호랑이", "토끼", "사자", "고래"],
+    "교실에 있는 물건": ["책상", "의자", "칠판", "공책", "가방", "연필"], "운동 종목": ["축구", "야구", "농구", "수영", "태권도", "골프"],
+    "하늘에 있는 것": ["해", "비행기", "무지개", "새", "구름", "별"], "과일 이름": ["사과", "포도", "수박", "바나나", "딸기"],
+    "직업 이름": ["의사", "가수", "소방관", "선생님", "경찰"], "나라 이름": ["한국", "중국", "미국", "일본", "캐나다", "프랑스"],
+    "색깔 이름": ["하양", "검정", "분홍", "주황", "파랑", "노랑"], "게임 아이템": ["방패", "다이아몬드", "곡괭이", "검", "횃불", "칼"] };
   const words = ["피자", "고양이", "축구", "사과", "파랑", "한국", "의사", "라면", "딸기", "칼", "cat", "dog"];
   for (let i = 0; i < n; i++) setTimeout(() => {
     const b = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/room/${code}/ws?name=${encodeURIComponent(names[i])}`);
     b.onmessage = e => { const s = JSON.parse(e.data); if (s.t !== "state" || s.phase !== "question" || s.answered.includes(s.you) || b.k === s.round + ":" + s.deadline) return;
       b.k = s.round + ":" + s.deadline; const c = s.current, r = Math.random();
-      const v = c.kind === "telepathy" ? (r < 0.45 ? 0 : r < 0.7 ? 1 : r < 0.88 ? 2 : 3) : c.kind === "greed" ? 1 + Math.floor(r * 7)
-        : c.kind === "taboo" ? words[Math.floor(r * words.length)] : c.kind === "blockmatch" ? [12, 12, 6, 18, 0][Math.floor(r * 5)] : Math.floor(r * 25);
+      const v = c.kind === "telepathy" ? (r < 0.45 ? 0 : r < 0.7 ? 1 : r < 0.88 ? 2 : 3) : c.kind === "greed" ? [1, 2, 3, 3, 4][Math.floor(r * 5)] /* ~fair share of the pot (3 per player) so the pot can survive */
+        : c.kind === "taboo" ? ((TW[c.qk] || words)[Math.floor(r * (TW[c.qk] || words).length)]) : c.kind === "blockmatch" ? [12, 12, 6, 18, 0][Math.floor(r * 5)] : Math.floor(r * 25);
       setTimeout(() => b.readyState === 1 && b.send(JSON.stringify({ t: "answer", v })), 2000 + r * 6000); };
   }, 300 + i * 250);
 }
