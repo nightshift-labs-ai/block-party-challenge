@@ -11,7 +11,7 @@ Docs: [business model + 4-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) 
 > **Judge it in 60 seconds**
 > 1. Open the Dname version https://extriver-proto.nightshift-labs.workers.dev/?creator=dname (Korean first; plain English version: https://extriver-proto.nightshift-labs.workers.dev/?lang=en) and click **"혼자 체험하기 (봇 6명)"** ("Try it alone (with 6 bots)"). The big screen shows a room code and a QR code.
 > 2. Scan the QR code with your phone (or open the join link in a second tab) and play the 7 rounds. The bots answer too, so every reveal has a crowd.
-> 3. On the final screen, click **"Make a Short"** to get a 1080×1920 recap video of your episode, made in the browser.
+> 3. On the final screen, click **"쇼츠 만들기 · Make a Short"** to get a 1080×1920 recap video of your episode, made in the browser.
 > Prefer watching? [2:52 demo video with EN/한국어 subtitles](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html).
 
 | Big screen: lobby | Big screen: a reveal | Phone |
