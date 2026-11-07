@@ -74,6 +74,28 @@ What the model shows:
   host and replayable rounds, so making that short costs him less effort than his current Minecraft setups.
 - Infrastructure is not a meaningful cost (README "Unit cost": ≈$1–5 per million player-episodes). Margin is set by payment fees and support.
 
+### Sensitivity: the two inputs we know least (Base scenario, `python3 tools/model.py`)
+Year-1 gross revenue, and in brackets the creator's 20% share as an **average per month**:
+
+| Views per short ↓ / join rate → | 0.5% | 1% | 2% |
+|---|---|---|---|
+| 24K (his recent median) | ₩23.0M (₩345K/mo) | ₩23.4M (₩352K/mo) | ₩24.3M (₩365K/mo) |
+| 300K | ₩28.0M (₩420K/mo) | ₩33.4M (₩501K/mo) | ₩44.2M (₩663K/mo) |
+| 800K (Base) | ₩37.0M (₩555K/mo) | **₩51.4M (₩771K/mo)** | ₩80.2M (₩1.2M/mo) |
+
+Revenue mix in year 1 (players' Fan Pass + cosmetics / sponsors / classroom licences): Conservative 66/0/34 % · Base 56/39/5 % ·
+Recent reach 25/0/75 % · Optimistic 81/16/3 %.
+
+What this tells us, honestly:
+- **The model's sponsor income does not scale with views.** At 24K views the table still counts one ₩2M sponsor a month, which is
+  unlikely. A brand pays for reach, so the realistic low-views case is the "Recent reach" row (no sponsors, ₩3.4M a year).
+- **For Dname this is extra income, not a replacement for brand deals.** In the Base case his share averages about ₩0.77M a month,
+  far below one brand deal for a channel his size (Korean press: ₩100M+ per promotion for 1M+ channels). What the game gives him is
+  a **new format he can sell**: "play my brand's round with Dname", where the sponsor pays for minutes of play instead of a 5-second
+  mention. The more sponsored finals he books, the more both sides earn.
+- **Classroom licences are the least proven line.** They are only 5% of the Base case, but 75% of "Recent reach". We keep them because
+  classroom mode works without new uploads, but we would test them with 10 academies before counting on them.
+
 ## 4. Competitors and alternatives
 | Alternative | What it does well | Why Block Party fits Dname's audience better |
 |---|---|---|
