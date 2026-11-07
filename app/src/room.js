@@ -77,7 +77,8 @@ export class Room {
   async alarm() { await this.load(); if (this.phase === "question" && Date.now() >= this.deadline) this.reveal(); }
 
   onHost(m) {
-    if (m.t === "start" && this.phase === "lobby" && this.players.size >= 1) { this.episode = makeEpisode(this.players.size); if (this.brand?.sq) this.episode[0] = { kind: "telepathy", q: this.brand.sq, opts: this.brand.so, qk: this.brand.sqk, ok: this.brand.sok, secs: 15, sponsored: true }; this.round = -1; this.next(); }
+    if (m.t === "start" && this.phase === "lobby" && this.players.size >= 1) { this.episode = makeEpisode(this.players.size);
+      const pack = cleanPack(m.pack); if (pack.length) { this.episode = [...pack, ...this.episode.slice(1)].slice(0, 10); this.noSeason = true; } /* s61: Fan Pass demo: host's own questions, never ranked */ if (this.brand?.sq) this.episode[0] = { kind: "telepathy", q: this.brand.sq, opts: this.brand.so, qk: this.brand.sqk, ok: this.brand.sok, secs: 15, sponsored: true }; this.round = -1; this.next(); }
     else if (m.t === "next" && this.phase === "reveal") this.next();
     else if (m.t === "skip" && this.phase === "question") this.reveal();
     else if (m.t === "veto" && this.phase === "reveal" && this.episode?.[this.round]?.kind === "taboo" && typeof m.w === "string") this.veto(m.w);
@@ -171,6 +172,13 @@ export class Room {
 
 // Sponsored/branded episode (set by the host in the lobby): show title, sponsor and prize line on every screen.
 // Plain text only, length-capped; prizes are described, never collected or paid through the game.
+// Fan Pass demo (s61): the host types up to 5 telepathy questions, one per line: "Question? | A | B | C | D" (2-4 options).
+export function cleanPack(pack) {
+  const c = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, n);
+  return (Array.isArray(pack) ? pack : []).slice(0, 5).map(l => String(l).split("|").map(x => x.trim()))
+    .map(([q, ...o]) => ({ kind: "telepathy", q: c(q, 80), opts: o.map(x => c(x, 24)).filter(Boolean).slice(0, 4), secs: 15, custom: true }))
+    .filter(r => r.q && r.opts.length >= 2);
+}
 export function cleanBrand(m) {
   const c = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, n);
   const b = { title: c(m.title, 40), sponsor: c(m.sponsor, 30), prize: c(m.prize, 60) };

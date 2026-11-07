@@ -45,6 +45,7 @@ one big screen (his stream, a classroom TV, a living-room TV) and everyone joins
 </li>
 <li><strong>Try it alone</strong> (for judges and first-time visitors): the home-page button &quot;Try it alone (with 6 bots)&quot; opens a practice room where 6 bot players join
 from the host page. Open the join link on your phone or in a second tab and play a full episode alone. Practice rooms never touch the season board.</li>
+<li><strong>Fan Pass demo</strong> (<code>/?pass=demo</code>, clearly labelled demo, no payment): the host types up to 5 of their own questions (&quot;Who in our class sleeps the most? | Minho | Yuna | Joon | Me&quot;); they become the first rounds, and the room is never ranked. This is the core of the paid Fan Pass (private rooms + custom question packs). Test: <code>node tools/passtest.mjs &lt;url&gt; &lt;out.png&gt;</code>.</li>
 <li><strong>Daily Challenge</strong> (<code>/?daily=1</code>, 오늘의 챌린지): shorts viewers arrive at any hour, not just during the weekly live final. Every Korean day has
 the same 5 rounds for everyone (seeded by date). You play against <em>today&#39;s crowd</em>: telepathy scores the % of players who picked what you picked,
 and lava gives a bonus if under 5% stood on your block. Ends with a Wordle-style shareable result (🟩🟨⬛ + points + link): the share loop

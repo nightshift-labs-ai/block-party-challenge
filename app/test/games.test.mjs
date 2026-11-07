@@ -67,3 +67,9 @@ test("cleanBrand: Korean text for the sponsored question only when complete", ()
   assert.equal(b.sqk, "최고의 맛은?"); assert.deepEqual(b.sok, ["허니", "매운맛"]);
   assert.equal(cleanBrand({ sponsor: "S", sq: "Q?", so: ["A", "B"], sok: ["가"] }).sok, undefined);
 });
+test("cleanPack: up to 5 custom telepathy rounds, 2-4 options, junk dropped", async () => {
+  const { cleanPack } = await import("../src/room.js");
+  const p = cleanPack(["Who sleeps most? | Minho | Yuna | Joon | Me | Extra", "no options |", "<b>Best snack?</b> | Honey | Spicy", "a|b|c", "d|e|f", "g|h|i", "j|k|l"]);
+  assert.equal(p.length, 4); assert.deepEqual(p[0].opts, ["Minho", "Yuna", "Joon", "Me"]); assert.equal(p[1].q, "bBest snack?/b");
+  assert.deepEqual(cleanPack(undefined), []);
+});

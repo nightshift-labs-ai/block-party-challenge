@@ -158,6 +158,7 @@ function reveal(c, r) {
   return grid(c, false, picks);
 }
 
+let packText = "", packFocus = false; // Fan Pass demo (?pass=demo)
 // s61: per-episode report for the sponsor / creator, collected on the host screen from the public state (nothing extra stored).
 const rep = { start: 0, end: 0, peak: 0, rounds: {} };
 function noteReport() {
@@ -186,8 +187,10 @@ function render() {
       $app.innerHTML = `<h1>${T("Join on your phone", "폰으로 참가하세요")}</h1>
       <div class="panel center"><div>${esc(location.host)}</div><div class="code">${code}</div><small>${esc(join)}</small><br><div class="qr">${qrSvg(join)}</div></div>
       <div class="panel"><b>${S.playerCount} ${T("players", "명")}</b><div class="players">${S.players.slice(0, 30).map(p => `<span class="chip ${p.online ? "" : "off"}">${esc(p.name)}</span>`).join("") || T("Waiting for players…", "참가자 기다리는 중…")}${S.playerCount > 30 ? `<span class="chip">+${S.playerCount - 30}</span>` : ""}</div></div>
+      ${QS.get("pass") === "demo" ? `<div class="panel"><b>🎟 ${T("Fan Pass demo: your own questions", "팬 패스 데모: 나만의 질문")}</b><br><small>${T("One per line, up to 5: Question? | A | B | C | D. They become the first rounds; this room is never ranked.", "한 줄에 하나, 최대 5개: 질문? | A | B | C | D. 처음 라운드가 되며 시즌 순위에 들어가지 않습니다.")}</small><textarea id="pack" rows="4" style="width:100%;font:16px system-ui" placeholder="Who in our class sleeps the most? | Minho | Yuna | Joon | Me">${esc(packText)}</textarea></div>` : ""}
       <button class="btn" id="start" ${S.players.length ? "" : "disabled"}>${T("Start episode", "게임 시작")}</button><span class="keys">Space / Enter</span>`;
-      document.getElementById("start").onclick = () => send({ t: "start" });
+      const pa = document.getElementById("pack"); if (pa) { pa.oninput = () => { packText = pa.value; }; if (packFocus) { pa.focus(); pa.selectionStart = pa.selectionEnd = pa.value.length; } pa.onfocus = () => { packFocus = true; }; pa.onblur = () => { packFocus = false; }; pa.onkeydown = e => e.stopPropagation(); }
+      document.getElementById("start").onclick = () => send({ t: "start", pack: packText.split("\n").filter(l => l.includes("|")) });
     } else if (S.phase === "question") {
       $app.innerHTML = `<small>Round ${S.round + 1}/${S.rounds} · ${code}</small><h1 class="big">${roundTitle(c)}</h1>${timerBar()}
       <div class="cols"><div>${c.kind === "telepathy" ? `<p class="big">${bi(c.q, c.qk)}</p><div class="opts">${c.opts.map((o, i) => `<div class="opt">${bi(o, c.ok?.[i])}</div>`).join("")}</div>` : c.kind === "diamond" || c.kind === "blockmatch" || c.kind === "lava" ? grid(c, false) : c.kind === "taboo" ? `<p class="big">${T("One word. Korean: no ㄹ (ㄹ, 를, 일, 닭…). English: no E. Unique words score double!", "한 단어! 한글은 ㄹ 금지 (ㄹ, 를, 일, 닭…), 영어는 E 금지. 남과 다른 단어면 2배!")}</p>` : ""}</div><div>
