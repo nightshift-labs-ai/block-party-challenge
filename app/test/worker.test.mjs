@@ -25,3 +25,10 @@ test("health: leaderboard DB failure = degraded (200), strict readiness = 503", 
   const r = await handle(req("/health"), e); assert.equal(r.status, 200); const j = await r.json(); assert.equal(j.degraded, true); assert.equal(j.db, "error"); assert.equal(j.ok, true);
   const s = await handle(req("/health?ready=1"), e); assert.equal(s.status, 503);
 });
+test("qualifier: final date + seat signature", async () => {
+  const { finalFor } = await import("../src/worker.js");
+  assert.equal(finalFor("2026-11-08"), "2026-11-14 20:00 KST"); // Sunday → next Saturday
+  assert.equal(finalFor("2026-11-14"), "2026-11-14 20:00 KST"); // Saturday → same day
+  const bad = await (await handle(req("/api/seat?s=2026-11-08.1.abcd1234.0000000000000000"), {})).json();
+  assert.equal(bad.valid, false);
+});

@@ -38,7 +38,7 @@ weaker (13K–755K). The model therefore uses lower view numbers than the median
 
 **Room cap and overflow (honest limit).** One live room holds up to **300 phones** (server cap; load-tested at 300 simulated phones, p50 0.46 s). A short that brings thousands of players cannot fit one final, so the plan is:
 - **Everyone** can play the same rounds in the **Daily Challenge**, which has no player cap (one storage object per day, answers are small counters). *Built and live.*
-- The weekly live final keeps **300 seats**, given to the week's top Daily Challenge players (a "qualifier" link), so the seats reward the most engaged fans. *Planned, not built yet.*
+- The weekly live final keeps **300 seats**, given to the week's top Daily Challenge players (a "qualifier" link), so the seats reward the most engaged fans. *Qualifier BUILT (s62): top 3 per day get a signed seat link; restricting the final room to seat holders is planned.*
 - If one final is not enough, several rooms can run the same episode in parallel and merge their results into one board (each room is already its own Durable Object). *Planned, not built yet.*
 
 | Input (A) | Conservative | Base | Optimistic |

@@ -4,8 +4,20 @@ import { safeName } from "./namefilter.js";
 import { Room, seasonId } from "./room.js";
 import { kstDate, dailyRounds, validAnswer, scoreDaily } from "./games.js";
 export { Room };
-const VERSION = "0.3.0";
-const MAX_NAME = 16, MAX_ENTRIES = 50;
+const VERSION = "0.4.0";
+const MAX_NAME = 16, MAX_ENTRIES = 50, QUAL_SEATS = 3;
+// Seat links are HMAC-signed (secret SEAT_SECRET; a fixed dev value locally) so a seat can't be typed by hand.
+async function seatSig(env, msg) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.SEAT_SECRET || "dev-only-seat-secret"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg)));
+  return [...mac.slice(0, 8)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+async function seatCode(env, date, rank, tok) {
+  const id = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(tok)))].slice(0, 4).map(b => b.toString(16).padStart(2, "0")).join("");
+  const msg = `${date}.${rank}.${id}`; return `${msg}.${await seatSig(env, msg)}`;
+}
+// The weekly final is the Saturday on or after the qualifying day (Korean dates), 20:00 KST.
+export function finalFor(date) { const d = new Date(date + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7)); return d.toISOString().slice(0, 10) + " 20:00 KST"; }
 const json = (o, s = 200, h = {}) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store", ...h } });
 
 function cleanName(n) {
@@ -81,9 +93,34 @@ export async function handle(req, env) {
     let body; try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
     const date = kstDate(), rounds = dailyRounds(date), i = body.round, r = rounds[i], tok = String(body.tok || "");
     if (!r || !validAnswer(r, body.v) || !/^[a-z0-9]{8,32}$/.test(tok)) return json({ error: "bad input" }, 400);
-    const res = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/", { method: "POST", body: JSON.stringify({ round: i, v: body.v, tok }) })).json();
+    const res = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/", { method: "POST", body: JSON.stringify({ round: i, v: body.v, tok, r: { kind: r.kind, diamond: r.diamond, lava: r.lava } }) })).json();
     const v = res.v ?? body.v; // a repeat answer keeps the first one
-    return json({ date, round: i, v, counts: res.counts, total: res.total, pts: scoreDaily(r, v, res.counts, res.total), diamond: r.diamond, lava: r.lava });
+    return json({ date, round: i, v, counts: res.counts, total: res.total, pts: res.pts ?? scoreDaily(r, v, res.counts, res.total), diamond: r.diamond, lava: r.lava });
+  }
+  // s62 Qualifier: after all 5 daily rounds a player can enter today's table with a nickname. Points are the ones fixed on the
+  // server at answer time (not sent by the client). Top QUAL_SEATS of each Korean day get a signed seat link for the weekly final.
+  if (url.pathname === "/api/daily/finish" && req.method === "POST" && env.DAILY) {
+    const ip = req.headers.get("cf-connecting-ip") || "local";
+    if (limited("fin:" + ip, 10)) return json({ error: "slow down" }, 429);
+    let body; try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
+    const tok = String(body.tok || ""), date = kstDate();
+    if (!/^[a-z0-9]{8,32}$/.test(tok)) return json({ error: "bad input" }, 400);
+    const res = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/finish", { method: "POST", body: JSON.stringify({ tok, name: cleanName(body.name) }) })).json();
+    if (res.error) return json(res, 400);
+    const seat = res.rank <= QUAL_SEATS ? await seatCode(env, date, res.rank, tok) : null;
+    return json({ date, ...res, seats: QUAL_SEATS, seat });
+  }
+  if (url.pathname === "/api/daily/top" && req.method === "GET" && env.DAILY) {
+    const date = /^\d{4}-\d\d-\d\d$/.test(url.searchParams.get("date") || "") ? url.searchParams.get("date") : kstDate();
+    let top; try { top = await (await env.DAILY.get(env.DAILY.idFromName("daily-" + date)).fetch("https://do/top")).json(); }
+    catch { return json({ date, top: [], unavailable: true }); }
+    return json({ date, seats: QUAL_SEATS, ...top }, 200, { "cache-control": "public, max-age=10" });
+  }
+  if (url.pathname === "/api/seat" && req.method === "GET") { // checks a seat link: <date>.<rank>.<id>.<sig>
+    const p = String(url.searchParams.get("s") || "").split(".");
+    if (p.length !== 4 || !/^\d{4}-\d\d-\d\d$/.test(p[0]) || !/^[1-9]$/.test(p[1])) return json({ valid: false }, 400);
+    const ok = (await seatSig(env, `${p[0]}.${p[1]}.${p[2]}`)) === p[3];
+    return json({ valid: ok, date: p[0], rank: +p[1], final: ok ? finalFor(p[0]) : null });
   }
   if (url.pathname === "/api/room" && req.method === "POST" && env.ROOM) {
     const ip = req.headers.get("cf-connecting-ip") || "local";
@@ -124,17 +161,34 @@ export class Daily {
     this.sql = state.storage.sql;
     this.sql.exec("CREATE TABLE IF NOT EXISTS c (round INTEGER, v INTEGER, n INTEGER, PRIMARY KEY (round, v))");
     this.sql.exec("CREATE TABLE IF NOT EXISTS seen (tok TEXT, round INTEGER, v INTEGER, PRIMARY KEY (tok, round))");
+    try { this.sql.exec("ALTER TABLE seen ADD COLUMN pts INTEGER"); } catch {} // s62: points fixed at answer time (qualifier)
+    this.sql.exec("CREATE TABLE IF NOT EXISTS fin (tok TEXT PRIMARY KEY, name TEXT, total INTEGER, at INTEGER)");
+    this.sql.exec("CREATE INDEX IF NOT EXISTS fi ON fin (total DESC, at)");
   }
+  top() { return { top: this.sql.exec("SELECT name, total FROM fin ORDER BY total DESC, at LIMIT 10").toArray(), players: this.sql.exec("SELECT COUNT(*) AS c FROM fin").one().c }; }
   async fetch(req) {
-    const { round, v, tok } = await req.json();
-    const prev = this.sql.exec("SELECT v FROM seen WHERE tok = ? AND round = ?", tok, round).toArray()[0];
-    if (!prev) {
-      this.sql.exec("INSERT INTO seen VALUES (?,?,?)", tok, round, v);
-      this.sql.exec("INSERT INTO c VALUES (?,?,1) ON CONFLICT(round, v) DO UPDATE SET n = n + 1", round, v);
+    const path = new URL(req.url).pathname;
+    if (path === "/top") return Response.json(this.top());
+    if (path === "/finish") { // one entry per token per day; needs all 5 rounds answered
+      const { tok, name } = await req.json();
+      let me = this.sql.exec("SELECT total, at FROM fin WHERE tok = ?", tok).toArray()[0];
+      if (!me) {
+        const r = this.sql.exec("SELECT COUNT(*) AS n, SUM(COALESCE(pts, 0)) AS t FROM seen WHERE tok = ?", tok).one();
+        if (r.n < 5) return Response.json({ error: "play all 5 rounds first" });
+        me = { total: r.t, at: Date.now() };
+        this.sql.exec("INSERT INTO fin VALUES (?,?,?,?)", tok, name, me.total, me.at);
+      }
+      const rank = this.sql.exec("SELECT COUNT(*) AS c FROM fin WHERE total > ? OR (total = ? AND at < ?)", me.total, me.total, me.at).one().c + 1;
+      return Response.json({ total: me.total, rank, ...this.top() });
     }
+    const { round, v, tok, r } = await req.json();
+    const prev = this.sql.exec("SELECT v, pts FROM seen WHERE tok = ? AND round = ?", tok, round).toArray()[0];
+    if (!prev) this.sql.exec("INSERT INTO c VALUES (?,?,1) ON CONFLICT(round, v) DO UPDATE SET n = n + 1", round, v);
     const counts = {}; let total = 0;
     for (const row of this.sql.exec("SELECT v, n FROM c WHERE round = ?", round)) { counts[row.v] = row.n; total += row.n; }
-    return Response.json({ counts, total, v: prev ? prev.v : v });
+    const pts = prev ? prev.pts : r ? scoreDaily(r, v, counts, total) : null;
+    if (!prev) this.sql.exec("INSERT INTO seen VALUES (?,?,?,?)", tok, round, v, pts);
+    return Response.json({ counts, total, v: prev ? prev.v : v, pts: pts ?? undefined });
   }
 }
 

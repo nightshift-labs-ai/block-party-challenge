@@ -312,11 +312,40 @@ async function daily() {
     const total = saved.reduce((a, b) => a + b, 0), boxes = saved.map((p, j) => p >= MAX[j] * 0.6 ? "🟩" : p > 0 ? "🟨" : "⬛").join("");
     const share = `Block Party Daily ${d.date} ${boxes} ${total}pts ${location.origin}/?daily=1`;
     $app.innerHTML = `<h1>${total} pts</h1><p class="big">${boxes}</p><div class="panel"><small>${esc(share)}</small><br><button class="btn alt" id="sh">${T("Copy result", "결과 복사")}</button></div>
+    <div class="panel" id="q"><b>${T("Weekly Final qualifier", "주간 파이널 예선")}</b> <small>${T("Top 3 of each day win a seat in Saturday's live final with the creator.", "매일 상위 3명은 토요일 크리에이터 라이브 파이널 좌석 획득!")}</small><br>
+    <input id="qn" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}"><button class="btn" id="qb">${T("Enter today's table", "오늘의 순위 등록")}</button><div id="qr"></div></div>
     <p>${T("New challenge every day at midnight (Korea time).", "매일 자정(한국 시간) 새 챌린지!")}</p><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
+    const showQ = r => {
+      const rows = (r.top || []).map((e, j) => `<tr><td>${j + 1}${j < r.seats ? " 🎟️" : ""}</td><td>${esc(e.name)}</td><td style="text-align:right">${e.total}</td></tr>`).join("");
+      const seat = r.seat ? `<p class="big">🎟️ ${T("You qualified! Seat", "예선 통과! 좌석")} #${r.rank}</p><a class="btn" id="seat" href="/?seat=${encodeURIComponent(r.seat)}${CREATOR ? "&creator=dname" : ""}">${T("Open my seat ticket", "내 좌석 티켓 열기")}</a>`
+        : `<p>${T("Your rank today", "오늘 내 순위")}: <b>#${r.rank}</b> / ${r.players}. ${T("Top 3 qualify; come back tomorrow!", "상위 3명 진출, 내일 또 도전!")}</p>`;
+      document.getElementById("qr").innerHTML = `${seat}<table>${rows}</table>`;
+      document.getElementById("qn").style.display = document.getElementById("qb").style.display = "none";
+      if (r.seat) localStorage["bpSeat" + d.date] = r.seat;
+    };
+    document.getElementById("qb").onclick = async () => {
+      const name = document.getElementById("qn").value.trim(); if (!name) return;
+      localStorage.bpName = name; document.getElementById("qb").disabled = true;
+      try {
+        const r = await (await fetch("/api/daily/finish", { method: "POST", body: JSON.stringify({ tok, name }) })).json();
+        if (r.error) { document.getElementById("qr").textContent = r.error; document.getElementById("qb").disabled = false; return; }
+        localStorage["bpFin" + d.date] = "1"; showQ(r);
+      } catch { document.getElementById("qr").textContent = T("Server is busy, try again in a minute.", "잠시 후 다시 시도해 주세요."); document.getElementById("qb").disabled = false; }
+    };
+    if (localStorage["bpFin" + d.date]) document.getElementById("qb").click(); // already entered: the server returns the same entry
     document.getElementById("sh").onclick = () => { navigator.share ? navigator.share({ text: share }).catch(() => {}) : navigator.clipboard?.writeText(share); };
     document.getElementById("hm").onclick = () => { history.replaceState(null, "", "/"); home(); };
   };
   step();
 }
 
-if (new URLSearchParams(location.search).get("daily") === "1") daily(); else home();
+// ---- Seat ticket for the weekly final (link from the Daily qualifier); the server checks the signature. ----
+async function seatPage(code) {
+  let r; try { r = await (await fetch("/api/seat?s=" + encodeURIComponent(code))).json(); } catch { r = { valid: false }; }
+  $app.innerHTML = r.valid
+    ? `<h1>🎟️ ${T("Weekly Final seat", "주간 파이널 좌석")}</h1><div class="panel"><p class="big">${T("Qualifier", "예선")} ${esc(r.date)} · #${r.rank}</p><p>${T("Live final", "라이브 파이널")}: <b>${esc(r.final)}</b></p><small>${T("Keep this link. When the host opens the final room, the code appears on stream; join with the nickname you used today.", "이 링크를 보관하세요. 파이널 방이 열리면 방송에 코드가 나옵니다. 오늘 사용한 닉네임으로 입장하세요.")}</small><br><small>${T("Prototype: seat checks are signed, final-room gating is planned.", "프로토타입: 좌석은 서명으로 확인되며, 파이널 방 입장 제한은 예정 기능입니다.")}</small></div><button class="btn" id="hm">${T("Home", "처음으로")}</button>`
+    : `<h1>${T("Seat link not valid", "유효하지 않은 좌석 링크")}</h1><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
+  document.getElementById("hm").onclick = () => { history.replaceState(null, "", "/"); home(); };
+}
+
+if (QS.get("seat")) seatPage(QS.get("seat")); else if (QS.get("daily") === "1") daily(); else home();
