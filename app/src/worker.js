@@ -147,13 +147,14 @@ export class Board {
 // Daily Challenge aggregate: one SQLite Durable Object per Korean day; counts per (round, answer), one answer per token per round.
 export class Daily {
   constructor(state) {
-    this.sql = state.storage.sql;
+    this.state = state; this.sql = state.storage.sql;
     this.sql.exec("CREATE TABLE IF NOT EXISTS c (round INTEGER, v INTEGER, n INTEGER, PRIMARY KEY (round, v))");
     this.sql.exec("CREATE TABLE IF NOT EXISTS seen (tok TEXT, round INTEGER, v INTEGER, PRIMARY KEY (tok, round))");
     try { this.sql.exec("ALTER TABLE seen ADD COLUMN pts INTEGER"); } catch {} // s62: points fixed at answer time (qualifier)
     this.sql.exec("CREATE TABLE IF NOT EXISTS fin (tok TEXT PRIMARY KEY, name TEXT, total INTEGER, at INTEGER)");
     this.sql.exec("CREATE INDEX IF NOT EXISTS fi ON fin (total DESC, at)");
   }
+  async alarm() { await this.state.storage.deleteAll(); } // the day's table, tokens and counts are deleted after 8 days
   top() { return { top: this.sql.exec("SELECT name, total FROM fin ORDER BY total DESC, at LIMIT 10").toArray(), players: this.sql.exec("SELECT COUNT(*) AS c FROM fin").one().c }; }
   async fetch(req) {
     const path = new URL(req.url).pathname;
@@ -166,6 +167,7 @@ export class Daily {
         if (r.n < 5) return Response.json({ error: "play all 5 rounds first" });
         me = { total: r.t, at: Date.now() };
         this.sql.exec("INSERT INTO fin VALUES (?,?,?,?)", tok, name, me.total, me.at);
+        if (!(await this.state.storage.getAlarm())) await this.state.storage.setAlarm(Date.now() + 8 * 864e5); // s62: nicknames kept ~1 week (OPS privacy)
       }
       const rank = this.sql.exec("SELECT COUNT(*) AS c FROM fin WHERE total > ? OR (total = ? AND at < ?)", me.total, me.total, me.at).one().c + 1;
       return Response.json({ total: me.total, rank, ...this.top() });
