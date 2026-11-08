@@ -40,7 +40,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 3. A room is stuck → the host's "Play again" resets it, and players reconnect automatically (1.5 s retry) with their id kept in sessionStorage.
 
 ### Incident log
-**2026-11-07, season leaderboard unavailable (first noticed ~17:00 UTC; expected to clear at the daily quota reset, 00:00 UTC Nov 8). Games kept working.**
+**2026-11-07, season leaderboard unavailable (first noticed ~17:00 UTC; recovered ~00:30 UTC Nov 8, about 30 minutes after the daily quota reset at 00:00 UTC, confirmed by `/health` returning `db: ok` and a production Daily Challenge test). Games kept working.**
 - *What happened:* the season leaderboard (`/api/leaderboard`) returned errors. Rooms, the Daily Challenge and the hourly production
   end-to-end game test kept working: 24 of 24 synthetic episodes passed that day.
 - *Cause:* the Cloudflare free plan's Durable Object "rows read per day" limit is shared by **every** Worker on the account. Another
