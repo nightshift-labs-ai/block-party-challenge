@@ -14,6 +14,14 @@ Docs: [business model + 4-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) 
 > 3. On the final screen, click **"쇼츠 만들기 · Make a Short"** to get a 1080×1920 recap video of your episode, made in the browser.
 > Prefer watching? [2:52 demo video with EN/한국어 subtitles](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html).
 
+**Run it locally** (Node 22, no install step in `app/`):
+
+```
+cd app
+node --test test/*.test.mjs   # 25 tests
+npx wrangler dev --local      # http://localhost:8787
+```
+
 | Big screen: lobby | Big screen: a reveal | Phone |
 |---|---|---|
 | ![Lobby with room code and QR](docs/shots/1-lobby.png) | ![Find the Diamond reveal](docs/shots/2-reveal3.png) | ![Phone: greed round](docs/shots/p-round2.png) |
