@@ -38,8 +38,11 @@ export class Room {
     const [client, server] = Object.values(new WebSocketPair());
     const role = url.searchParams.get("role");
     if (role === "host") {
+      // s90: the room code is on stream, so a browser that doesn't hold this host's secret can't take over while the host is connected.
+      const hs = url.searchParams.get("hs") || "", cur = this.hostWs();
+      if (cur && (cur.deserializeAttachment()?.hs || "") !== hs) { server.accept(); server.send(JSON.stringify({ t: "error", msg: "This room already has a host / 이미 진행자가 있는 방입니다" })); server.close(1008, "host taken"); return new Response(null, { status: 101, webSocket: client }); }
       for (const old of this.state.getWebSockets("host")) try { old.close(1000, "replaced"); } catch {}
-      this.state.acceptWebSocket(server, ["host"]); server.serializeAttachment({ role: "host" });
+      this.state.acceptWebSocket(server, ["host"]); server.serializeAttachment({ role: "host", hs });
       if (this.phase === "lobby") { this.noSeason = url.searchParams.get("practice") === "1"; this.final = url.searchParams.get("final") === "1"; this.official = this.final && !!this.env?.FINAL_HOST_KEY && url.searchParams.get("hk") === this.env.FINAL_HOST_KEY; } // s62: only the creator's host key makes an OFFICIAL final; without it = labelled demo final // s62: weekly final = seat holders only
       this.broadcast();
     } else {

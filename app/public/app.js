@@ -19,7 +19,8 @@ addEventListener("keydown", e => {
   const id = { lobby: "start", question: "skip", reveal: "next", final: "again" }[S.phase];
   document.getElementById(id)?.click();
 });
-const hostQ = () => "role=host" + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "") + (new URLSearchParams(location.search).get("final") === "1" ? "&final=1" + (sessionStorage.bpHk ? "&hk=" + encodeURIComponent(sessionStorage.bpHk) : "") : "");
+if (!sessionStorage.bpHs) sessionStorage.bpHs = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+const hostQ = () => "role=host&hs=" + sessionStorage.bpHs + (new URLSearchParams(location.search).get("practice") === "1" ? "&practice=1" : "") + (new URLSearchParams(location.search).get("final") === "1" ? "&final=1" + (sessionStorage.bpHk ? "&hk=" + encodeURIComponent(sessionStorage.bpHk) : "") : "");
 if (QS.get("hk")) { sessionStorage.bpHk = QS.get("hk"); const u = new URL(location.href); u.searchParams.delete("hk"); history.replaceState(null, "", u); } // keep the creator's host key off the on-stream address bar
 const mySeat = () => { const k = Object.keys(localStorage).filter(k => k.startsWith("bpSeat")).sort().pop(); return k ? "&seat=" + encodeURIComponent(localStorage[k]) : ""; }; // s62: newest Daily seat
 // s63: qualifier ranks are provisional during the Korean day (crowd points move); after midnight KST we ask for the final result once.
@@ -101,7 +102,7 @@ function home() {
     const r = await fetch("/api/room", { method: "POST" }); const j = await r.json();
     if (!j.code) return alert(j.error || "error");
     try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
-    code = j.code; role = "host"; connect(hostQ());
+    code = j.code; role = "host"; sessionStorage.bpHostCode = code; connect(hostQ());
   };
   document.getElementById("daily").onclick = () => daily();
   document.getElementById("solo").onclick = () => { history.replaceState(null, "", "/?practice=1&bots=6"); document.getElementById("host").click(); };
@@ -374,7 +375,7 @@ async function daily() {
     };
     if (localStorage["bpFin" + d.date]) document.getElementById("qb").click(); // already entered: the server returns the same entry
     document.getElementById("sh").onclick = () => { navigator.share ? navigator.share({ text: share }).catch(() => {}) : navigator.clipboard?.writeText(share); };
-    document.getElementById("hm").onclick = () => { history.replaceState(null, "", "/"); home(); };
+    document.getElementById("hm").onclick = () => { delete sessionStorage.bpHostCode; history.replaceState(null, "", "/"); home(); };
   };
   step();
 }
@@ -386,7 +387,16 @@ async function seatPage(code) {
   $app.innerHTML = r.valid
     ? `<h1>🎟️ ${T("Weekly Final seat", "주간 파이널 좌석")}</h1><div class="panel"><p class="big">${T("Qualifier", "예선")} ${esc(r.date)} · #${r.rank}</p><p>${T("Live final", "라이브 파이널")}: <b>${esc(r.final)}</b></p><small>${T("Keep this link. At the final time the creator posts the room code (community post or stream); open it in this browser to take your seat.", "이 링크를 보관하세요. 파이널 시간에 크리에이터가 방 코드를 공개합니다(커뮤니티 글 또는 방송). 이 브라우저로 입장하세요.")}</small><br><small>${T("Your seat is saved in this browser: the final room only lets seat holders in.", "좌석은 이 브라우저에 저장됩니다. 파이널 방은 좌석 보유자만 입장할 수 있어요.")}</small></div><button class="btn" id="hm">${T("Home", "처음으로")}</button>`
     : `<h1>${T("Seat link not valid", "유효하지 않은 좌석 링크")}</h1><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
-  document.getElementById("hm").onclick = () => { history.replaceState(null, "", "/"); home(); };
+  document.getElementById("hm").onclick = () => { delete sessionStorage.bpHostCode; history.replaceState(null, "", "/"); home(); };
 }
 
-if (QS.get("seat")) seatPage(QS.get("seat")); else if (QS.get("daily") === "1") daily(); else home();
+// s90: a host who refreshes mid-show gets the same room back (the phones keep waiting); bot demos just start fresh.
+async function boot() {
+  const hc = sessionStorage.bpHostCode;
+  if (hc && !QS.get("code") && !QS.get("bots")) try {
+    const st = await (await fetch(`/api/room/${hc}/ws`)).json();
+    if (st.players > 0 && st.phase !== "final") { if (OVERLAY) window.__autoHosted = 1; try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} code = hc; role = "host"; connect(hostQ()); return; }
+  } catch {}
+  delete sessionStorage.bpHostCode; home();
+}
+if (QS.get("seat")) seatPage(QS.get("seat")); else if (QS.get("daily") === "1") daily(); else boot();
