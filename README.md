@@ -26,6 +26,14 @@ npx wrangler dev --local      # http://localhost:8787
 |---|---|---|
 | ![Lobby with room code and QR](docs/shots/1-lobby.png) | ![Find the Diamond reveal](docs/shots/2-reveal3.png) | ![Phone: greed round](docs/shots/p-round2.png) |
 
+## The four judge questions, answered
+| Question | Short answer | Evidence |
+|---|---|---|
+| **Are there customers who would actually pay?** | Brands would pay for a sponsored weekly final, teachers for a classroom licence, and parents for a Fan Pass. Kids never pay to enter. Nobody has paid yet: the first Dname Final is the real test of demand. | People already pay for this format: Gimkit Pro $14.99/month, Jackbox packs $24.99-29.99. Sponsor banner, sponsored round and sponsor report are built. [Prices and model](docs/BUSINESS.md) |
+| **Why this creator's followers in particular?** | His shorts already are these games, and his tagline is "Subscribe and join the game!". Today most fans can only watch. | Don't say ㄹ 5.5M views, find the diamond 5.2M, greed game 5.1M, block telepathy 1.6M (YouTube, 2026-11-06). His audience's age is our assumption. [Research](RESEARCH.md) |
+| **What makes it different?** | Every viewer plays on a phone, in his own formats, with no app or account. Each episode becomes his next short with one click. | With YouTube Playables only the creator plays. Custom Minecraft maps fit a handful of players, this room holds 300. Kahoot is right-or-wrong quizzes, these rounds are social. [Comparison](docs/BUSINESS.md) |
+| **Can it grow long-term on current trends?** | Weekly finals feed new shorts, shorts bring new players, and the Daily Challenge keeps them between uploads. | 49.1% of Korean students in grades 4-12 watch short-form every day (Korea Press Foundation, 2025 survey). His recent uploads are weaker and rarer than his median, so our base model uses lower view counts and we also publish a no-sponsor case at 24K views per short. [Trends](RESEARCH.md) |
+
 ## The idea in one line
 Dname's shorts are already games — "find the diamond and win", greed game, block telepathy, trust game — and his tagline is
 "Subscribe and join the game!". Block Party Challenge lets his viewers actually play those formats **with him and with each other**:
