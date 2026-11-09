@@ -13,6 +13,11 @@ table{border-collapse:collapse;margin:1em 0;font-size:14px}td,th{border:1px soli
 Prefer watching? <a href="https://extriver-proto.nightshift-labs.workers.dev/docs/video.html">2:52 demo video with EN/한국어 subtitles</a>.</li>
 </ol>
 </blockquote>
+<p><strong>Run it locally</strong> (Node 22, no install step in <code>app/</code>):</p>
+<pre><code>cd app
+node --test test/*.test.mjs   # 25 tests
+npx wrangler dev --local      # http://localhost:8787
+</code></pre>
 <table>
 <thead>
 <tr>
