@@ -16,6 +16,7 @@
 cd app && npm test && npx wrangler@4 deploy
 node test/room-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev        # 3 bots, full episode, host veto check
 node test/room-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev 200    # load: 200 phones in one room, prints p50/p95
+node test/live-audience-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev # host takeover refused, late join, phone + host reconnect, join after the final
 node test/alarm-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev       # round timer fires with no answers (storage alarm)
 node ../tools/uitest.mjs <url> <dir>; node ../tools/dailytest.mjs <url> <dir>; node ../tools/overlaytest.mjs <url> <dir>   # browser tests
 ```

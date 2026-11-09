@@ -4,7 +4,7 @@ const { chromium } = require("playwright");
 const [base, out = "/tmp/ext"] = process.argv.slice(2);
 const b = await chromium.launch(); const errs = [];
 const host = await b.newPage({ viewport: { width: 1280, height: 720 } }); host.on("pageerror", e => errs.push(e.message));
-await host.goto(base + "/?overlay=1&practice=1"); await host.click("#host"); await host.waitForSelector(".code");
+await host.goto(base + "/?overlay=1&practice=1"); await host.waitForSelector(".code"); // overlay mode creates the room by itself
 const code = (await host.textContent(".code")).trim();
 const p = await b.newPage({ viewport: { width: 390, height: 780 } });
 await p.goto(`${base}/?code=${code}`); await p.fill("#name", "Streamer"); await p.click("#join");
