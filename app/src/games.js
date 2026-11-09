@@ -127,12 +127,12 @@ export function makeEpisode(nPlayers, rnd = Math.random) {
   const tb = TABOO[Math.floor(rnd() * TABOO.length)];
   return [
     { kind: "telepathy", ...t[0], secs: 15 },
-    { kind: "greed", pot, maxTake: 10, secs: 15 },
+    { kind: "greed", pot, potPer: 4, potMin: 10, maxTake: 10, secs: 15 },
     { kind: "diamond", diamond: Math.floor(rnd() * 25), secs: 12 },
     { kind: "blockmatch", secs: 12 },
     { kind: "taboo", ...tb, secs: 20 },
     { kind: "lava", lava: pickLava(rnd), secs: 12 },
-    { kind: "greed", pot: Math.max(8, Math.round(nPlayers * 3)), maxTake: 10, secs: 15 },
+    { kind: "greed", pot: Math.max(8, Math.round(nPlayers * 3)), potPer: 3, potMin: 8, maxTake: 10, secs: 15 },
   ];
 }
 

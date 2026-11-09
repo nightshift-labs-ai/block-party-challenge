@@ -55,12 +55,12 @@ export class Room {
 
   attachPlayer(ws, name, pid, seat = null) {
     name = String(name || "").replace(/[^\p{L}\p{N} _.-]/gu, "").trim().slice(0, 12);
-    if (!name) return "name required";
+    if (!name) return "Enter a nickname / 닉네임을 입력하세요";
     pid = /^[a-z0-9]{8,24}$/.test(pid || "") ? pid : crypto.randomUUID().replace(/-/g, "").slice(0, 16);
     name = safeName(name, pid); // kids watch the stream: unsafe nicknames become a friendly generated name
     if (!this.players.has(pid)) {
-      if (this.players.size >= MAX_PLAYERS) return "room full";
-      if (this.phase !== "lobby") return "game already started";
+      if (this.players.size >= MAX_PLAYERS) return "This room is full / 방이 가득 찼어요";
+      if (this.phase === "final") return "This game has just finished. Wait for the next one! / 이번 판이 끝났어요. 다음 판을 기다려 주세요!"; // late joiners may enter during an episode and play the remaining rounds
       this.players.set(pid, seat ? { pid, name, score: 0, seat: `${seat.date} #${seat.rank}`, seatId: seat.id } : { pid, name, score: 0 });
     }
     for (const old of this.state.getWebSockets("p:" + pid)) try { old.close(1000, "replaced"); } catch {}
@@ -96,6 +96,7 @@ export class Room {
     if (this.round >= this.episode.length) { this.phase = "final"; this.broadcast(); this.recordSeason(); return; }
     this.phase = "question"; this.answers = {}; this.result = null;
     const r = this.episode[this.round];
+    if (r.potPer) r.pot = Math.max(r.potMin, Math.round(this.players.size * r.potPer)); // late joiners count, so the pot stays fair
     this.deadline = Date.now() + r.secs * 1000;
     this.state.storage.setAlarm(this.deadline + 300);
     this.broadcast();

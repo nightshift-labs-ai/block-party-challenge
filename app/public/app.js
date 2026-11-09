@@ -113,6 +113,8 @@ function home() {
     connect(`name=${encodeURIComponent(n)}&pid=${pid}${mySeat()}`);
   };
   // s58: RECORDING mode (?overlay=1 as an OBS browser source): create the room right away, so the source shows code + QR with no clicks (once per page load)
+  // s90: a phone that reloaded (or whose browser dropped the tab) goes straight back into its room
+  if (q && sessionStorage["bp" + q.toUpperCase()] && localStorage.bpName && !window.__autoJoined) { window.__autoJoined = 1; document.getElementById("join").click(); }
   if (OVERLAY && !q && !window.__autoHosted) { window.__autoHosted = 1; document.getElementById("host").click(); }
 }
 
@@ -121,7 +123,7 @@ function connect(q) {
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.t === "welcome") sessionStorage["bp" + code] = m.pid;
-    else if (m.t === "error") { alert(m.msg); location.reload(); }
+    else if (m.t === "error") { sessionStorage.removeItem("bp" + code); role = null; ws.onclose = null; home(); const er = document.getElementById("err"); er.textContent = m.msg; er.scrollIntoView({ block: "center" }); }
     else if (m.t === "state") {
       const prev = S; if (prev?.phase !== m.phase || prev?.round !== m.round) myPick = null; m.skew = Date.now() - m.now; S = m;
       if (role === "host") {
