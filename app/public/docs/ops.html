@@ -67,7 +67,7 @@ npx wrangler@4 rollback &lt;version-id&gt; -m &quot;reason&quot;
 <li>A room is stuck → the host&#39;s &quot;Play again&quot; resets it, and players reconnect automatically (1.5 s retry) with their id kept in sessionStorage.</li>
 </ol>
 <h3>Incident log</h3>
-<p><strong>2026-11-07, season leaderboard unavailable (first noticed ~17:00 UTC; expected to clear at the daily quota reset, 00:00 UTC Nov 8). Games kept working.</strong></p>
+<p><strong>2026-11-07, season leaderboard unavailable (first noticed ~17:00 UTC; recovered ~00:30 UTC Nov 8, about 30 minutes after the daily quota reset at 00:00 UTC, confirmed by <code>/health</code> returning <code>db: ok</code> and a production Daily Challenge test). Games kept working.</strong></p>
 <ul>
 <li><em>What happened:</em> the season leaderboard (<code>/api/leaderboard</code>) returned errors. Rooms, the Daily Challenge and the hourly production
 end-to-end game test kept working: 24 of 24 synthetic episodes passed that day.</li>

@@ -57,7 +57,14 @@ let botsStarted = false, brandSent = false, phoneKey = null, lastTick = 0, ws = 
 
 function home() {
   const q = new URLSearchParams(location.search).get("code") || "";
+  // s90: a phone that scanned the QR gets the join form first; the host/daily/season panels stay one tap away.
+  const joinPanel = `<div class="panel"><b>${T("Join a room", "방 참가")}</b>
+  <input id="code" maxlength="4" placeholder="CODE" value="${esc(q)}" autocapitalize="characters">
+  <input id="name" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}">
+  <button class="btn" id="join">${T("Join", "참가")}</button><div id="err" style="color:var(--red)"></div></div>`;
+  const heading = `${CREATOR ? `<h1>${T("Dname Challenge Arena", "디네임 챌린지 아레나")}</h1>` : `<h1>${T("Block Party Challenge", "블록 파티 챌린지")}</h1>`}`;
   $app.innerHTML = `
+  ${q ? `${heading}${joinPanel}<p class="center"><small><a href="#" id="more" style="color:var(--gold)">${T("Not joining? Host a game or play the daily", "참가 안 하나요? 직접 방 만들기 / 오늘의 챌린지")}</a></small></p><div id="rest" style="display:none">` : ""}
   ${CREATOR ? `<h1>${T("Dname Challenge Arena", "디네임 챌린지 아레나")}</h1><div class="panel"><p>${T("The games from Dname's shorts — now you play them on your phone, against everyone watching.", "디네임 쇼츠 속 게임, 이제 폰으로 직접! 보는 사람 모두와 대결.")}</p><small>${T("Prototype made for Hack the Audience 2026, not an official channel product.", "Hack the Audience 2026 출품 프로토타입이며, 채널 공식 제품이 아닙니다.")}</small></div>` : `<h1>${T("Block Party Challenge", "블록 파티 챌린지")}</h1>`}
   <div class="panel"><p>${T("One big screen, everyone plays on their phone. Read the crowd, don't get greedy, find the diamond.", "큰 화면 하나, 모두 폰으로 참가! 눈치 보고, 욕심 내지 말고, 다이아를 찾아라.")}</p>
   <button class="btn alt" id="host">${T("Host on this screen", "이 화면에서 방 만들기")}</button>
@@ -65,19 +72,17 @@ function home() {
   <br><small>${T("Streaming? Add", "방송 중이라면")} <a href="/?overlay=1${CREATOR ? "&creator=dname" : ""}" style="color:var(--gold)">${esc(location.host)}/?overlay=1${CREATOR ? "&amp;creator=dname" : ""}</a> ${T("as a browser source (transparent overlay; Space/Enter drives the show).", "을 브라우저 소스로 추가하세요 (투명 오버레이, Space/Enter로 진행).")}</small></div>
   <div class="panel"><b>${T("Daily challenge", "오늘의 챌린지")}</b> <small>${T("5 rounds, no room needed: play against everyone who played today.", "방 없이 5라운드! 오늘 플레이한 모두와 대결.")}</small><br>
   <button class="btn" id="daily">${T("Play today's challenge", "오늘의 챌린지 하기")}</button><div id="dres"></div><div id="dtop"></div></div>
-  <div class="panel"><b>${T("Join a room", "방 참가")}</b>
-  <input id="code" maxlength="4" placeholder="CODE" value="${esc(q)}" autocapitalize="characters">
-  <input id="name" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}">
-  <button class="btn" id="join">${T("Join", "참가")}</button><div id="err" style="color:var(--red)"></div></div>
+  ${q ? "" : joinPanel}
   <div class="panel"><b>${T("This week's season top 10", "이번 주 시즌 TOP 10")}</b><div id="season"><small>…</small></div></div>
-  <small><a href="/docs/" style="color:var(--gold)">Docs, pitch &amp; demo video</a> · Made by Nightshift Labs (an AI-agent-run studio) for Hack the Audience 2026. Original game; not affiliated with Mojang or Minecraft.</small>`;
-  collectSeats().then(rs => { // s63: final results of the days you entered (newest unseen one)
+  <small><a href="/docs/" style="color:var(--gold)">Docs, pitch &amp; demo video</a> · Made by Nightshift Labs (an AI-agent-run studio) for Hack the Audience 2026. Original game; not affiliated with Mojang or Minecraft.</small>${q ? "</div>" : ""}`;
+  (q ? Promise.resolve([]) : collectSeats()).then(rs => { // s63: final results of the days you entered (newest unseen one)
     const r = rs.filter(x => x.entered && !localStorage["bpSeen" + x.date]).pop(), el = document.getElementById("dres"); if (!r || !el) return;
     localStorage["bpSeen" + r.date] = "1";
     el.innerHTML = r.seat ? `<p class="big">🎟️ ${T("You qualified on", "예선 통과")} ${esc(r.date)}: #${r.rank} / ${r.players}</p><a class="btn" href="/?seat=${encodeURIComponent(r.seat)}${CREATOR ? "&creator=dname" : ""}">${T("Open my seat ticket", "내 좌석 티켓 열기")}</a>`
       : `<small>${T("Final result", "최종 결과")} ${esc(r.date)}: <b>#${r.rank}</b> / ${r.players}. ${T("Top 3 qualify. Try again today!", "상위 3명 진출. 오늘 다시 도전!")}</small>`;
     if (r.seat) el.scrollIntoView({ block: "center" }); // the seat is the big news: don't leave it below the fold
   }).catch(() => {});
+  const loadBoards = () => {
   fetch("/api/daily/top").then(r => r.json()).then(j => { // s62: today's qualifier (top 3 win a weekly-final seat)
     const el = document.getElementById("dtop"); if (!el || j.unavailable) return;
     el.innerHTML = `<small>🎟️ ${T("Top 3 today win a seat in Saturday's final (live ranking)", "오늘 상위 3명은 토요일 파이널 좌석 (실시간 순위)")}${j.top?.length ? ": " + j.top.slice(0, 3).map(e => `${esc(e.name)} ${e.total}`).join(" · ") : ""}</small>`;
@@ -86,6 +91,12 @@ function home() {
     const el = document.getElementById("season"); if (!el) return;
     el.innerHTML = j.unavailable ? `<small>${T("Leaderboard is taking a short break. Games still work!", "리더보드 잠시 점검 중. 게임은 정상 작동합니다!")}</small>` : j.entries?.length ? `<table>${j.entries.slice(0, 10).map((e, i) => `<tr><td>${i + 1}</td><td>${esc(e.name)}</td><td style="text-align:right">${e.score}</td></tr>`).join("")}</table>` : `<small>${T("No games yet this week. Be first!", "아직 기록 없음. 첫 번째가 되어 보세요!")}</small>`;
   }).catch(() => {});
+  };
+  if (q) { // boards are fetched only if someone opens the rest of the page: a full room of phones should not cost database reads
+    document.getElementById("more").onclick = e => { e.preventDefault(); e.target.closest("p").remove(); document.getElementById("rest").style.display = ""; loadBoards(); };
+    const nm = document.getElementById("name"); if (!nm.value) nm.focus();
+  } else loadBoards();
+  document.getElementById("name").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("join").click(); });
   document.getElementById("host").onclick = async () => {
     const r = await fetch("/api/room", { method: "POST" }); const j = await r.json();
     if (!j.code) return alert(j.error || "error");
@@ -210,7 +221,7 @@ function render() {
   const c = S.current, me = S.players.find(p => p.pid === S.you);
   if (role === "host") noteReport();
   if (role === "host") {
-    const join = `${location.origin}/?code=${code}${CREATOR ? "&lang=ko" : ""}`;
+    const join = `${location.origin}/?code=${code}${CREATOR ? "&creator=dname" : ""}`;
     if (S.phase === "lobby") {
       $app.innerHTML = `<h1>${T("Join on your phone", "폰으로 참가하세요")}</h1>
       <div class="panel center"><div>${esc(location.host)}</div><div class="code">${code}</div><small>${esc(join)}</small><br><div class="qr">${qrSvg(join)}</div></div>
