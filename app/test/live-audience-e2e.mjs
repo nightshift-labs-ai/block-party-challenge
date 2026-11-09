@@ -36,6 +36,8 @@ const again = await open(`name=Ana&pid=${pid0}`); await until(() => again.pid);
 check("a dropped phone keeps its identity", again.pid === pid0, again.pid);
 
 host.close(); await wait(300);
+const thief2 = await open("role=host"); await until(() => thief2.closed !== null, 4000);
+check("a stranger cannot grab the host seat while the host is offline", thief2.closed === 1008, { closed: thief2.closed, msgs: thief2.msgs });
 const host2 = await open("role=host&hs=secret-a&practice=1"); await until(() => host2.state);
 check("the host can reconnect with its secret", host2.closed === null && host2.state?.phase === "question", { closed: host2.closed, phase: host2.state?.phase });
 

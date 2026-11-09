@@ -21,6 +21,7 @@ export class Room {
   async _load() {
     const g = await this.state.storage.get("g");
     this.players = new Map((g?.players || []).map(p => [p.pid, p]));
+    this.hostSecret = await this.state.storage.get("hs");
     Object.assign(this, { phase: "lobby", round: -1, episode: null, answers: {}, result: null, deadline: 0, noSeason: false, brand: null, final: false, official: false }, g ? { final: !!g.final, official: !!g.official, brand: g.brand || null, phase: g.phase, round: g.round, episode: g.episode, answers: g.answers, result: g.result, deadline: g.deadline, noSeason: g.noSeason } : {});
     this.loaded = true;
   }
@@ -39,10 +40,11 @@ export class Room {
     const role = url.searchParams.get("role");
     if (role === "host") {
       // s90: the room code is on stream, so a browser that doesn't hold this host's secret can't take over while the host is connected.
-      const hs = url.searchParams.get("hs") || "", cur = this.hostWs();
-      if (cur && (cur.deserializeAttachment()?.hs || "") !== hs) { server.accept(); server.send(JSON.stringify({ t: "error", msg: "This room already has a host / 이미 진행자가 있는 방입니다" })); server.close(1008, "host taken"); return new Response(null, { status: 101, webSocket: client }); }
+      const hs = url.searchParams.get("hs") || "", cur = this.hostWs(), mid = this.phase === "question" || this.phase === "reveal";
+      if (cur ? (cur.deserializeAttachment()?.hs || "") !== hs : mid && this.hostSecret != null && this.hostSecret !== hs) { // mid-episode the seat stays reserved while the host reconnects
+        server.accept(); server.send(JSON.stringify({ t: "error", msg: "This room already has a host / 이미 진행자가 있는 방입니다" })); server.close(1008, "host taken"); return new Response(null, { status: 101, webSocket: client }); }
       for (const old of this.state.getWebSockets("host")) try { old.close(1000, "replaced"); } catch {}
-      this.state.acceptWebSocket(server, ["host"]); server.serializeAttachment({ role: "host", hs });
+      this.state.acceptWebSocket(server, ["host"]); server.serializeAttachment({ role: "host", hs }); this.hostSecret = hs; this.state.storage.put("hs", hs);
       if (this.phase === "lobby") { this.noSeason = url.searchParams.get("practice") === "1"; this.final = url.searchParams.get("final") === "1"; this.official = this.final && !!this.env?.FINAL_HOST_KEY && url.searchParams.get("hk") === this.env.FINAL_HOST_KEY; } // s62: only the creator's host key makes an OFFICIAL final; without it = labelled demo final // s62: weekly final = seat holders only
       this.broadcast();
     } else {
