@@ -1,5 +1,5 @@
 // Fan Pass demo test: node tools/passtest.mjs <base> <out.png> — host types a custom question, starts, round 1 shows it.
-import { chromium } from "/home/agent/tools/pw/node_modules/playwright/index.mjs";
+const { chromium } = await import(process.env.PW_MODULE || "playwright");
 const [base, out] = process.argv.slice(2); const b = await chromium.launch(); const h = await b.newPage({ viewport: { width: 1280, height: 720 } });
 const errs = []; h.on("pageerror", e => errs.push(String(e)));
 await h.goto(base + "/?practice=1&bots=6&pass=demo&lang=en"); await h.click("#host"); await h.waitForSelector("#pack");

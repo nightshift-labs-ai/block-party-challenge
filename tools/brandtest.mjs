@@ -1,5 +1,5 @@
 // Sponsored-episode banner test: node tools/brandtest.mjs <base> → host+phone show exactly one banner (screens in /tmp/brand-*.png)
-import { chromium } from "/home/agent/tools/pw/node_modules/playwright/index.mjs";
+const { chromium } = await import(process.env.PW_MODULE || "playwright");
 const base = process.argv[2]; const b = await chromium.launch();
 const h = await b.newPage({ viewport: { width: 1280, height: 720 } });
 await h.goto(base + "/?practice=1&title=" + encodeURIComponent("Dname Final #1") + "&sponsor=" + encodeURIComponent("Snack Co (demo)") + "&prize=" + encodeURIComponent("Top 3 get a snack box from the sponsor"));

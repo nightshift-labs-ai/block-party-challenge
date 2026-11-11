@@ -47,6 +47,7 @@ node test/room-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev 200   
 node test/live-audience-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev # host takeover refused, late join, phone + host reconnect, join after the final
 node test/alarm-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev       # round timer fires with no answers (storage alarm)
 node ../tools/uitest.mjs &lt;url&gt; &lt;dir&gt;; node ../tools/dailytest.mjs &lt;url&gt; &lt;dir&gt;; node ../tools/overlaytest.mjs &lt;url&gt; &lt;dir&gt;   # browser tests
+# the browser tests need Playwright and tools/builddocs.mjs needs marked: `npm i playwright marked` in the repo root, then run them from there
 </code></pre>
 <h2>Roll back</h2>
 <p>Every deploy is an immutable Worker version.</p>
@@ -107,7 +108,7 @@ Before launch with Dname, move to Workers Paid ($5/month, BUSINESS.md §5), wher
 </tr>
 <tr>
 <td>Content (new rounds, prompts)</td>
-<td>weekly, before the creator&#39;s Friday episode</td>
+<td>weekly, before the creator&#39;s Saturday final</td>
 <td>data-only change in <code>games.js</code> + unit test → CI deploy → smoke test</td>
 </tr>
 <tr>

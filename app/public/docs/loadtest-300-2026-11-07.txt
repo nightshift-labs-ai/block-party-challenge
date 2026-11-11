@@ -1,0 +1,5 @@
+# node app/test/room-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev 300   (run 2026-11-07 21:2x UTC, bots from one machine)
+300 players joined in 4983 ms (handshake retries: 0)
+answer→reveal latency over 2099 samples: p50 461 ms, p95 706 ms; playerCount 300
+code PBTF rounds telepathy,greed,diamond,blockmatch,taboo,lava,greed final bot11:60310 bot22:60310 bot35:60310
+E2E PASSED

@@ -1,5 +1,5 @@
 // UI test: host + 2 phones play through; screenshots to OUT dir. node uitest.mjs <base> <outdir>
-import { createRequire } from "module"; const require = createRequire("/home/agent/tools/pw/");
+import { createRequire } from "module"; const require = createRequire(process.env.PW_DIR || process.cwd() + "/");
 const { chromium } = require("playwright");
 const [base = "http://localhost:8799", out = "/tmp/ext"] = process.argv.slice(2);
 const b = await chromium.launch(); const errs = [];

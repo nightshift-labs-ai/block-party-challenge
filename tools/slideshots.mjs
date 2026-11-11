@@ -1,4 +1,4 @@
-import { chromium } from "/home/agent/tools/pw/node_modules/playwright/index.mjs";
+const { chromium } = await import(process.env.PW_MODULE || "playwright");
 // usage: node slideshots.mjs <abs html> <outdir>  — one PNG per 720px slide
 const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
 await p.goto("file://" + process.argv[2]); await p.waitForTimeout(300);

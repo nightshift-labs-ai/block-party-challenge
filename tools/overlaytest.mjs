@@ -1,5 +1,5 @@
 // Overlay check: host with ?overlay=1&practice=1, one phone, keyboard-driven start; transparent screenshots.
-import { createRequire } from "module"; const require = createRequire("/home/agent/tools/pw/");
+import { createRequire } from "module"; const require = createRequire(process.env.PW_DIR || process.cwd() + "/");
 const { chromium } = require("playwright");
 const [base, out = "/tmp/ext"] = process.argv.slice(2);
 const b = await chromium.launch(); const errs = [];

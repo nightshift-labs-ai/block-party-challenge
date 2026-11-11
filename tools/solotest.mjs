@@ -1,5 +1,5 @@
 // Solo demo test: node tools/solotest.mjs <base> — home → "Try it alone" → 6 bots join → one human phone tab plays round 1 → reveal.
-import { chromium } from "/home/agent/tools/pw/node_modules/playwright/index.mjs";
+const { chromium } = await import(process.env.PW_MODULE || "playwright");
 const base = process.argv[2]; const b = await chromium.launch(); const errs = [];
 const h = await b.newPage({ viewport: { width: 1280, height: 720 } }); h.on("pageerror", e => errs.push(e.message));
 await h.goto(base + "/"); await h.click("#solo"); await h.waitForSelector(".code"); const code = (await h.textContent(".code")).trim();

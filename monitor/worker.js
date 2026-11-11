@@ -78,7 +78,9 @@ async function backupDaily(env) {
   try {
     const r = await fetch(env.TARGET + "/api/leaderboard?board=season", { cf: { cacheTtl: 0 } });
     if (!r.ok) return;
-    await env.MON.put("bk:" + day, JSON.stringify({ at: Date.now(), data: await r.json() }), { expirationTtl: 14 * 86400 });
+    const data = await r.json();
+    if (data.unavailable) return; // a failed read answers 200: leave the day open so a later run can retry
+    await env.MON.put("bk:" + day, JSON.stringify({ at: Date.now(), data }), { expirationTtl: 14 * 86400 });
   } catch {}
 }
 function summary(h) {

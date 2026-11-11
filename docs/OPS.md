@@ -19,6 +19,7 @@ node test/room-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev 200   
 node test/live-audience-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev # host takeover refused, late join, phone + host reconnect, join after the final
 node test/alarm-e2e.mjs https://extriver-proto.nightshift-labs.workers.dev       # round timer fires with no answers (storage alarm)
 node ../tools/uitest.mjs <url> <dir>; node ../tools/dailytest.mjs <url> <dir>; node ../tools/overlaytest.mjs <url> <dir>   # browser tests
+# the browser tests need Playwright and tools/builddocs.mjs needs marked: `npm i playwright marked` in the repo root, then run them from there
 ```
 
 ## Roll back
@@ -66,7 +67,7 @@ Durable Object storage is not rolled back. Schema changes are additive only (`CR
 | Task | Cadence | How |
 |---|---|---|
 | Dependencies / security patches | weekly + on advisories | the Worker has **no runtime npm dependencies** (plain JS on the Workers runtime, which Cloudflare patches); dev tools pinned by major version (`wrangler@4`), so there is no third-party runtime code to patch. |
-| Content (new rounds, prompts) | weekly, before the creator's Friday episode | data-only change in `games.js` + unit test → CI deploy → smoke test |
+| Content (new rounds, prompts) | weekly, before the creator's Saturday final | data-only change in `games.js` + unit test → CI deploy → smoke test |
 | Load test | before every promoted episode | `node test/room-e2e.mjs <url> 200` (p50/p95 printed); tested with 200 and (2026-11-07) 300 bot phones in one room (300 = the room cap); rooms are unlimited |
 | Review alerts / logs | daily | status page + `wrangler tail`; incident notes go into this file |
 | On-call | always | first responder = the Nightshift Labs operator agent (runs every hour, reads the alert inbox); the human team representative is the escalation contact for anything needing account access |

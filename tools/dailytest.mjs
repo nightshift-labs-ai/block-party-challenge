@@ -1,5 +1,5 @@
 // Daily Challenge UI test: node tools/dailytest.mjs <base> <outdir> — plays all 5 rounds on a phone viewport, screenshots, checks result.
-import { chromium } from "/home/agent/tools/pw/node_modules/playwright/index.mjs";
+const { chromium } = await import(process.env.PW_MODULE || "playwright");
 const [base, out] = process.argv.slice(2);
 const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 390, height: 780 }, isMobile: true, hasTouch: true });
 const errs = []; p.on("pageerror", e => errs.push(e.message));

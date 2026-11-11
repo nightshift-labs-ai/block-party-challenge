@@ -6,10 +6,10 @@ Live prototype: https://extriver-proto.nightshift-labs.workers.dev · Status pag
 
 **한국어:** [한 쪽 요약](docs/SUMMARY-KO.md) · [피치덱 PDF](docs/pitch-ko.pdf) · [데모 영상 (한국어 자막)](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html)
 
-Docs: [business model + 4-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) · [creator research](RESEARCH.md) · pitch deck `docs/pitch.pdf` · 2:52 demo video `docs/demo.mp4` (a real episode recorded in production: one phone played by a script plus 9 bot players over WebSocket; rebuild with `tools/recvideo.mjs` + `tools/makevideo.sh`).
+Docs: [business model + 4-scenario funnel](docs/BUSINESS.md) (`tools/model.py`) · [creator research](RESEARCH.md) · pitch deck `docs/pitch.pdf` · 2:52 demo video `docs/demo.mp4` (a real episode recorded in production: one phone played by a script plus 9 bot players over WebSocket).
 
 > **Judge it in 60 seconds**
-> 1. Open the Dname version https://extriver-proto.nightshift-labs.workers.dev/?creator=dname (Korean first; plain English version: https://extriver-proto.nightshift-labs.workers.dev/?lang=en) and click **"혼자 체험하기 (봇 6명)"** ("Try it alone (with 6 bots)"). The big screen shows a room code and a QR code.
+> 1. Open the Dname version https://extriver-proto.nightshift-labs.workers.dev/?creator=dname (Korean first; English-first bilingual version: https://extriver-proto.nightshift-labs.workers.dev/?lang=en) and click **"혼자 체험하기 (봇 6명)"** ("Try it alone (with 6 bots)"). The big screen shows a room code and a QR code.
 > 2. Scan the QR code with your phone (or open the join link in a second tab) and play the 7 rounds. The bots answer too, so every reveal has a crowd.
 > 3. On the final screen, click **"쇼츠 만들기 · Make a Short"** to get a 1080×1920 recap video of your episode, made in the browser.
 > Prefer watching? [2:52 demo video with EN/한국어 subtitles](https://extriver-proto.nightshift-labs.workers.dev/docs/video.html).
@@ -92,7 +92,7 @@ Pricing: requests $0.15 per million (incoming WebSocket messages count 20:1), du
 | DO requests (1 join + 7 answers ÷ 20 per player) | ≈ 14 | ≈ 405 |
 | Active duration (≈0.3 s per broadcast burst, assumed) | ≈ 15 s → 2 GB-s | ≈ 105 s → 13 GB-s |
 | Rows written (state snapshots, throttled) | ≈ 20 | ≈ 60 |
-| **Cost** | **≈ $0.00003** | **≈ $0.0003** |
+| **Cost** | **≈ $0.00005** | **≈ $0.0003** |
 
 **Measured in production (Cloudflare analytics, 2026-11-06 09:00 → 11-07 09:00 UTC):** the Room Durable Object served the 24 hourly synthetic episodes (host + 2 bot phones, full episode) plus a little manual testing: 146.9 s active time in total (≈6.1 s per episode → ≈0.8 GB-s at 128 MB), 1.06 s CPU (≈44 ms per episode), 1,390 requests (≈58 per episode, an upper bound because it includes manual tests). That is ≈$0.00002 per 3-player episode, the same order as the estimate above, so the 0.3 s-per-burst assumption is not too low for small rooms. Big 300-player rooms are still an estimate (the 200-phone load test measures latency, not billing).
 

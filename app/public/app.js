@@ -355,7 +355,7 @@ async function daily() {
     const total = saved.reduce((a, b) => a + b, 0), boxes = saved.map((p, j) => p >= MAX[j] * 0.6 ? "🟩" : p > 0 ? "🟨" : "⬛").join("");
     const share = `Block Party Daily ${d.date} ${boxes} ${total}pts ${location.origin}/?daily=1`;
     $app.innerHTML = `<h1>${total} pts</h1><p class="big">${boxes}</p><div class="panel"><small>${esc(share)}</small><br><button class="btn alt" id="sh">${T("Copy result", "결과 복사")}</button></div>
-    <div class="panel" id="q"><b>${T("Weekly Final qualifier", "주간 파이널 예선")}</b> <small>${T("Top 3 of each day win a seat in Saturday's final, recorded with the creator for his next short.", "매일 상위 3명은 토요일 크리에이터 라이브 파이널 좌석 획득!")}</small><br>
+    <div class="panel" id="q"><b>${T("Weekly Final qualifier", "주간 파이널 예선")}</b> <small>${T("Top 3 of each day win a seat in Saturday's final, recorded with the creator for his next short.", "매일 상위 3명은 토요일 파이널 좌석 획득! 크리에이터와 함께 녹화해 다음 쇼츠에 나옵니다.")}</small><br>
     <input id="qn" maxlength="12" placeholder="Nickname / 닉네임" value="${esc(localStorage.bpName || "")}"><button class="btn" id="qb">${T("Enter today's table", "오늘의 순위 등록")}</button><div id="qr"></div></div>
     <p>${T("New challenge every day at midnight (Korea time).", "매일 자정(한국 시간) 새 챌린지!")}</p><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
     const showQ = r => {
@@ -385,7 +385,7 @@ async function seatPage(code) {
   let r; try { r = await (await fetch("/api/seat?s=" + encodeURIComponent(code))).json(); } catch { r = { valid: false }; }
   if (r.valid) localStorage["bpSeat" + r.date] = code; // opening the ticket on another phone moves the seat there too
   $app.innerHTML = r.valid
-    ? `<h1>🎟️ ${T("Weekly Final seat", "주간 파이널 좌석")}</h1><div class="panel"><p class="big">${T("Qualifier", "예선")} ${esc(r.date)} · #${r.rank}</p><p>${T("Live final", "라이브 파이널")}: <b>${esc(r.final)}</b></p><small>${T("Keep this link. At the final time the creator posts the room code (community post or stream); open it in this browser to take your seat.", "이 링크를 보관하세요. 파이널 시간에 크리에이터가 방 코드를 공개합니다(커뮤니티 글 또는 방송). 이 브라우저로 입장하세요.")}</small><br><small>${T("Your seat is saved in this browser: the final room only lets seat holders in.", "좌석은 이 브라우저에 저장됩니다. 파이널 방은 좌석 보유자만 입장할 수 있어요.")}</small></div><button class="btn" id="hm">${T("Home", "처음으로")}</button>`
+    ? `<h1>🎟️ ${T("Weekly Final seat", "주간 파이널 좌석")}</h1><div class="panel"><p class="big">${T("Qualifier", "예선")} ${esc(r.date)} · #${r.rank}</p><p>${T("Recorded final", "녹화 파이널")}: <b>${esc(r.final)}</b></p><small>${T("Keep this link. At the final time the creator posts the room code (community post or stream); open it in this browser to take your seat.", "이 링크를 보관하세요. 파이널 시간에 크리에이터가 방 코드를 공개합니다(커뮤니티 글 또는 방송). 이 브라우저로 입장하세요.")}</small><br><small>${T("Your seat is saved in this browser: the final room only lets seat holders in.", "좌석은 이 브라우저에 저장됩니다. 파이널 방은 좌석 보유자만 입장할 수 있어요.")}</small></div><button class="btn" id="hm">${T("Home", "처음으로")}</button>`
     : `<h1>${T("Seat link not valid", "유효하지 않은 좌석 링크")}</h1><button class="btn" id="hm">${T("Home", "처음으로")}</button>`;
   document.getElementById("hm").onclick = () => { delete sessionStorage.bpHostCode; history.replaceState(null, "", "/"); home(); };
 }

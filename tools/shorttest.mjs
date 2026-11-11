@@ -1,7 +1,7 @@
 // "Make a Short" test: node tools/shorttest.mjs <base> <out.webm> — solo room with 6 bots, host skips through every round,
 // then clicks "Make a Short" on the final screen and saves the recorded 9:16 WebM.
 // Optional 3rd arg: sponsor query, e.g. "title=Final&sponsor=Acme&prize=Gift" (host page instead of solo button).
-import { chromium } from "/home/agent/tools/pw/node_modules/playwright/index.mjs";
+const { chromium } = await import(process.env.PW_MODULE || "playwright");
 import { writeFileSync } from "fs";
 const [base, out = "/tmp/short.webm", q = ""] = process.argv.slice(2); const b = await chromium.launch(); const errs = [];
 const h = await b.newPage({ viewport: { width: 1280, height: 720 } }); h.on("pageerror", e => errs.push(e.message));

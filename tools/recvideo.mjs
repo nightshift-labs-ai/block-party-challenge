@@ -1,6 +1,6 @@
 // Record a real episode for the demo video: host screen (1280x720) + one phone (390x780) as WebM, with 9 bot players
 // over WebSocket. node tools/recvideo.mjs <base> <outdir>  → host/*.webm, phone/*.webm, marks.json (seconds from host start)
-import { chromium } from "/home/agent/tools/pw/node_modules/playwright/index.mjs";
+const { chromium } = await import(process.env.PW_MODULE || "playwright");
 import fs from "node:fs";
 const [base, out] = process.argv.slice(2); fs.mkdirSync(out + "/host", { recursive: true }); fs.mkdirSync(out + "/phone", { recursive: true });
 const wsBase = base.replace(/^http/, "ws");

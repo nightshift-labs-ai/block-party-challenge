@@ -124,8 +124,8 @@ GAMST's IG count. Kkwallu's TikTok post views. Merch existence for GAMST. How ma
   Source: Korea Times, 2026-01-07, https://www.koreatimes.co.kr/amp/southkorea/society/20260107/korean-teens-watch-online-videos-3-hours-daily-half-view-short-form-content-every-day
 - **YouTube Shorts dominates short-form across ages:** 93.4% of Korean short-form users use it (KOCCA 2025 Content Usage Survey,
   6,554 people aged 10+). Source: https://www.asiae.co.kr/en/article/2025121510582925254 (Asia Economy, Dec 2025; summary, not the primary report).
-- **Platforms are pushing "play with your audience".** In Sep 2025 YouTube added Playables minigames to Live: 75+ casual games that the
-  *creator* plays while chatting. It also tested a live leaderboard of the top 50 participating viewers.
+- **Platforms are pushing "play with your audience".** In Sep 2025 YouTube added Playables minigames to Live: casual games that the
+  *creator* plays while chatting.
   Source: TechCrunch 2025-09-16, https://techcrunch.com/2025/09/16/youtube-live-gets-a-major-update-introduces-dual-format-streaming-minigames-and-more/
   → Our angle is the step after that. With Playables only the creator plays. In Block Party, **every viewer plays on their own phone**, in the creator's own formats.
 - **Daily shared puzzles with a share grid** (the Wordle pattern) are now a standard retention loop. Our Daily Challenge uses it to turn
